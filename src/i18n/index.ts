@@ -58,6 +58,9 @@ function resolveDeviceLanguage(): LanguageCode {
 
 const initialLanguage: LanguageCode = readPersistedLanguage() ?? resolveDeviceLanguage();
 
+// `use` here is i18next's plugin registration, not the React hook the rule
+// is guarding against.
+// eslint-disable-next-line import/no-named-as-default-member
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },

@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 import { transaction } from '@src/core/db';
 import { logger } from '@src/core/logger';
 
-import { enqueueReceipt } from './receiptSender';
+import { countPendingReceipts, enqueueReceipt } from './receiptSender';
 import {
   clearSchedule,
   countByState,
@@ -20,7 +20,6 @@ import {
 import { buildPlan, diffSchedule, slotKey, type PlannerContent } from './sequencePlanner';
 import { DAILY_MESSAGES, ONBOARDING_MESSAGES } from '../content/messages';
 import { MESSAGING_CONFIG } from '../config';
-import { countPendingReceipts } from './receiptSender';
 import type { MessagingSnapshot, PlannedMessage, SequenceId } from '../types';
 
 const TAG = 'messaging';

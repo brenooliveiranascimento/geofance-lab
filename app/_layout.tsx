@@ -3,7 +3,7 @@ import '@src/i18n';
 // can launch this process purely to deliver a region event, and the task has to
 // already be defined by the time the module graph finishes loading.
 import '@src/domains/geofencing';
-import '@src/domains/messaging';
+import { registerMessagingTask } from '@src/domains/messaging';
 
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -17,7 +17,6 @@ import 'react-native-reanimated';
 
 import { bootstrapDatabase } from '@src/core/bootstrap';
 import { logger } from '@src/core/logger';
-import { registerMessagingTask } from '@src/domains/messaging';
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
 import {
   handleNotificationReceived,

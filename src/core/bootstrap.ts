@@ -3,7 +3,6 @@ import { logger } from '@src/core/logger';
 import { APP_CONFIG } from '@src/config/app';
 import { countPlaces, seedPlaces, type SeedPayload } from '@src/domains/geofencing/services/placeRepository';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const SEED: SeedPayload = require('../../assets/seed/places.json');
 
 const SEEDED_KEY = 'app.seededAt';

@@ -6,7 +6,6 @@ import { selectRegions } from '../regionReconciler';
 import { MONITOR_CONFIG } from '../../config';
 import type { GeofenceEvent, Place, Room, TargetState } from '../../types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const seed = require('../../../../../assets/seed/places.json') as {
   count: number;
   places: {

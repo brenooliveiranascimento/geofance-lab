@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
 import { Text } from '@src/components/atoms';
 import type { LatLng } from '@src/core/geo';
 import { colors, fontSize, radius, spacing } from '@src/theme';
-import { Platform } from 'react-native';
 
 import type { Place, Room, TargetState } from '../types';
 

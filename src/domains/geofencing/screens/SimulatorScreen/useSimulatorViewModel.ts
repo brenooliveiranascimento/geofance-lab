@@ -9,7 +9,6 @@ import { invalidateGeofencingData } from '../../queries/invalidate';
 import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
 import { usePlaces } from '../../queries/usePlaces';
 import { submitSimulatedFix } from '../../services/monitorService';
-import { listRooms } from '../../services/placeRepository';
 import {
   DEFAULT_ROUTE_OPTIONS,
   buildApproachRoute,
@@ -151,6 +150,3 @@ export function useSimulatorViewModel(): SimulatorViewModel {
     },
   };
 }
-
-/** Rooms of a place, for the summary line. Read directly — it is one query. */
-export const roomCountFor = (placeId: string): number => listRooms(placeId).length;
