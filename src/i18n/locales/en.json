@@ -1,0 +1,333 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "next": "Continue",
+    "refresh": "Refresh",
+    "save": "Save",
+    "on": "On",
+    "off": "Off"
+  },
+  "tabs": {
+    "monitor": "Monitor",
+    "places": "Places",
+    "events": "Events",
+    "messages": "Messages",
+    "settings": "Settings"
+  },
+  "permissions": {
+    "state": {
+      "granted": "Granted",
+      "denied": "Denied",
+      "undetermined": "Not asked"
+    }
+  },
+  "monitor": {
+    "title": "Monitor",
+    "start": "Start monitoring",
+    "stop": "Stop monitoring",
+    "started": "Monitoring {{regions}} regions",
+    "stopped": "Monitoring stopped",
+    "grant": "Grant",
+    "simulator": "Open simulator",
+    "recent": "Recent events",
+    "lastFix": "Last position",
+    "noPosition": "No position yet",
+    "status": {
+      "idle": {
+        "title": "Stopped",
+        "message": "No regions registered. Start monitoring to detect entries and exits."
+      },
+      "regions": {
+        "title": "Waiting",
+        "message": "{{total}} regions registered with the system. Continuous GPS is off — the device itself is doing the waiting."
+      },
+      "precise": {
+        "title": "High precision",
+        "message": "Inside {{total}} place(s). Continuous GPS is on to resolve rooms."
+      },
+      "blocked": {
+        "title": "Permission needed",
+        "message": "Without \"always\" location access, monitoring cannot work while the app is closed."
+      },
+      "busy": {
+        "title": "One moment",
+        "message": "Applying changes."
+      }
+    },
+    "startFailed": {
+      "permissions": "Grant background location access to start",
+      "no_places": "No places registered",
+      "no_position": "Could not obtain a position"
+    },
+    "stats": {
+      "places": "Places",
+      "placesHint": "In the local database",
+      "regions": "Regions",
+      "regionsHint": "Active window",
+      "inside": "Inside",
+      "insideNone": "None right now"
+    },
+    "mapUnavailable": {
+      "title": "Map unavailable",
+      "body": "The Maps SDK for Android key is missing. Set EXPO_PUBLIC_GOOGLE_MAPS_API_KEY in .env and rebuild the APK. Monitoring works fine without it."
+    }
+  },
+  "places": {
+    "title": "Places",
+    "subtitle": "{{shown}} of {{total}} places",
+    "searchPlaceholder": "Search by name",
+    "radii": "radius {{radius}} m · active {{activeRadius}} m",
+    "residence": "residence",
+    "create": "Add a place here",
+    "reseed": "Reload dataset",
+    "reseeded": "{{total}} places reloaded",
+    "empty": "No places found",
+    "filter": {
+      "all": "All",
+      "inside": "Inside",
+      "residences": "Residences",
+      "disabled": "Disabled"
+    }
+  },
+  "events": {
+    "title": "Events",
+    "summary": "{{total}} records · {{entries}} entries · {{exits}} exits",
+    "clear": "Clear log",
+    "cleared": "Log cleared",
+    "copy": "Copy as JSONL",
+    "copied": "Log copied",
+    "nothingToExport": "Nothing to export",
+    "empty": {
+      "title": "No events yet",
+      "body": "Start monitoring and walk into one of the places, or use the simulator to play a route."
+    },
+    "scope": {
+      "all": "All",
+      "places": "Places",
+      "rooms": "Rooms"
+    },
+    "kind": {
+      "place_enter": "Entered",
+      "place_exit": "Left",
+      "room_enter": "Entered room",
+      "room_exit": "Left room"
+    },
+    "source": {
+      "native_region": "native region",
+      "location_update": "continuous GPS",
+      "simulator": "simulator",
+      "initial_sync": "initial sync"
+    }
+  },
+  "editor": {
+    "newTitle": "New place",
+    "editTitle": "Edit place",
+    "notFound": "Place not found",
+    "noPosition": "Could not obtain your position to create the place",
+    "saved": "Place saved",
+    "roomSaved": "Room saved",
+    "roomDefaultName": "Room {{index}}",
+    "deletePlace": "Delete place",
+    "deleteTitle": "Delete place",
+    "deleteBody": "Delete \"{{name}}\" and all of its rooms? Events already recorded stay in the log.",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "e.g. My parents' house",
+      "radius": "Radius (m)",
+      "radiusHint": "Entry is detected here",
+      "activeRadius": "Active radius (m)",
+      "activeRadiusHint": "Exit is only detected past this",
+      "enabled": "Monitor this place",
+      "enabledHint": "Disabled places take no region slot and produce no events"
+    },
+    "errors": {
+      "name": "Enter a name",
+      "radius": "Radius must be a number greater than zero",
+      "activeRadius": "Active radius must be a number greater than zero",
+      "ordering": "Active radius must be greater than or equal to the radius — the gap between them is what prevents repeated events on the boundary"
+    },
+    "rooms": {
+      "title": "Rooms ({{total}})",
+      "explainer": "Rooms are polygons inside the place. Native circles do not work at this scale — below roughly 100 m iOS stops firing reliably — so they are resolved by point-in-polygon instead.",
+      "draw": "Draw a room on the map",
+      "saveFirst": "Save the place before drawing rooms",
+      "vertices": "{{total}} vertices"
+    },
+    "drawing": {
+      "title": "Drawing",
+      "body": "Tap the map to mark the room's corners. {{vertices}} vertices · {{perimeter}} m perimeter.",
+      "finish": "Finish",
+      "undo": "Undo"
+    }
+  },
+  "simulator": {
+    "title": "Simulator",
+    "intro": "Feeds a synthetic route through the same pipeline the GPS feeds: same state machine, same deduplication, same notifications. Lets you verify detection without leaving your desk.",
+    "pickPlace": "Place",
+    "routeKind": "Route",
+    "accuracy": "Simulated accuracy",
+    "accuracyHint": "Readings worse than 100 m are discarded. Between 40 and 100 m the confidence margin delays entry until the error circle fits inside the radius.",
+    "progress": "{{current}} of {{total}} positions",
+    "start": "Play route",
+    "stop": "Stop",
+    "finished": "Route finished",
+    "footnote": "Positions are dated backwards from now, so real monitoring can resume straight afterwards without waiting.",
+    "kind": {
+      "crossing": {
+        "label": "Walk through",
+        "hint": "Enters, crosses the rooms and leaves the far side"
+      },
+      "approach": {
+        "label": "Arrive and stay",
+        "hint": "Enters and remains at the centre"
+      }
+    },
+    "monitoringWarning": {
+      "title": "Real monitoring is running",
+      "body": "Simulated positions will interleave with GPS ones. Stop monitoring on the Monitor tab for a clean test."
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "intro": "Two local notification sequences: onboarding, minutes after signup, and a daily one at a fixed hour. All offline, without duplicates, with delivery confirmations queued for retry.",
+    "signUp": "Simulate signup",
+    "sync": "Reconcile now",
+    "synced": "{{scheduled}} scheduled · {{confirmed}} confirmations sent",
+    "reset": "Clear sequence",
+    "enrolled": "Signup recorded · {{total}} notifications scheduled",
+    "retried": "{{requeued}} requeued · {{confirmed}} confirmed",
+    "permissionDenied": "Without notification permission there is nothing to schedule",
+    "plan": "Sequence",
+    "next": "Next message",
+    "notEnrolled": {
+      "title": "Not enrolled",
+      "body": "The whole plan derives from a single instant: the signup. Tap below to record it and schedule the sequence."
+    },
+    "stats": {
+      "scheduled": "Scheduled",
+      "delivered": "Delivered",
+      "total": "In plan"
+    },
+    "state": {
+      "pending": "in plan",
+      "scheduled": "scheduled",
+      "delivered": "delivered",
+      "cancelled": "cancelled",
+      "failed": "failed"
+    },
+    "receipts": {
+      "title": "Delivery confirmations",
+      "endpoint": "Sending to {{endpoint}}",
+      "noEndpoint": "No endpoint configured. Set EXPO_PUBLIC_DELIVERY_ENDPOINT in .env to send confirmations; the queue is recorded locally regardless.",
+      "pending": "Queued",
+      "confirmed": "Confirmed",
+      "exhausted": "Exhausted",
+      "retry": "Requeue exhausted",
+      "attempts": "{{total}} attempts",
+      "state": {
+        "pending": "queued",
+        "confirmed": "confirmed",
+        "exhausted": "exhausted"
+      }
+    }
+  },
+  "onboarding": {
+    "skip": "Not now",
+    "finish": "Get started",
+    "welcome": {
+      "title": "Geofence Lab",
+      "body": "A background geolocation module: detects entry and exit across hundreds of places and the rooms inside them, with the app open, backgrounded or closed."
+    },
+    "how": {
+      "title": "How it works",
+      "body": "Two tiers, so the battery is not spent waiting.",
+      "bullet1": "The operating system watches the nearest regions and wakes the app when you cross one.",
+      "bullet2": "Only then does continuous GPS start, to resolve which room you are in.",
+      "bullet3": "On the way out it stops again — at rest the app requests no position at all."
+    },
+    "location": {
+      "title": "Always-on location",
+      "body": "To work while the app is closed, the system requires \"always\" access. The ordinary prompt comes first, then the background one — on Android that opens a settings page where you must pick \"Allow all the time\".",
+      "action": "Grant access",
+      "resultForeground": "Foreground: {{status}}",
+      "resultBackground": "Background: {{status}}",
+      "resultHint": "Without background access, detection only works while the app is open. You can grant it later in Settings."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Every entry and exit becomes a local notification — that is how events surface when the app is not on screen. The sequenced messages use the same channel.",
+      "action": "Allow notifications"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languages": {
+      "pt-BR": "Português",
+      "en": "English"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "services": "Location services",
+      "foreground": "Location (foreground)",
+      "background": "Location (background)",
+      "notifications": "Notifications",
+      "requestLocation": "Request location",
+      "requestNotifications": "Request notifications",
+      "openSettings": "Open settings",
+      "backgroundMissing": {
+        "title": "No background access",
+        "body": "The system only asks once. After a denial the only way through is to grant it manually in the device settings."
+      }
+    },
+    "battery": {
+      "title": "Battery optimisation",
+      "body": "Battery managers from some manufacturers kill the foreground service even when everything is configured correctly. Exempting the app is what keeps monitoring alive with the screen off.",
+      "action": "Open battery settings"
+    },
+    "tools": {
+      "title": "Tools",
+      "simulator": "Route simulator",
+      "diagnostics": "Diagnostics"
+    },
+    "data": {
+      "title": "Data",
+      "reseed": "Reload the {{total}} places in the dataset",
+      "clearEvents": "Clear events and log",
+      "reset": "Erase everything and start over"
+    },
+    "reset": {
+      "title": "Erase everything",
+      "body": "This stops monitoring, erases places, rooms, state, events and the message sequence, and reloads the original dataset.",
+      "confirm": "Erase",
+      "done": "Everything reset"
+    },
+    "about": {
+      "title": "About",
+      "app": "Application",
+      "version": "Version",
+      "endpoint": "Confirmation endpoint",
+      "endpointEmpty": "not configured"
+    }
+  },
+  "diagnostics": {
+    "title": "Diagnostics",
+    "monitoring": "Monitoring",
+    "regions": "Registered regions",
+    "activePlaces": "Active places",
+    "places": "Places in database",
+    "events": "Recorded events",
+    "tasks": "Background tasks",
+    "registered": "registered",
+    "notRegistered": "not registered",
+    "log": "Log",
+    "logHint": "Background tasks run in a process with no console anyone can read. The log is written to the database so you can see what happened while the app was closed.",
+    "empty": "Log is empty",
+    "copy": "Copy log",
+    "copied": "Log copied",
+    "clear": "Clear log"
+  }
+}

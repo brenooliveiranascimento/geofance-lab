@@ -1,0 +1,333 @@
+{
+  "common": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Excluir",
+    "next": "Continuar",
+    "refresh": "Atualizar",
+    "save": "Salvar",
+    "on": "Ativado",
+    "off": "Desativado"
+  },
+  "tabs": {
+    "monitor": "Monitor",
+    "places": "Locais",
+    "events": "Eventos",
+    "messages": "Mensagens",
+    "settings": "Ajustes"
+  },
+  "permissions": {
+    "state": {
+      "granted": "Concedida",
+      "denied": "Negada",
+      "undetermined": "Não solicitada"
+    }
+  },
+  "monitor": {
+    "title": "Monitor",
+    "start": "Iniciar monitoramento",
+    "stop": "Parar monitoramento",
+    "started": "Monitorando {{regions}} regiões",
+    "stopped": "Monitoramento parado",
+    "grant": "Conceder",
+    "simulator": "Abrir simulador",
+    "recent": "Últimos eventos",
+    "lastFix": "Última posição",
+    "noPosition": "Sem posição ainda",
+    "status": {
+      "idle": {
+        "title": "Parado",
+        "message": "Nenhuma região registrada. Inicie o monitoramento para detectar entradas e saídas."
+      },
+      "regions": {
+        "title": "Aguardando",
+        "message": "{{total}} regiões registradas no sistema. O GPS contínuo está desligado — quem espera é o próprio aparelho."
+      },
+      "precise": {
+        "title": "Precisão alta",
+        "message": "Dentro de {{total}} local(is). O GPS contínuo está ligado para resolver os cômodos."
+      },
+      "blocked": {
+        "title": "Permissão pendente",
+        "message": "Sem o acesso à localização \"o tempo todo\", o monitoramento não funciona com o app fechado."
+      },
+      "busy": {
+        "title": "Um momento",
+        "message": "Aplicando as mudanças."
+      }
+    },
+    "startFailed": {
+      "permissions": "Conceda o acesso à localização em background para iniciar",
+      "no_places": "Nenhum local cadastrado",
+      "no_position": "Não foi possível obter uma posição"
+    },
+    "stats": {
+      "places": "Locais",
+      "placesHint": "No banco local",
+      "regions": "Regiões",
+      "regionsHint": "Janela ativa",
+      "inside": "Dentro",
+      "insideNone": "Nenhum no momento"
+    },
+    "mapUnavailable": {
+      "title": "Mapa indisponível",
+      "body": "Falta a chave da Maps SDK for Android. Preencha EXPO_PUBLIC_GOOGLE_MAPS_API_KEY no .env e gere o APK de novo. O monitoramento funciona normalmente sem ela."
+    }
+  },
+  "places": {
+    "title": "Locais",
+    "subtitle": "{{shown}} de {{total}} locais",
+    "searchPlaceholder": "Buscar por nome",
+    "radii": "raio {{radius}} m · ativo {{activeRadius}} m",
+    "residence": "residência",
+    "create": "Cadastrar local aqui",
+    "reseed": "Recarregar dataset",
+    "reseeded": "{{total}} locais recarregados",
+    "empty": "Nenhum local encontrado",
+    "filter": {
+      "all": "Todos",
+      "inside": "Dentro",
+      "residences": "Residências",
+      "disabled": "Desativados"
+    }
+  },
+  "events": {
+    "title": "Eventos",
+    "summary": "{{total}} registros · {{entries}} entradas · {{exits}} saídas",
+    "clear": "Limpar log",
+    "cleared": "Log limpo",
+    "copy": "Copiar como JSONL",
+    "copied": "Log copiado",
+    "nothingToExport": "Não há nada para exportar",
+    "empty": {
+      "title": "Nenhum evento ainda",
+      "body": "Inicie o monitoramento e entre num dos locais, ou use o simulador para percorrer uma rota."
+    },
+    "scope": {
+      "all": "Todos",
+      "places": "Locais",
+      "rooms": "Cômodos"
+    },
+    "kind": {
+      "place_enter": "Entrou",
+      "place_exit": "Saiu",
+      "room_enter": "Entrou no cômodo",
+      "room_exit": "Saiu do cômodo"
+    },
+    "source": {
+      "native_region": "região nativa",
+      "location_update": "GPS contínuo",
+      "simulator": "simulador",
+      "initial_sync": "sincronização inicial"
+    }
+  },
+  "editor": {
+    "newTitle": "Novo local",
+    "editTitle": "Editar local",
+    "notFound": "Local não encontrado",
+    "noPosition": "Não foi possível obter sua posição para criar o local",
+    "saved": "Local salvo",
+    "roomSaved": "Cômodo salvo",
+    "roomDefaultName": "Cômodo {{index}}",
+    "deletePlace": "Excluir local",
+    "deleteTitle": "Excluir local",
+    "deleteBody": "Excluir \"{{name}}\" e todos os seus cômodos? Os eventos já registrados permanecem no log.",
+    "fields": {
+      "name": "Nome",
+      "namePlaceholder": "Ex.: Casa dos meus pais",
+      "radius": "Raio (m)",
+      "radiusHint": "A entrada é detectada aqui",
+      "activeRadius": "Raio ativo (m)",
+      "activeRadiusHint": "A saída só é detectada depois daqui",
+      "enabled": "Monitorar este local",
+      "enabledHint": "Locais desativados não ocupam vaga de região nem geram eventos"
+    },
+    "errors": {
+      "name": "Informe um nome",
+      "radius": "O raio precisa ser um número maior que zero",
+      "activeRadius": "O raio ativo precisa ser um número maior que zero",
+      "ordering": "O raio ativo precisa ser maior ou igual ao raio — a folga entre os dois é o que evita eventos repetidos na borda"
+    },
+    "rooms": {
+      "title": "Cômodos ({{total}})",
+      "explainer": "Cômodos são polígonos dentro do local. Círculos nativos não funcionam nessa escala — abaixo de ~100 m o iOS não dispara de forma confiável —, então eles são resolvidos por ponto-em-polígono.",
+      "draw": "Desenhar cômodo no mapa",
+      "saveFirst": "Salve o local antes de desenhar cômodos",
+      "vertices": "{{total}} vértices"
+    },
+    "drawing": {
+      "title": "Desenhando",
+      "body": "Toque no mapa para marcar os cantos do cômodo. {{vertices}} vértices · {{perimeter}} m de perímetro.",
+      "finish": "Concluir",
+      "undo": "Desfazer"
+    }
+  },
+  "simulator": {
+    "title": "Simulador",
+    "intro": "Injeta uma rota sintética no mesmo pipeline que o GPS alimenta: mesma máquina de estados, mesma deduplicação, mesmas notificações. Serve para verificar a detecção sem sair do lugar.",
+    "pickPlace": "Local",
+    "routeKind": "Trajeto",
+    "accuracy": "Acurácia simulada",
+    "accuracyHint": "Leituras acima de 100 m são descartadas. Entre 40 e 100 m, a margem de confiança atrasa a entrada até o círculo de erro caber dentro do raio.",
+    "progress": "{{current}} de {{total}} posições",
+    "start": "Executar rota",
+    "stop": "Interromper",
+    "finished": "Rota concluída",
+    "footnote": "As posições são datadas para trás a partir de agora, então o monitoramento real pode ser retomado logo em seguida sem esperar.",
+    "kind": {
+      "crossing": {
+        "label": "Atravessar",
+        "hint": "Entra, cruza os cômodos e sai pelo outro lado"
+      },
+      "approach": {
+        "label": "Chegar e ficar",
+        "hint": "Entra e permanece no centro"
+      }
+    },
+    "monitoringWarning": {
+      "title": "Monitoramento real ativo",
+      "body": "As posições simuladas vão se misturar às do GPS. Pare o monitoramento na aba Monitor para um teste limpo."
+    }
+  },
+  "messages": {
+    "title": "Mensagens",
+    "intro": "Duas sequências de notificações locais: as de onboarding, minutos após o cadastro, e a diária, uma por dia em horário fixo. Tudo offline, sem duplicidade, com confirmação de entrega enfileirada.",
+    "signUp": "Simular cadastro",
+    "sync": "Reconciliar agora",
+    "synced": "{{scheduled}} agendadas · {{confirmed}} confirmações enviadas",
+    "reset": "Apagar sequência",
+    "enrolled": "Cadastro registrado · {{total}} notificações agendadas",
+    "retried": "{{requeued}} reenfileiradas · {{confirmed}} confirmadas",
+    "permissionDenied": "Sem permissão de notificação não há o que agendar",
+    "plan": "Sequência",
+    "next": "Próxima mensagem",
+    "notEnrolled": {
+      "title": "Sem cadastro",
+      "body": "O plano inteiro deriva de um único instante: o do cadastro. Toque abaixo para registrá-lo e agendar a sequência."
+    },
+    "stats": {
+      "scheduled": "Agendadas",
+      "delivered": "Entregues",
+      "total": "No plano"
+    },
+    "state": {
+      "pending": "no plano",
+      "scheduled": "agendada",
+      "delivered": "entregue",
+      "cancelled": "cancelada",
+      "failed": "falhou"
+    },
+    "receipts": {
+      "title": "Confirmações de entrega",
+      "endpoint": "Enviando para {{endpoint}}",
+      "noEndpoint": "Nenhum endpoint configurado. Preencha EXPO_PUBLIC_DELIVERY_ENDPOINT no .env para enviar as confirmações; a fila continua sendo gravada localmente.",
+      "pending": "Na fila",
+      "confirmed": "Confirmadas",
+      "exhausted": "Esgotadas",
+      "retry": "Reenfileirar esgotadas",
+      "attempts": "{{total}} tentativas",
+      "state": {
+        "pending": "na fila",
+        "confirmed": "confirmada",
+        "exhausted": "esgotada"
+      }
+    }
+  },
+  "onboarding": {
+    "skip": "Agora não",
+    "finish": "Começar",
+    "welcome": {
+      "title": "Geofence Lab",
+      "body": "Um módulo de geolocalização em background: detecta entrada e saída de centenas de locais e dos cômodos dentro deles, com o app aberto, em segundo plano ou fechado."
+    },
+    "how": {
+      "title": "Como funciona",
+      "body": "Duas camadas, para não gastar bateria à toa.",
+      "bullet1": "O sistema operacional vigia as regiões mais próximas e acorda o app quando você cruza uma delas.",
+      "bullet2": "Só então o GPS contínuo liga, para resolver em qual cômodo você está.",
+      "bullet3": "Ao sair, ele desliga de novo — em repouso o app não pede nenhuma posição."
+    },
+    "location": {
+      "title": "Localização o tempo todo",
+      "body": "Para funcionar com o app fechado, o sistema exige o acesso \"o tempo todo\". Primeiro aparece o pedido comum; em seguida, o de segundo plano — no Android ele abre uma tela de ajustes onde é preciso escolher \"Permitir o tempo todo\".",
+      "action": "Conceder acesso",
+      "resultForeground": "Primeiro plano: {{status}}",
+      "resultBackground": "Segundo plano: {{status}}",
+      "resultHint": "Sem o acesso em segundo plano, a detecção só funciona com o app aberto. Dá para conceder depois em Ajustes."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "body": "Cada entrada e cada saída vira uma notificação local — é como os eventos aparecem quando o app não está na tela. As mensagens sequenciadas usam o mesmo canal.",
+      "action": "Permitir notificações"
+    }
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "languages": {
+      "pt-BR": "Português",
+      "en": "English"
+    },
+    "permissions": {
+      "title": "Permissões",
+      "services": "Serviços de localização",
+      "foreground": "Localização (primeiro plano)",
+      "background": "Localização (segundo plano)",
+      "notifications": "Notificações",
+      "requestLocation": "Pedir localização",
+      "requestNotifications": "Pedir notificações",
+      "openSettings": "Abrir ajustes",
+      "backgroundMissing": {
+        "title": "Sem acesso em segundo plano",
+        "body": "O sistema só pergunta uma vez. Depois de negado, a única saída é conceder manualmente nos ajustes do aparelho."
+      }
+    },
+    "battery": {
+      "title": "Otimização de bateria",
+      "body": "Gerenciadores de bateria de alguns fabricantes encerram o serviço em primeiro plano mesmo com tudo configurado corretamente. Isentar o app é o que mantém o monitoramento vivo com a tela apagada.",
+      "action": "Abrir ajustes de bateria"
+    },
+    "tools": {
+      "title": "Ferramentas",
+      "simulator": "Simulador de rota",
+      "diagnostics": "Diagnóstico"
+    },
+    "data": {
+      "title": "Dados",
+      "reseed": "Recarregar os {{total}} locais do dataset",
+      "clearEvents": "Limpar eventos e log",
+      "reset": "Apagar tudo e recomeçar"
+    },
+    "reset": {
+      "title": "Apagar tudo",
+      "body": "Isso para o monitoramento, apaga locais, cômodos, estado, eventos e a sequência de mensagens, e recarrega o dataset original.",
+      "confirm": "Apagar",
+      "done": "Tudo recomeçado"
+    },
+    "about": {
+      "title": "Sobre",
+      "app": "Aplicativo",
+      "version": "Versão",
+      "endpoint": "Endpoint de confirmação",
+      "endpointEmpty": "não configurado"
+    }
+  },
+  "diagnostics": {
+    "title": "Diagnóstico",
+    "monitoring": "Monitoramento",
+    "regions": "Regiões registradas",
+    "activePlaces": "Locais ativos",
+    "places": "Locais no banco",
+    "events": "Eventos registrados",
+    "tasks": "Tarefas em background",
+    "registered": "registrada",
+    "notRegistered": "não registrada",
+    "log": "Log",
+    "logHint": "Tarefas em background rodam num processo sem console acessível. O log é gravado no banco para que dê para ver o que aconteceu enquanto o app estava fechado.",
+    "empty": "Log vazio",
+    "copy": "Copiar log",
+    "copied": "Log copiado",
+    "clear": "Limpar log"
+  }
+}
