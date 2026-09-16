@@ -43,3 +43,6 @@ yarn-error.*
 
 # jest
 coverage/
+
+# APKs gerados localmente
+*.apk

@@ -460,10 +460,20 @@ npx eas build -p android --profile preview
 Ou localmente, sem conta em nenhum serviço:
 
 ```bash
+export ANDROID_HOME="$HOME/Library/Android/sdk"   # ajuste ao seu caminho
 npx expo prebuild -p android --clean
-cd android && ./gradlew assembleRelease
+cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 # android/app/build/outputs/apk/release/app-release.apk
 ```
+
+O `-PreactNativeArchitectures=arm64-v8a` importa: sem ele o Gradle empacota as quatro
+arquiteturas no mesmo APK e o arquivo passa de 120 MB. Restrito ao arm64 — que é o que todo
+aparelho Android real usa desde cerca de 2017 — ele fica em torno de 47 MB. Para rodar num
+emulador x86, troque para `x86_64` ou omita o flag.
+
+O perfil `release` é assinado com a keystore de depuração que o próprio template do Expo gera,
+então o APK instala direto, sem nenhum cadastro. Para publicação de verdade seria preciso uma
+keystore própria — mas não é o caso aqui.
 
 ---
 
