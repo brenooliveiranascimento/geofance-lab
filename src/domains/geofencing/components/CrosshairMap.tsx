@@ -26,7 +26,6 @@ export interface CrosshairMapProps {
   siblings?: readonly { id: string; name: string; polygon: Ring }[];
   onCenterMove: (center: LatLng) => void;
   readoutLabel: string;
-  /** Paints the draft as invalid — used when its edges cross each other. */
   invalid?: boolean;
 }
 

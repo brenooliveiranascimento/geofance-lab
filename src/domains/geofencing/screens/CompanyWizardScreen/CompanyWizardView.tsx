@@ -148,7 +148,6 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
     );
   }
 
-  // Drawing: the outline of the company, or one of its rooms.
   const drawingOutline = step === 'outline';
   const ring = drawingOutline ? viewModel.outline : viewModel.draft;
 

@@ -358,7 +358,6 @@ describe('overlapping rooms', () => {
 });
 
 describe('companies delimited by a polygon', () => {
-  /** A 40 x 30 m office, centred on HOME. */
   const halfWidth = 20 / (METERS_PER_DEGREE_LATITUDE * Math.cos((HOME.latitude * Math.PI) / 180));
   const halfHeight = 15 / METERS_PER_DEGREE_LATITUDE;
 
@@ -377,7 +376,6 @@ describe('companies delimited by a polygon', () => {
   };
 
   it('enters on the outline, not on the circle', () => {
-    // 20 m north is inside the 25 m radius but 5 m past the polygon's north wall.
     const outsideShape = run(hold(20, 4), { companies: [OFFICE] });
     expect(outsideShape.events).toHaveLength(0);
 
@@ -389,7 +387,6 @@ describe('companies delimited by a polygon', () => {
     const entered = run(hold(10, 3), { companies: [OFFICE] });
     expect(entered.states.get('office')?.state).toBe('inside');
 
-    // 25 m north: 10 m beyond the wall, inside the 20 m exit buffer.
     const band = run(hold(25, 4, 40_000), { companies: [OFFICE], states: entered.states });
     expect(band.events).toHaveLength(0);
     expect(band.states.get('office')?.state).toBe('inside');
@@ -399,14 +396,11 @@ describe('companies delimited by a polygon', () => {
     const entered = run(hold(10, 3), { companies: [OFFICE] });
     const band = run(hold(25, 3, 40_000), { companies: [OFFICE], states: entered.states });
 
-    // 60 m north is 45 m beyond the wall, well past the 20 m buffer.
     const gone = run(hold(60, 3, 90_000), { companies: [OFFICE], states: band.states });
     expect(gone.events.map((e) => e.kind)).toEqual(['company_exit']);
   });
 
   it('does not let a poor fix keep a small company from being entered', () => {
-    // The whole office is 40 x 30 m; a 30 m error circle can never fit inside
-    // it, so requiring containment would make entry impossible.
     const { events } = run(hold(0, 3, 0, 6_000, 30), { companies: [OFFICE] });
     expect(events.map((e) => e.kind)).toEqual(['company_enter']);
   });

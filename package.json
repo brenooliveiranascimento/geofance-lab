@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "seed": "node scripts/gen-seed.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "verify": "npm run typecheck && npm run check:i18n && npm test"
+    "verify": "npm run typecheck && npm run check:i18n && npm test",
+    "seed:demo": "node scripts/gen-demo-house.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

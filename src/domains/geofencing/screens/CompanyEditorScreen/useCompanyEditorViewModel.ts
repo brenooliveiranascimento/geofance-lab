@@ -153,7 +153,6 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     if (mode === 'roomDraw' && company?.polygon && !isRingInsideRing(draft, company.polygon)) {
       return t('wizard.errors.outsideCompany');
     }
-    // Redrawing the perimeter must not orphan the rooms already inside it.
     if (mode === 'outlineDraw' && rooms.some((room) => !isRingInsideRing(room.polygon, draft))) {
       return t('editor.errors.outlineExcludesRooms');
     }

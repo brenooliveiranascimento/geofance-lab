@@ -393,9 +393,6 @@ export async function resumeMonitoringIfNeeded(): Promise<void> {
     return;
   }
 
-  // The platform dropped the registrations — a reinstall, a reboot, or the OS
-  // evicting them. Our own flag still says "running", so without this the app
-  // would show itself as monitoring while nothing was armed.
   logger.warn(TAG, 're-arming the region window after relaunch');
 
   const fix = (await getCurrentFix()) ?? readJson<Fix>(MONITOR_KEYS.lastFix);

@@ -608,6 +608,23 @@ nenhum evento é gerado, que é o comportamento correto.
 As posições são datadas para trás a partir de agora, então o monitoramento real pode ser retomado
 logo em seguida sem esperar nada.
 
+### Casa de demonstração
+
+Para ver o app com dados sem cadastrar nada à mão, `scripts/gen-demo-house.mjs` produz uma empresa
+com o contorno em formato de casa — corpo retangular sob um telhado de duas águas — e cinco
+cômodos: Sala, Cozinha, Quarto, Banheiro e um Sótão dentro do telhado. Os cômodos têm corredores
+entre si em vez de paredes compartilhadas, então nenhuma leitura cai numa fronteira comum a dois.
+
+```bash
+npm run seed:demo                                    # grava src/__fixtures__/demo-house.json
+node scripts/gen-demo-house.mjs --lat -23.55 --lon -46.63 --sql \
+  | sqlite3 "<caminho do geofence-lab.db do aparelho>"
+```
+
+A geometria é verificada por teste com as mesmas funções que o wizard usa: contorno sem
+cruzamento, cada cômodo simples e dentro da casa, nenhum cômodo invadindo outro, e o círculo
+derivado contendo tudo.
+
 ### No campo
 
 1. **Empresas → Cadastrar empresa**, ou conclua o onboarding.
@@ -725,7 +742,8 @@ src/
   i18n/                               pt-BR (padrão) + en
 src/__fixtures__/companies.json       520 locais para os testes de escala (não vai para o app)
 scripts/
-  gen-seed.mjs                        gera o fixture (determinístico)
+  gen-seed.mjs                        gera o fixture de escala (determinístico)
+  gen-demo-house.mjs                  gera a casa de demonstração, e o SQL dela
   check-i18n.mjs                      garante que nenhuma chave de tradução falte
 ```
 

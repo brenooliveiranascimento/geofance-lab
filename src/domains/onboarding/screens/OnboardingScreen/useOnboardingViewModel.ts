@@ -91,8 +91,6 @@ export function useOnboardingViewModel(): OnboardingViewModel {
 
   const advance = useCallback(async () => {
     if (step.action === 'company') {
-      // The wizard marks onboarding complete once the company is saved, so a
-      // half-finished registration does not count as onboarded.
       router.replace('/companies/new');
       return;
     }

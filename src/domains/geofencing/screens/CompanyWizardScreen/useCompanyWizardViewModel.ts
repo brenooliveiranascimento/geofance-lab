@@ -59,7 +59,6 @@ export interface CompanyWizardViewModel {
   canAdvance: boolean;
   tangled: boolean;
   draftAreaSquareMeters: number;
-  /** Where the drawing map opens, and how wide. */
   drawingCenter: LatLng | null;
   drawingSpanMeters: number;
 
@@ -98,8 +97,6 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
   const [draft, setDraft] = useState<Ring>([]);
   const [roomName, setRoomName] = useState('');
 
-  // The map centre changes on every pan frame. Keeping it in a ref rather than
-  // state means panning does not re-render the whole wizard.
   const centerRef = useRef<LatLng | null>(null);
 
   useEffect(() => {
@@ -162,28 +159,15 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     [isDrawing, currentRing],
   );
 
-  /**
-   * A room is drawn over the perimeter that was just traced, not over wherever
-   * the phone happens to be. The map unmounts while the rooms list is on
-   * screen, so without this it would remount centred on the GPS position —
-   * which is usually nowhere near the site the user panned to, and every room
-   * drawn there would fail the containment check.
-   */
   const outlineCentroid = useMemo(() => ringCentroid(outline), [outline]);
 
   const drawingCenter = step === 'roomDraw' ? (outlineCentroid ?? origin) : origin;
 
   const drawingSpanMeters = useMemo(() => {
     if (step !== 'roomDraw' || !outlineCentroid) return step === 'roomDraw' ? 70 : 160;
-    // Wide enough to show the whole perimeter, with room to breathe.
     return Math.max(circumscribedRadiusMeters(outline, outlineCentroid) * 3, 40);
   }, [step, outline, outlineCentroid]);
 
-  /**
-   * The rule the data model cannot express: a room has to sit inside the
-   * company it belongs to. Catching it here, while the shape is still a draft,
-   * is the only moment the user can actually fix it.
-   */
   const error = useMemo(() => {
     if (step === 'name' && name.trim().length < 2) return t('wizard.errors.name');
 
@@ -191,9 +175,6 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
       if (currentRing.length < COMPANY_SHAPE.minVertices) {
         return t('wizard.errors.vertices', { total: COMPANY_SHAPE.minVertices });
       }
-      // A ring whose edges cross itself breaks point-in-polygon: the even-odd
-      // rule turns part of the drawn area into "outside", and the shoelace area
-      // cancels the reversed lobe away. It has to be refused, not warned about.
       if (tangled) return t('wizard.errors.selfIntersecting');
       const minArea =
         step === 'outline'
@@ -248,9 +229,6 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
       const createdAt = Date.now();
       const companyId = `company-${createdAt}`;
 
-      // The circle is derived from the outline so the native region always
-      // contains it. Entry is still decided by the polygon; the circle only
-      // has to be wide enough to wake the app up in time.
       const radius = circumscribedRadiusMeters(outline, centroid);
 
       const company: Company = {
@@ -279,10 +257,6 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
       invalidateGeofencingData();
       toast.show({ message: t('wizard.saved', { name: company.name }), type: 'success' });
 
-      // The company is already on disk. Monitoring is a separate concern that
-      // can legitimately fail — permission denied, location services off — and
-      // must never strand the user on a screen that looks like nothing was
-      // saved.
       try {
         if (readSnapshot().running) {
           await refreshMonitoring();
@@ -355,8 +329,6 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     back,
     startRoom: () => {
       setDraft([]);
-      // Seed the crosshair too: the first "add point" can happen before the map
-      // reports a region change.
       if (outlineCentroid) centerRef.current = outlineCentroid;
       setStep('roomDraw');
     },

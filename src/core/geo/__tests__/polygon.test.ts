@@ -152,7 +152,6 @@ describe('distanceToRingMeters', () => {
 
   it('measures from inside to the nearest wall', () => {
     const centroid = ringCentroid(roomRing)!;
-    // The room is ~11 m tall by ~10 m wide, so the centre is ~5 m from a wall.
     const distance = distanceToRingMeters(centroid, roomRing);
     expect(distance).toBeGreaterThan(4);
     expect(distance).toBeLessThan(6);
@@ -173,7 +172,6 @@ describe('circumscribedRadiusMeters', () => {
   it('reaches the furthest vertex', () => {
     const centroid = ringCentroid(roomRing)!;
     const furthest = circumscribedRadiusMeters(roomRing, centroid);
-    // Half-diagonal of an 11 x 10 m rectangle is ~7.5 m.
     expect(furthest).toBeGreaterThan(7);
     expect(furthest).toBeLessThan(8);
   });
@@ -216,14 +214,12 @@ describe('isRingInsideRing', () => {
   });
 
   it('rejects a room outside a concave notch', () => {
-    // Inside the bounding box of the U, but in the gap between its arms.
     expect(isRingInsideRing(ring([1.2, 1.5], [1.8, 1.5], [1.8, 2.5], [1.2, 2.5]), uShape)).toBe(false);
   });
 });
 
 describe('ringAreaSquareMeters', () => {
   it('measures a room in square meters', () => {
-    // ~11.1 x 10.2 m.
     const area = ringAreaSquareMeters(roomRing);
     expect(area).toBeGreaterThan(105);
     expect(area).toBeLessThan(120);
@@ -253,7 +249,6 @@ describe('findSelfIntersection', () => {
   });
 
   it('catches the bowtie', () => {
-    // The corners of a square visited in the wrong order: 1 → 3 → 2 → 4.
     const bowtie = ring([0, 0], [2, 2], [2, 0], [0, 2]);
     const crossing = findSelfIntersection(bowtie);
 
@@ -268,7 +263,6 @@ describe('findSelfIntersection', () => {
   });
 
   it('catches a tangle that only appears late in the ring', () => {
-    // Five points where only the closing edge crosses an earlier one.
     const tangled = ring([0, 0], [4, 0], [4, 3], [1, 3], [2, -1]);
     expect(isSimpleRing(tangled)).toBe(false);
   });
@@ -284,9 +278,6 @@ describe('findSelfIntersection', () => {
   });
 
   it('is why the area of a tangled ring cannot be trusted', () => {
-    // Both lobes of this bowtie have the same area and opposite winding, so the
-    // shoelace sum cancels to nearly nothing — which is exactly why the shape
-    // has to be rejected before its area is shown to anyone.
     const bowtie = ring([0, 0], [2, 2], [2, 0], [0, 2]);
     const square = ring([0, 0], [2, 0], [2, 2], [0, 2]);
 
@@ -329,8 +320,6 @@ describe('sortRingByAngle', () => {
   });
 
   it('untangles a nine-point sketch', () => {
-    // Nine corners added in an arbitrary order, the way a hurried sketch on the
-    // map produces them.
     const messy = ring([0, 0], [3, 4], [1, 3], [4, 1], [0, 2], [2, 0], [4, 4], [1, 1], [3, 2]);
     expect(isSimpleRing(messy)).toBe(false);
     expect(isSimpleRing(sortRingByAngle(messy))).toBe(true);
@@ -360,7 +349,6 @@ describe('nearestVertexDistanceMeters', () => {
 });
 
 describe('untangleRing', () => {
-  /** An L-shaped footprint: the kind angular sorting alone cannot recover. */
   const lShape = ring([0, 0], [3, 0], [3, 1], [1, 1], [1, 3], [0, 3]);
 
   const scramble = <T,>(items: readonly T[], order: number[]): T[] =>
@@ -378,19 +366,12 @@ describe('untangleRing', () => {
   });
 
   it('always produces a simple ring, even from a concave point set', () => {
-    // Guaranteed, not incidental: if two edges of a tour cross, the 2-opt move
-    // that uncrosses them is strictly shorter by the triangle inequality — so a
-    // 2-opt local optimum has no crossings left.
     const scrambled = scramble(lShape, [3, 0, 5, 1, 4, 2]);
     expect(isSimpleRing(scrambled)).toBe(false);
     expect(isSimpleRing(untangleRing(scrambled))).toBe(true);
   });
 
   it('cannot recover which concave shape was meant', () => {
-    // Six corners admit more than one simple polygon, and the shortest tour is
-    // not the L: going A-B-C-E-F-D-A measures 11.48 against the L's 12. No
-    // ordering algorithm can know which the user had in mind, which is why this
-    // is offered as a suggestion to eyeball rather than applied silently.
     const scrambled = scramble(lShape, [3, 0, 5, 1, 4, 2]);
     const recovered = ringAreaSquareMeters(untangleRing(scrambled));
     const intended = ringAreaSquareMeters(lShape);
