@@ -1,5 +1,9 @@
 import {
   boundingBoxOfRing,
+  circumscribedRadiusMeters,
+  distanceToRingMeters,
+  isRingInsideRing,
+  ringAreaSquareMeters,
   isPointInPolygon,
   isPointInRing,
   isPointOnRingBoundary,
@@ -124,7 +128,7 @@ describe('ring helpers', () => {
     expect(ringCentroid([])).toBeNull();
   });
 
-  it('places the centroid inside a convex room', () => {
+  it('companies the centroid inside a convex room', () => {
     const centroid = ringCentroid(roomRing);
     expect(centroid).not.toBeNull();
     expect(isPointInRing(centroid!, roomRing)).toBe(true);
@@ -133,5 +137,102 @@ describe('ring helpers', () => {
   it('measures the room perimeter in meters', () => {
     expect(ringPerimeterMeters(roomRing)).toBeGreaterThan(40);
     expect(ringPerimeterMeters(roomRing)).toBeLessThan(46);
+  });
+});
+
+describe('distanceToRingMeters', () => {
+  it('is zero on the outline', () => {
+    expect(distanceToRingMeters(roomRing[0], roomRing)).toBeCloseTo(0, 5);
+  });
+
+  it('measures from inside to the nearest wall', () => {
+    const centroid = ringCentroid(roomRing)!;
+    // The room is ~11 m tall by ~10 m wide, so the centre is ~5 m from a wall.
+    const distance = distanceToRingMeters(centroid, roomRing);
+    expect(distance).toBeGreaterThan(4);
+    expect(distance).toBeLessThan(6);
+  });
+
+  it('measures from outside as well', () => {
+    const north = { latitude: roomRing[2].latitude + 0.0001, longitude: -46.62995 };
+    expect(distanceToRingMeters(north, roomRing)).toBeCloseTo(11.1, 0);
+  });
+
+  it('handles degenerate rings', () => {
+    expect(distanceToRingMeters(at(0, 0), [])).toBe(Infinity);
+    expect(distanceToRingMeters(at(0, 0), [at(0, 1)])).toBeGreaterThan(0);
+  });
+});
+
+describe('circumscribedRadiusMeters', () => {
+  it('reaches the furthest vertex', () => {
+    const centroid = ringCentroid(roomRing)!;
+    const furthest = circumscribedRadiusMeters(roomRing, centroid);
+    // Half-diagonal of an 11 x 10 m rectangle is ~7.5 m.
+    expect(furthest).toBeGreaterThan(7);
+    expect(furthest).toBeLessThan(8);
+  });
+
+  it('contains every vertex of the ring', () => {
+    const centroid = ringCentroid(uShape)!;
+    const radius = circumscribedRadiusMeters(uShape, centroid);
+    for (const vertex of uShape) {
+      expect(distanceToRingMeters(vertex, uShape)).toBeLessThanOrEqual(radius);
+    }
+  });
+
+  it('is zero for an empty ring', () => {
+    expect(circumscribedRadiusMeters([], at(0, 0))).toBe(0);
+  });
+});
+
+describe('isRingInsideRing', () => {
+  const outer = ring([0, 0], [4, 0], [4, 4], [0, 4]);
+
+  it('accepts a ring fully contained', () => {
+    expect(isRingInsideRing(ring([1, 1], [3, 1], [3, 3], [1, 3]), outer)).toBe(true);
+  });
+
+  it('rejects a ring that pokes outside', () => {
+    expect(isRingInsideRing(ring([3, 3], [5, 3], [5, 5], [3, 5]), outer)).toBe(false);
+  });
+
+  it('rejects a ring entirely outside', () => {
+    expect(isRingInsideRing(ring([10, 10], [12, 10], [12, 12], [10, 12]), outer)).toBe(false);
+  });
+
+  it('accepts a ring sharing the outline', () => {
+    expect(isRingInsideRing(outer, outer)).toBe(true);
+  });
+
+  it('rejects degenerate rings', () => {
+    expect(isRingInsideRing([], outer)).toBe(false);
+    expect(isRingInsideRing(outer, ring([0, 0], [1, 1]))).toBe(false);
+  });
+
+  it('rejects a room outside a concave notch', () => {
+    // Inside the bounding box of the U, but in the gap between its arms.
+    expect(isRingInsideRing(ring([1.2, 1.5], [1.8, 1.5], [1.8, 2.5], [1.2, 2.5]), uShape)).toBe(false);
+  });
+});
+
+describe('ringAreaSquareMeters', () => {
+  it('measures a room in square meters', () => {
+    // ~11.1 x 10.2 m.
+    const area = ringAreaSquareMeters(roomRing);
+    expect(area).toBeGreaterThan(105);
+    expect(area).toBeLessThan(120);
+  });
+
+  it('is independent of winding direction', () => {
+    expect(ringAreaSquareMeters([...roomRing].reverse())).toBeCloseTo(
+      ringAreaSquareMeters(roomRing),
+      6,
+    );
+  });
+
+  it('is zero for shapes that enclose nothing', () => {
+    expect(ringAreaSquareMeters([])).toBe(0);
+    expect(ringAreaSquareMeters(ring([0, 0], [1, 1]))).toBe(0);
   });
 });

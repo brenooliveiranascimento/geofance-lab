@@ -98,4 +98,24 @@ export const MIGRATIONS: readonly string[] = [
     value TEXT NOT NULL
   );
   `,
+
+  `
+  ALTER TABLE places RENAME TO companies;
+
+  ALTER TABLE rooms           RENAME COLUMN place_id   TO company_id;
+  ALTER TABLE monitor_state   RENAME COLUMN place_id   TO company_id;
+  ALTER TABLE geofence_events RENAME COLUMN place_id   TO company_id;
+  ALTER TABLE geofence_events RENAME COLUMN place_name TO company_name;
+
+  UPDATE geofence_events SET kind = 'company_enter' WHERE kind = 'place_enter';
+  UPDATE geofence_events SET kind = 'company_exit'  WHERE kind = 'place_exit';
+
+  DROP INDEX IF EXISTS idx_rooms_place;
+  DROP INDEX IF EXISTS idx_monitor_state_place;
+  DROP INDEX IF EXISTS idx_events_place;
+
+  CREATE INDEX IF NOT EXISTS idx_rooms_company ON rooms(company_id);
+  CREATE INDEX IF NOT EXISTS idx_monitor_state_company ON monitor_state(company_id);
+  CREATE INDEX IF NOT EXISTS idx_events_company ON geofence_events(company_id, occurred_at DESC);
+  `,
 ];

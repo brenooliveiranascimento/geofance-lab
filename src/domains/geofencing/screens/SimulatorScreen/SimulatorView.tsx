@@ -40,23 +40,23 @@ export function SimulatorView({ viewModel }: SimulatorViewProps): React.JSX.Elem
           />
         ) : null}
 
-        <Text style={styles.sectionTitle}>{t('simulator.pickPlace')}</Text>
-        <View style={styles.placeList}>
-          {viewModel.places.slice(0, 12).map((place) => {
-            const active = selected?.id === place.id;
+        <Text style={styles.sectionTitle}>{t('simulator.pickCompany')}</Text>
+        <View style={styles.companyList}>
+          {viewModel.companies.slice(0, 12).map((company) => {
+            const active = selected?.id === company.id;
             return (
               <TouchableOpacity
-                key={place.id}
-                style={[styles.placeChip, active && styles.placeChipActive]}
-                onPress={() => viewModel.selectPlace(place)}
+                key={company.id}
+                style={[styles.companyChip, active && styles.companyChipActive]}
+                onPress={() => viewModel.selectCompany(company)}
                 disabled={running}
               >
-                <Text style={[styles.placeChipLabel, active && styles.placeChipLabelActive]} numberOfLines={1}>
-                  {place.name}
+                <Text style={[styles.companyChipLabel, active && styles.companyChipLabelActive]} numberOfLines={1}>
+                  {company.name}
                 </Text>
-                <Text style={styles.placeChipMeta}>
-                  {t('places.radii', { radius: place.radius, activeRadius: place.activeRadius })}
-                  {place.polygon ? ` · ${t('places.residence')}` : ''}
+                <Text style={styles.companyChipMeta}>
+                  {t('companies.radii', { radius: company.radius, activeRadius: company.activeRadius })}
+                  {company.polygon ? ` · ${t('companies.residence')}` : ''}
                 </Text>
               </TouchableOpacity>
             );
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   hint: { color: colors.textMuted, fontSize: fontSize.xs, lineHeight: 16 },
-  placeList: { gap: spacing.xs },
-  placeChip: {
+  companyList: { gap: spacing.xs },
+  companyChip: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -143,10 +143,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 2,
   },
-  placeChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
-  placeChipLabel: { color: colors.textSecondary, fontSize: fontSize.sm },
-  placeChipLabelActive: { color: colors.text, fontWeight: '600' },
-  placeChipMeta: { color: colors.textMuted, fontSize: fontSize.xs },
+  companyChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  companyChipLabel: { color: colors.textSecondary, fontSize: fontSize.sm },
+  companyChipLabelActive: { color: colors.text, fontWeight: '600' },
+  companyChipMeta: { color: colors.textMuted, fontSize: fontSize.xs },
   row: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   option: {
     flex: 1,

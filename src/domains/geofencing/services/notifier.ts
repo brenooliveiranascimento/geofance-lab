@@ -27,17 +27,17 @@ export async function ensureNotificationChannel(): Promise<void> {
 }
 
 function describe(event: GeofenceEvent): { title: string; body: string } {
-  const entering = event.kind === 'place_enter' || event.kind === 'room_enter';
+  const entering = event.kind === 'company_enter' || event.kind === 'room_enter';
 
   if (event.kind === 'room_enter' || event.kind === 'room_exit') {
     return {
       title: entering ? `Entrou em ${event.roomName}` : `Saiu de ${event.roomName}`,
-      body: event.placeName,
+      body: event.companyName,
     };
   }
 
   return {
-    title: entering ? `Chegou em ${event.placeName}` : `Saiu de ${event.placeName}`,
+    title: entering ? `Chegou em ${event.companyName}` : `Saiu de ${event.companyName}`,
     body:
       event.distance === null
         ? 'Perímetro monitorado'
@@ -61,7 +61,7 @@ export async function notifyEvents(events: readonly GeofenceEvent[]): Promise<vo
           body,
           data: {
             kind: event.kind,
-            placeId: event.placeId,
+            companyId: event.companyId,
             roomId: event.roomId,
             idempotencyKey: event.idempotencyKey,
           },

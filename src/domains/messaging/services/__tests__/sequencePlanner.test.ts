@@ -54,7 +54,7 @@ describe('buildPlan — onboarding', () => {
     expect(onboarding.map((m) => m.messageId)).toEqual(['onb-0', 'onb-1', 'onb-2']);
   });
 
-  it('places them minutes after enrolment, in order', () => {
+  it('companies them minutes after enrolment, in order', () => {
     const onboarding = plan().filter((m) => m.sequence === 'onboarding');
     expect(onboarding.map((m) => m.scheduledFor - ENROLLED_AT)).toEqual([
       2 * MINUTE,

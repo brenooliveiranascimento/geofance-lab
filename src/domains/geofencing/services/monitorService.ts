@@ -10,15 +10,15 @@ import { commitEvaluation } from './eventRepository';
 import { notifyEvents } from './notifier';
 import {
   getMaxActiveRadius,
-  getPlaceIndex,
-  getRoomsByPlace,
-  listEnabledPlaces,
-} from './placeRepository';
+  getCompanyIndex,
+  getRoomsByCompany,
+  listEnabledCompanies,
+} from './companyRepository';
 import { regionsEqual, selectRegions } from './regionReconciler';
-import { loadOccupiedPlaceIds, loadStatesFor, releaseAllPresence } from './stateRepository';
+import { loadOccupiedCompanyIds, loadStatesFor, releaseAllPresence } from './stateRepository';
 import { evaluateFix } from './transitionEngine';
 import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG, MONITOR_KEYS } from '../config';
-import type { EventSource, MonitorSnapshot, MonitorTier, NativeRegion, Place } from '../types';
+import type { EventSource, MonitorSnapshot, MonitorTier, NativeRegion, Company } from '../types';
 
 const TAG = 'monitor';
 
@@ -32,19 +32,19 @@ const TRANSITION_CONFIG = {
 const readRunning = (): boolean => readJson<boolean>(MONITOR_KEYS.running) ?? false;
 const readOrigin = (): LatLng | null => readJson<LatLng>(MONITOR_KEYS.origin);
 const readRegions = (): NativeRegion[] => readJson<NativeRegion[]>(MONITOR_KEYS.regions) ?? [];
-const readActivePlaces = (): string[] => readJson<string[]>(MONITOR_KEYS.activePlaces) ?? [];
+const readActiveCompanies = (): string[] => readJson<string[]>(MONITOR_KEYS.activeCompanies) ?? [];
 
 export function readSnapshot(): MonitorSnapshot {
-  const activePlaceIds = readActivePlaces();
+  const activeCompanyIds = readActiveCompanies();
   const running = readRunning();
 
   let tier: MonitorTier = 'idle';
-  if (running) tier = activePlaceIds.length > 0 ? 'precise' : 'regions';
+  if (running) tier = activeCompanyIds.length > 0 ? 'precise' : 'regions';
 
   return {
     running,
     tier,
-    activePlaceIds,
+    activeCompanyIds,
     regionCount: readRegions().length,
     lastFix: readJson<Fix>(MONITOR_KEYS.lastFix),
     lastEvaluatedAt: readJson<number>(MONITOR_KEYS.lastEvaluatedAt),
@@ -79,9 +79,9 @@ export async function getCurrentFix(): Promise<Fix | null> {
 }
 
 export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
-  const places = listEnabledPlaces();
+  const companies = listEnabledCompanies();
 
-  const { regions, selected, guard, omittedCount } = selectRegions(places, origin, {
+  const { regions, selected, guard, omittedCount } = selectRegions(companies, origin, {
     limit: MONITOR_CONFIG.maxNativeRegions,
     minRegionRadiusMeters: MONITOR_CONFIG.minNativeRegionRadiusMeters,
     minGuardRadiusMeters: MONITOR_CONFIG.minGuardRadiusMeters,
@@ -89,7 +89,7 @@ export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
   });
 
   if (regions.length === 0) {
-    logger.warn(TAG, 'no places to monitor');
+    logger.warn(TAG, 'no companies to monitor');
     await stopGeofencing();
     writeJson(MONITOR_KEYS.regions, []);
     writeJson(MONITOR_KEYS.origin, origin);
@@ -111,7 +111,7 @@ export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
     monitored: selected.length,
     omitted: omittedCount,
     guardRadius: guard ? Math.round(guard.radius) : null,
-    nearest: selected[0]?.place.name ?? null,
+    nearest: selected[0]?.company.name ?? null,
   });
 
   return regions;
@@ -166,52 +166,52 @@ async function stopPreciseUpdates(): Promise<void> {
   }
 }
 
-async function syncTier(activePlaceIds: readonly string[]): Promise<void> {
-  writeJson(MONITOR_KEYS.activePlaces, [...activePlaceIds]);
+async function syncTier(activeCompanyIds: readonly string[]): Promise<void> {
+  writeJson(MONITOR_KEYS.activeCompanies, [...activeCompanyIds]);
 
-  if (activePlaceIds.length > 0) await startPreciseUpdates();
+  if (activeCompanyIds.length > 0) await startPreciseUpdates();
   else await stopPreciseUpdates();
 }
 
-function candidatePlacesFor(fix: Fix): Place[] {
-  const index = getPlaceIndex();
+function candidateCompaniesFor(fix: Fix): Company[] {
+  const index = getCompanyIndex();
   const searchRadius = getMaxActiveRadius();
 
   const nearby = queryWithinRadius(index, fix, searchRadius).map((result) => result.item);
-  const seen = new Set(nearby.map((place) => place.id));
+  const seen = new Set(nearby.map((company) => company.id));
 
-  const occupied = loadOccupiedPlaceIds().filter((id) => !seen.has(id));
+  const occupied = loadOccupiedCompanyIds().filter((id) => !seen.has(id));
   if (occupied.length === 0) return nearby;
 
-  const byId = new Map(listEnabledPlaces().map((place) => [place.id, place]));
+  const byId = new Map(listEnabledCompanies().map((company) => [company.id, company]));
   for (const id of occupied) {
-    const place = byId.get(id);
-    if (place) nearby.push(place);
+    const company = byId.get(id);
+    if (company) nearby.push(company);
   }
   return nearby;
 }
 
 export async function evaluateAndCommit(fix: Fix, source: EventSource): Promise<string[]> {
-  const places = candidatePlacesFor(fix);
+  const companies = candidateCompaniesFor(fix);
 
-  if (places.length === 0) {
+  if (companies.length === 0) {
     writeJson(MONITOR_KEYS.lastFix, fix);
     writeJson(MONITOR_KEYS.lastEvaluatedAt, Date.now());
-    return loadOccupiedPlaceIds();
+    return loadOccupiedCompanyIds();
   }
 
-  const placeIds = places.map((place) => place.id);
-  const roomsByPlace = getRoomsByPlace(placeIds);
+  const companyIds = companies.map((company) => company.id);
+  const roomsByCompany = getRoomsByCompany(companyIds);
 
-  const targetIds = [...placeIds];
-  for (const rooms of roomsByPlace.values()) {
+  const targetIds = [...companyIds];
+  for (const rooms of roomsByCompany.values()) {
     for (const room of rooms) targetIds.push(room.id);
   }
 
   const result = evaluateFix({
     fix,
-    places,
-    roomsByPlace,
+    companies,
+    roomsByCompany,
     states: loadStatesFor(targetIds),
     config: TRANSITION_CONFIG,
     source,
@@ -222,7 +222,7 @@ export async function evaluateAndCommit(fix: Fix, source: EventSource): Promise<
 
   if (!result.accepted) {
     logger.debug(TAG, 'fix rejected', { reason: result.rejectionReason, accuracy: fix.accuracy });
-    return loadOccupiedPlaceIds();
+    return loadOccupiedCompanyIds();
   }
 
   const persisted = commitEvaluation(result.changedStates, result.events);
@@ -234,7 +234,7 @@ export async function evaluateAndCommit(fix: Fix, source: EventSource): Promise<
     await notifyEvents(persisted);
   }
 
-  return loadOccupiedPlaceIds();
+  return loadOccupiedCompanyIds();
 }
 
 export async function handleRegionEvent(
@@ -262,7 +262,7 @@ export async function handleRegionEvent(
     return;
   }
 
-  const active = new Set(readActivePlaces());
+  const active = new Set(readActiveCompanies());
 
   if (isExit && !active.has(identifier)) {
     const known = loadStatesFor([identifier]).get(identifier);
@@ -293,12 +293,12 @@ export async function handleRegionEvent(
 
 function mergeActive(
   fromRegions: ReadonlySet<string>,
-  occupiedPlaceIds: readonly string[],
+  occupiedCompanyIds: readonly string[],
   justExited: string | null,
 ): string[] {
   const merged = new Set(fromRegions);
-  for (const id of occupiedPlaceIds) merged.add(id);
-  if (justExited && !occupiedPlaceIds.includes(justExited)) merged.delete(justExited);
+  for (const id of occupiedCompanyIds) merged.add(id);
+  if (justExited && !occupiedCompanyIds.includes(justExited)) merged.delete(justExited);
   return [...merged];
 }
 
@@ -310,7 +310,7 @@ export async function handleFixes(
 
   const fixes = positions.map(toFix).sort((a, b) => a.timestamp - b.timestamp);
 
-  let occupied: string[] = readActivePlaces();
+  let occupied: string[] = readActiveCompanies();
   for (const fix of fixes) {
     occupied = await evaluateAndCommit(fix, source);
   }
@@ -323,7 +323,7 @@ export async function submitSimulatedFix(fix: Fix): Promise<void> {
   if (readRunning()) await syncTier(occupied);
 }
 
-export type StartFailure = 'permissions' | 'no_places' | 'no_position';
+export type StartFailure = 'permissions' | 'no_companies' | 'no_position';
 
 export interface StartResult {
   started: boolean;
@@ -338,8 +338,8 @@ export async function startMonitoring(): Promise<StartResult> {
     return { started: false, reason: 'permissions' };
   }
 
-  if (listEnabledPlaces().length === 0) {
-    return { started: false, reason: 'no_places' };
+  if (listEnabledCompanies().length === 0) {
+    return { started: false, reason: 'no_companies' };
   }
 
   const fix = await getCurrentFix();
@@ -363,7 +363,7 @@ export async function stopMonitoring(): Promise<void> {
   await stopPreciseUpdates();
 
   writeJson(MONITOR_KEYS.regions, []);
-  writeJson(MONITOR_KEYS.activePlaces, []);
+  writeJson(MONITOR_KEYS.activeCompanies, []);
 
   releaseAllPresence();
 

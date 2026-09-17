@@ -36,7 +36,7 @@ export function useOnboardingViewModel(): OnboardingViewModel {
     () => [
       {
         key: 'welcome',
-        icon: 'location.fill',
+        icon: 'building.2.fill',
         title: t('onboarding.welcome.title'),
         body: t('onboarding.welcome.body'),
       },
@@ -65,6 +65,18 @@ export function useOnboardingViewModel(): OnboardingViewModel {
         body: t('onboarding.notifications.body'),
         action: 'notifications',
       },
+      {
+        key: 'company',
+        icon: 'mappin.and.ellipse',
+        title: t('onboarding.company.title'),
+        body: t('onboarding.company.body'),
+        bullets: [
+          t('onboarding.company.bullet1'),
+          t('onboarding.company.bullet2'),
+          t('onboarding.company.bullet3'),
+        ],
+        action: 'company',
+      },
     ],
     [t],
   );
@@ -78,6 +90,13 @@ export function useOnboardingViewModel(): OnboardingViewModel {
   }, [setOnboardingCompleted]);
 
   const advance = useCallback(async () => {
+    if (step.action === 'company') {
+      // The wizard marks onboarding complete once the company is saved, so a
+      // half-finished registration does not count as onboarded.
+      router.replace('/companies/new');
+      return;
+    }
+
     if (step.action) {
       setBusy(true);
       try {

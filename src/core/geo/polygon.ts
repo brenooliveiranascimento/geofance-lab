@@ -1,4 +1,4 @@
-import { distanceMeters } from './haversine';
+import { METERS_PER_DEGREE_LATITUDE, distanceMeters } from './haversine';
 import type { BoundingBox, LatLng, Ring } from './types';
 
 export function boundingBoxOfRing(ring: Ring): BoundingBox | null {
@@ -19,7 +19,7 @@ export function boundingBoxOfRing(ring: Ring): BoundingBox | null {
   return { minLatitude, maxLatitude, minLongitude, maxLongitude };
 }
 
-function distanceToSegmentMeters(point: LatLng, a: LatLng, b: LatLng): number {
+export function distanceToSegmentMeters(point: LatLng, a: LatLng, b: LatLng): number {
   const dx = b.longitude - a.longitude;
   const dy = b.latitude - a.latitude;
 
@@ -118,4 +118,49 @@ export function ringPerimeterMeters(ring: Ring): number {
     total += distanceMeters(ring[j], ring[i]);
   }
   return total;
+}
+
+export function distanceToRingMeters(point: LatLng, ring: Ring): number {
+  if (ring.length === 0) return Infinity;
+  if (ring.length === 1) return distanceMeters(point, ring[0]);
+
+  let closest = Infinity;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const distance = distanceToSegmentMeters(point, ring[j], ring[i]);
+    if (distance < closest) closest = distance;
+  }
+  return closest;
+}
+
+export function circumscribedRadiusMeters(ring: Ring, center: LatLng): number {
+  let furthest = 0;
+  for (const vertex of ring) {
+    const distance = distanceMeters(center, vertex);
+    if (distance > furthest) furthest = distance;
+  }
+  return furthest;
+}
+
+export function isRingInsideRing(inner: Ring, outer: Ring, toleranceMeters = 0.5): boolean {
+  if (inner.length < 3 || outer.length < 3) return false;
+
+  const box = boundingBoxOfRing(outer);
+  return inner.every((vertex) => isPointInPolygon(vertex, outer, box, toleranceMeters));
+}
+
+export function ringAreaSquareMeters(ring: Ring): number {
+  if (ring.length < 3) return 0;
+
+  const origin = ringCentroid(ring)!;
+  const metersPerLongitude = METERS_PER_DEGREE_LATITUDE * Math.cos((origin.latitude * Math.PI) / 180);
+
+  let twiceArea = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xj = (ring[j].longitude - origin.longitude) * metersPerLongitude;
+    const yj = (ring[j].latitude - origin.latitude) * METERS_PER_DEGREE_LATITUDE;
+    const xi = (ring[i].longitude - origin.longitude) * metersPerLongitude;
+    const yi = (ring[i].latitude - origin.latitude) * METERS_PER_DEGREE_LATITUDE;
+    twiceArea += xj * yi - xi * yj;
+  }
+  return Math.abs(twiceArea) / 2;
 }

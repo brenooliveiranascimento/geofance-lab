@@ -5,7 +5,6 @@ import * as TaskManager from 'expo-task-manager';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { readSeededAt } from '@src/core/bootstrap';
 import { clearLog, readLog, type LogEntry } from '@src/core/logger';
 import {
   GEOFENCING_TASK,
@@ -14,7 +13,7 @@ import {
 } from '@src/domains/geofencing/config';
 import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
 import { countEvents } from '@src/domains/geofencing/services/eventRepository';
-import { countPlaces } from '@src/domains/geofencing/services/placeRepository';
+import { countCompanies } from '@src/domains/geofencing/services/companyRepository';
 import { MESSAGING_TASK } from '@src/domains/messaging/config';
 import { useToast } from '@src/lib/toast';
 
@@ -28,10 +27,9 @@ export interface DiagnosticsViewModel {
   tasks: TaskStatus[];
   maxNativeRegions: number;
   registeredRegions: number;
-  activePlaces: number;
-  totalPlaces: number;
+  activeCompanies: number;
+  totalCompanies: number;
   totalEvents: number;
-  seededAt: number | null;
   running: boolean;
   refresh: () => void;
   copyLog: () => Promise<void>;
@@ -47,11 +45,11 @@ export function useDiagnosticsViewModel(): DiagnosticsViewModel {
   const { data: snapshot } = useMonitorSnapshot();
   const [log, setLog] = useState<LogEntry[]>([]);
   const [tasks, setTasks] = useState<TaskStatus[]>([]);
-  const [counts, setCounts] = useState({ places: 0, events: 0 });
+  const [counts, setCounts] = useState({ companies: 0, events: 0 });
 
   const refresh = useCallback(() => {
     setLog(readLog(200));
-    setCounts({ places: countPlaces(), events: countEvents() });
+    setCounts({ companies: countCompanies(), events: countEvents() });
 
     void (async () => {
       const entries = await Promise.all(
@@ -98,10 +96,9 @@ export function useDiagnosticsViewModel(): DiagnosticsViewModel {
     tasks,
     maxNativeRegions: MONITOR_CONFIG.maxNativeRegions,
     registeredRegions: snapshot?.regionCount ?? 0,
-    activePlaces: snapshot?.activePlaceIds.length ?? 0,
-    totalPlaces: counts.places,
+    activeCompanies: snapshot?.activeCompanyIds.length ?? 0,
+    totalCompanies: counts.companies,
     totalEvents: counts.events,
-    seededAt: readSeededAt(),
     running: snapshot?.running ?? false,
     refresh,
     copyLog,

@@ -7,23 +7,23 @@ import { useToast } from '@src/lib/toast';
 
 import { invalidateGeofencingData } from '../../queries/invalidate';
 import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
-import { usePlaces } from '../../queries/usePlaces';
+import { useCompanies } from '../../queries/useCompanies';
 import { submitSimulatedFix } from '../../services/monitorService';
 import {
   DEFAULT_ROUTE_OPTIONS,
   buildApproachRoute,
   buildCrossingRoute,
 } from '../../services/routeSimulator';
-import type { Place } from '../../types';
+import type { Company } from '../../types';
 
 export type RouteKind = 'crossing' | 'approach';
 
 const PLAYBACK_INTERVAL_MS = 120;
 
 export interface SimulatorViewModel {
-  places: Place[];
-  selected: Place | null;
-  selectPlace: (place: Place) => void;
+  companies: Company[];
+  selected: Company | null;
+  selectCompany: (company: Company) => void;
   routeKind: RouteKind;
   setRouteKind: (kind: RouteKind) => void;
   accuracy: number;
@@ -42,7 +42,7 @@ export function useSimulatorViewModel(): SimulatorViewModel {
   const router = useRouter();
   const toast = useToast();
 
-  const { data: allPlaces = [] } = usePlaces();
+  const { data: allCompanies = [] } = useCompanies();
   const { data: snapshot } = useMonitorSnapshot();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -53,15 +53,15 @@ export function useSimulatorViewModel(): SimulatorViewModel {
 
   const cancelled = useRef(false);
 
-  const places = useMemo(() => {
-    const residences = allPlaces.filter((place) => place.polygon !== null);
-    const others = allPlaces.filter((place) => place.polygon === null).slice(0, 30);
+  const companies = useMemo(() => {
+    const residences = allCompanies.filter((company) => company.polygon !== null);
+    const others = allCompanies.filter((company) => company.polygon === null).slice(0, 30);
     return [...residences, ...others];
-  }, [allPlaces]);
+  }, [allCompanies]);
 
   const selected = useMemo(
-    () => places.find((place) => place.id === selectedId) ?? places[0] ?? null,
-    [places, selectedId],
+    () => companies.find((company) => company.id === selectedId) ?? companies[0] ?? null,
+    [companies, selectedId],
   );
 
   const route = useMemo<Fix[]>(() => {
@@ -106,19 +106,19 @@ export function useSimulatorViewModel(): SimulatorViewModel {
     setRunning(false);
   }, []);
 
-  const selectPlace = useCallback(
-    (place: Place) => {
+  const selectCompany = useCallback(
+    (company: Company) => {
       if (running) return;
-      setSelectedId(place.id);
+      setSelectedId(company.id);
       setProgress(0);
     },
     [running],
   );
 
   return {
-    places,
+    companies,
     selected,
-    selectPlace,
+    selectCompany,
     routeKind,
     setRouteKind: (kind) => {
       if (!running) {

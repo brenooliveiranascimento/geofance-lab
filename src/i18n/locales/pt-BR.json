@@ -12,7 +12,7 @@
   },
   "tabs": {
     "monitor": "Monitor",
-    "places": "Locais",
+    "companies": "Empresas",
     "events": "Eventos",
     "messages": "Mensagens",
     "settings": "Ajustes"
@@ -46,7 +46,7 @@
       },
       "precise": {
         "title": "Precisão alta",
-        "message": "Dentro de {{total}} local(is). O GPS contínuo está ligado para resolver os cômodos."
+        "message": "Dentro de {{total}} empresa(s). O GPS contínuo está ligado para resolver os cômodos."
       },
       "blocked": {
         "title": "Permissão pendente",
@@ -59,37 +59,34 @@
     },
     "startFailed": {
       "permissions": "Conceda o acesso à localização em background para iniciar",
-      "no_places": "Nenhum local cadastrado",
+      "no_companies": "Cadastre uma empresa antes de iniciar",
       "no_position": "Não foi possível obter uma posição"
     },
     "stats": {
-      "places": "Locais",
-      "placesHint": "No banco local",
+      "companies": "Empresas",
+      "companiesHint": "Cadastradas",
       "regions": "Regiões",
       "regionsHint": "Janela ativa",
       "inside": "Dentro",
-      "insideNone": "Nenhum no momento"
+      "insideNone": "Nenhuma no momento"
     },
     "mapUnavailable": {
       "title": "Mapa indisponível",
       "body": "Falta a chave da Maps SDK for Android. Preencha EXPO_PUBLIC_GOOGLE_MAPS_API_KEY no .env e gere o APK de novo. O monitoramento funciona normalmente sem ela."
     }
   },
-  "places": {
-    "title": "Locais",
-    "subtitle": "{{shown}} de {{total}} locais",
+  "companies": {
+    "title": "Empresas",
+    "subtitle": "{{total}} cadastrada(s)",
     "searchPlaceholder": "Buscar por nome",
     "radii": "raio {{radius}} m · ativo {{activeRadius}} m",
-    "residence": "residência",
-    "create": "Cadastrar local aqui",
-    "reseed": "Recarregar dataset",
-    "reseeded": "{{total}} locais recarregados",
-    "empty": "Nenhum local encontrado",
-    "filter": {
-      "all": "Todos",
-      "inside": "Dentro",
-      "residences": "Residências",
-      "disabled": "Desativados"
+    "rooms": "{{total}} cômodo(s)",
+    "residence": "com polígono",
+    "youAreHere": "Você está aqui agora",
+    "create": "Cadastrar empresa",
+    "empty": {
+      "title": "Nenhuma empresa cadastrada",
+      "body": "Cadastre uma empresa, desenhe o perímetro dela no mapa e delimite os cômodos. O app avisa sempre que você entrar em qualquer um deles."
     }
   },
   "events": {
@@ -102,16 +99,16 @@
     "nothingToExport": "Não há nada para exportar",
     "empty": {
       "title": "Nenhum evento ainda",
-      "body": "Inicie o monitoramento e entre num dos locais, ou use o simulador para percorrer uma rota."
+      "body": "Inicie o monitoramento e entre numa das empresas, ou use o simulador para percorrer uma rota."
     },
     "scope": {
       "all": "Todos",
-      "places": "Locais",
+      "companies": "Empresas",
       "rooms": "Cômodos"
     },
     "kind": {
-      "place_enter": "Entrou",
-      "place_exit": "Saiu",
+      "company_enter": "Entrou na empresa",
+      "company_exit": "Saiu da empresa",
       "room_enter": "Entrou no cômodo",
       "room_exit": "Saiu do cômodo"
     },
@@ -123,53 +120,89 @@
     }
   },
   "editor": {
-    "newTitle": "Novo local",
-    "editTitle": "Editar local",
-    "notFound": "Local não encontrado",
-    "noPosition": "Não foi possível obter sua posição para criar o local",
-    "saved": "Local salvo",
+    "notFound": "Empresa não encontrada",
+    "saved": "Empresa salva",
     "roomSaved": "Cômodo salvo",
-    "roomDefaultName": "Cômodo {{index}}",
-    "deletePlace": "Excluir local",
-    "deleteTitle": "Excluir local",
+    "outlineSaved": "Perímetro atualizado",
+    "deleteCompany": "Excluir empresa",
+    "deleteTitle": "Excluir empresa",
     "deleteBody": "Excluir \"{{name}}\" e todos os seus cômodos? Os eventos já registrados permanecem no log.",
+    "derivedHint": "O raio e o raio ativo são derivados do perímetro: o círculo é o gatilho que acorda o app, e a entrada em si é decidida pelo polígono.",
+    "outlineRedraw": "Redesenhar perímetro",
+    "outlineRedrawHint": "Marque os cantos de novo. Os cômodos já cadastrados precisam continuar dentro do novo perímetro.",
     "fields": {
       "name": "Nome",
-      "namePlaceholder": "Ex.: Casa dos meus pais",
-      "radius": "Raio (m)",
-      "radiusHint": "A entrada é detectada aqui",
-      "activeRadius": "Raio ativo (m)",
-      "activeRadiusHint": "A saída só é detectada depois daqui",
-      "enabled": "Monitorar este local",
-      "enabledHint": "Locais desativados não ocupam vaga de região nem geram eventos"
+      "radius": "Raio derivado",
+      "activeRadius": "Raio ativo",
+      "vertices": "Vértices do perímetro"
     },
     "errors": {
-      "name": "Informe um nome",
-      "radius": "O raio precisa ser um número maior que zero",
-      "activeRadius": "O raio ativo precisa ser um número maior que zero",
-      "ordering": "O raio ativo precisa ser maior ou igual ao raio — a folga entre os dois é o que evita eventos repetidos na borda"
+      "outlineExcludesRooms": "O novo perímetro deixaria algum cômodo de fora. Amplie o desenho ou exclua o cômodo antes."
     },
     "rooms": {
       "title": "Cômodos ({{total}})",
-      "explainer": "Cômodos são polígonos dentro do local. Círculos nativos não funcionam nessa escala — abaixo de ~100 m o iOS não dispara de forma confiável —, então eles são resolvidos por ponto-em-polígono.",
-      "draw": "Desenhar cômodo no mapa",
-      "saveFirst": "Salve o local antes de desenhar cômodos",
+      "explainer": "Cômodos são polígonos dentro da empresa. Círculos nativos não funcionam nessa escala — abaixo de ~100 m o iOS não dispara de forma confiável —, então eles são resolvidos por ponto-em-polígono.",
+      "draw": "Adicionar cômodo",
+      "vertices": "{{total}} vértices"
+    }
+  },
+  "wizard": {
+    "locating": "Obtendo sua posição…",
+    "crosshair": "Ponto sob o pino",
+    "addPoint": "Adicionar ponto",
+    "undo": "Desfazer",
+    "counter": "{{total}} pontos · {{area}} m²",
+    "finish": "Concluir cadastro",
+    "saved": "{{name}} cadastrada",
+    "roomDefaultName": "Cômodo {{index}}",
+    "name": {
+      "title": "Qual é a empresa?",
+      "body": "O nome aparece nas notificações de entrada e saída.",
+      "placeholder": "Ex.: Matriz São Paulo"
+    },
+    "outline": {
+      "title": "Perímetro da empresa",
+      "body": "Arraste o mapa até o pino ficar sobre um canto do terreno e toque em \"Adicionar ponto\". Repita para cada canto — o dedo não tampa o alvo assim.",
+      "done": "Perímetro pronto"
+    },
+    "rooms": {
+      "title": "Cômodos",
+      "body": "Agora delimite as áreas internas. Cada uma vira um polígono próprio, com nome, e gera notificação quando você entra nela.",
+      "add": "Adicionar cômodo",
+      "emptyTitle": "Nenhum cômodo ainda",
+      "emptyBody": "Você pode concluir sem nenhum: a empresa já vai notificar na entrada e na saída do perímetro. Cômodos podem ser adicionados depois.",
       "vertices": "{{total}} vértices"
     },
-    "drawing": {
-      "title": "Desenhando",
-      "body": "Toque no mapa para marcar os cantos do cômodo. {{vertices}} vértices · {{perimeter}} m de perímetro.",
-      "finish": "Concluir",
-      "undo": "Desfazer"
+    "roomDraw": {
+      "title": "Perímetro do cômodo",
+      "body": "Mesma ideia: posicione o pino em cada canto do cômodo. O contorno azul é o perímetro da empresa, e o cômodo precisa caber dentro dele.",
+      "done": "Cômodo pronto"
+    },
+    "roomName": {
+      "title": "Nome do cômodo",
+      "body": "É esse nome que aparece na notificação.",
+      "placeholder": "Ex.: Recepção",
+      "save": "Salvar cômodo"
+    },
+    "noPosition": {
+      "title": "Sem posição",
+      "body": "Não foi possível obter sua localização. Verifique a permissão e se os serviços de localização estão ligados."
+    },
+    "errors": {
+      "name": "Informe um nome com pelo menos 2 letras",
+      "vertices": "Marque pelo menos {{total}} pontos",
+      "area": "A área ficou pequena demais (mínimo de {{total}} m²)",
+      "outsideCompany": "O cômodo precisa ficar dentro do perímetro da empresa",
+      "roomName": "Informe um nome com pelo menos 2 letras"
     }
   },
   "simulator": {
     "title": "Simulador",
     "intro": "Injeta uma rota sintética no mesmo pipeline que o GPS alimenta: mesma máquina de estados, mesma deduplicação, mesmas notificações. Serve para verificar a detecção sem sair do lugar.",
-    "pickPlace": "Local",
+    "pickCompany": "Empresa",
     "routeKind": "Trajeto",
     "accuracy": "Acurácia simulada",
-    "accuracyHint": "Leituras acima de 100 m são descartadas. Entre 40 e 100 m, a margem de confiança atrasa a entrada até o círculo de erro caber dentro do raio.",
+    "accuracyHint": "Leituras acima de 100 m são descartadas. A entrada na empresa é decidida pelo polígono, então uma leitura ruim atrasa a detecção em vez de falseá-la.",
     "progress": "{{current}} de {{total}} posições",
     "start": "Executar rota",
     "stop": "Interromper",
@@ -189,6 +222,110 @@
       "title": "Monitoramento real ativo",
       "body": "As posições simuladas vão se misturar às do GPS. Pare o monitoramento na aba Monitor para um teste limpo."
     }
+  },
+  "onboarding": {
+    "skip": "Agora não",
+    "skipCompany": "Cadastrar depois",
+    "finish": "Começar",
+    "welcome": {
+      "title": "Geofence Lab",
+      "body": "Cadastre uma empresa, desenhe o perímetro dela e os cômodos por dentro. O app avisa toda vez que você entra ou sai de qualquer um deles — com o app aberto, em segundo plano ou fechado."
+    },
+    "how": {
+      "title": "Como funciona",
+      "body": "Duas camadas, para não gastar bateria à toa.",
+      "bullet1": "O sistema operacional vigia as empresas mais próximas e acorda o app quando você cruza uma delas.",
+      "bullet2": "Só então o GPS contínuo liga, para resolver em qual cômodo você está.",
+      "bullet3": "Ao sair, ele desliga de novo — em repouso o app não pede nenhuma posição."
+    },
+    "location": {
+      "title": "Localização o tempo todo",
+      "body": "Para funcionar com o app fechado, o sistema exige o acesso \"o tempo todo\". Primeiro aparece o pedido comum; em seguida, o de segundo plano — no Android ele abre uma tela de ajustes onde é preciso escolher \"Permitir o tempo todo\".",
+      "action": "Conceder acesso",
+      "resultForeground": "Primeiro plano: {{status}}",
+      "resultBackground": "Segundo plano: {{status}}",
+      "resultHint": "Sem o acesso em segundo plano, a detecção só funciona com o app aberto. Dá para conceder depois em Ajustes."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "body": "Cada entrada e cada saída vira uma notificação local — é como os eventos aparecem quando o app não está na tela. Tudo funciona offline.",
+      "action": "Permitir notificações"
+    },
+    "company": {
+      "title": "Cadastre sua empresa",
+      "body": "Agora o principal: marcar no mapa onde a empresa fica.",
+      "bullet1": "Um pino fixo no centro da tela marca cada canto do perímetro.",
+      "bullet2": "Dentro dele, você delimita os cômodos e dá nome a cada um.",
+      "bullet3": "Leva menos de um minuto e pode ser ajustado depois.",
+      "action": "Cadastrar empresa"
+    }
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "languages": {
+      "pt-BR": "Português",
+      "en": "English"
+    },
+    "permissions": {
+      "title": "Permissões",
+      "services": "Serviços de localização",
+      "foreground": "Localização (primeiro plano)",
+      "background": "Localização (segundo plano)",
+      "notifications": "Notificações",
+      "requestLocation": "Pedir localização",
+      "requestNotifications": "Pedir notificações",
+      "openSettings": "Abrir ajustes",
+      "backgroundMissing": {
+        "title": "Sem acesso em segundo plano",
+        "body": "O sistema só pergunta uma vez. Depois de negado, a única saída é conceder manualmente nos ajustes do aparelho."
+      }
+    },
+    "battery": {
+      "title": "Otimização de bateria",
+      "body": "Gerenciadores de bateria de alguns fabricantes encerram o serviço em primeiro plano mesmo com tudo configurado corretamente. Isentar o app é o que mantém o monitoramento vivo com a tela apagada.",
+      "action": "Abrir ajustes de bateria"
+    },
+    "tools": {
+      "title": "Ferramentas",
+      "simulator": "Simulador de rota",
+      "diagnostics": "Diagnóstico"
+    },
+    "data": {
+      "title": "Dados",
+      "clearEvents": "Limpar eventos e log",
+      "reset": "Apagar tudo e recomeçar"
+    },
+    "reset": {
+      "title": "Apagar tudo",
+      "body": "Isso para o monitoramento e apaga empresas, cômodos, estado, eventos e a sequência de mensagens.",
+      "confirm": "Apagar",
+      "done": "Tudo apagado"
+    },
+    "about": {
+      "title": "Sobre",
+      "app": "Aplicativo",
+      "version": "Versão",
+      "endpoint": "Endpoint de confirmação",
+      "endpointEmpty": "não configurado"
+    }
+  },
+  "diagnostics": {
+    "title": "Diagnóstico",
+    "monitoring": "Monitoramento",
+    "regions": "Regiões registradas",
+    "activeCompanies": "Empresas ativas",
+    "companies": "Empresas no banco",
+    "events": "Eventos registrados",
+    "tasks": "Tarefas em background",
+    "registered": "registrada",
+    "notRegistered": "não registrada",
+    "log": "Log",
+    "logHint": "Tarefas em background rodam num processo sem console acessível. O log é gravado no banco para que dê para ver o que aconteceu enquanto o app estava fechado.",
+    "empty": "Log vazio",
+    "copy": "Copiar log",
+    "copied": "Log copiado",
+    "clear": "Limpar log"
   },
   "messages": {
     "title": "Mensagens",
@@ -233,101 +370,5 @@
         "exhausted": "esgotada"
       }
     }
-  },
-  "onboarding": {
-    "skip": "Agora não",
-    "finish": "Começar",
-    "welcome": {
-      "title": "Geofence Lab",
-      "body": "Um módulo de geolocalização em background: detecta entrada e saída de centenas de locais e dos cômodos dentro deles, com o app aberto, em segundo plano ou fechado."
-    },
-    "how": {
-      "title": "Como funciona",
-      "body": "Duas camadas, para não gastar bateria à toa.",
-      "bullet1": "O sistema operacional vigia as regiões mais próximas e acorda o app quando você cruza uma delas.",
-      "bullet2": "Só então o GPS contínuo liga, para resolver em qual cômodo você está.",
-      "bullet3": "Ao sair, ele desliga de novo — em repouso o app não pede nenhuma posição."
-    },
-    "location": {
-      "title": "Localização o tempo todo",
-      "body": "Para funcionar com o app fechado, o sistema exige o acesso \"o tempo todo\". Primeiro aparece o pedido comum; em seguida, o de segundo plano — no Android ele abre uma tela de ajustes onde é preciso escolher \"Permitir o tempo todo\".",
-      "action": "Conceder acesso",
-      "resultForeground": "Primeiro plano: {{status}}",
-      "resultBackground": "Segundo plano: {{status}}",
-      "resultHint": "Sem o acesso em segundo plano, a detecção só funciona com o app aberto. Dá para conceder depois em Ajustes."
-    },
-    "notifications": {
-      "title": "Notificações",
-      "body": "Cada entrada e cada saída vira uma notificação local — é como os eventos aparecem quando o app não está na tela. As mensagens sequenciadas usam o mesmo canal.",
-      "action": "Permitir notificações"
-    }
-  },
-  "settings": {
-    "title": "Ajustes",
-    "language": "Idioma",
-    "languages": {
-      "pt-BR": "Português",
-      "en": "English"
-    },
-    "permissions": {
-      "title": "Permissões",
-      "services": "Serviços de localização",
-      "foreground": "Localização (primeiro plano)",
-      "background": "Localização (segundo plano)",
-      "notifications": "Notificações",
-      "requestLocation": "Pedir localização",
-      "requestNotifications": "Pedir notificações",
-      "openSettings": "Abrir ajustes",
-      "backgroundMissing": {
-        "title": "Sem acesso em segundo plano",
-        "body": "O sistema só pergunta uma vez. Depois de negado, a única saída é conceder manualmente nos ajustes do aparelho."
-      }
-    },
-    "battery": {
-      "title": "Otimização de bateria",
-      "body": "Gerenciadores de bateria de alguns fabricantes encerram o serviço em primeiro plano mesmo com tudo configurado corretamente. Isentar o app é o que mantém o monitoramento vivo com a tela apagada.",
-      "action": "Abrir ajustes de bateria"
-    },
-    "tools": {
-      "title": "Ferramentas",
-      "simulator": "Simulador de rota",
-      "diagnostics": "Diagnóstico"
-    },
-    "data": {
-      "title": "Dados",
-      "reseed": "Recarregar os {{total}} locais do dataset",
-      "clearEvents": "Limpar eventos e log",
-      "reset": "Apagar tudo e recomeçar"
-    },
-    "reset": {
-      "title": "Apagar tudo",
-      "body": "Isso para o monitoramento, apaga locais, cômodos, estado, eventos e a sequência de mensagens, e recarrega o dataset original.",
-      "confirm": "Apagar",
-      "done": "Tudo recomeçado"
-    },
-    "about": {
-      "title": "Sobre",
-      "app": "Aplicativo",
-      "version": "Versão",
-      "endpoint": "Endpoint de confirmação",
-      "endpointEmpty": "não configurado"
-    }
-  },
-  "diagnostics": {
-    "title": "Diagnóstico",
-    "monitoring": "Monitoramento",
-    "regions": "Regiões registradas",
-    "activePlaces": "Locais ativos",
-    "places": "Locais no banco",
-    "events": "Eventos registrados",
-    "tasks": "Tarefas em background",
-    "registered": "registrada",
-    "notRegistered": "não registrada",
-    "log": "Log",
-    "logHint": "Tarefas em background rodam num processo sem console acessível. O log é gravado no banco para que dê para ver o que aconteceu enquanto o app estava fechado.",
-    "empty": "Log vazio",
-    "copy": "Copiar log",
-    "copied": "Log copiado",
-    "clear": "Limpar log"
   }
 }

@@ -5,7 +5,7 @@ import type { PresenceState, TargetState } from '../types';
 interface StateRow {
   target_id: string;
   target_kind: TargetState['targetKind'];
-  place_id: string;
+  company_id: string;
   state: PresenceState;
   transition_seq: number;
   since: number;
@@ -18,7 +18,7 @@ interface StateRow {
 const toState = (row: StateRow): TargetState => ({
   targetId: row.target_id,
   targetKind: row.target_kind,
-  placeId: row.place_id,
+  companyId: row.company_id,
   state: row.state,
   transitionSeq: row.transition_seq,
   since: row.since,
@@ -51,12 +51,12 @@ export function loadOccupiedTargetIds(): string[] {
     .map((row) => row.target_id);
 }
 
-export function loadOccupiedPlaceIds(): string[] {
+export function loadOccupiedCompanyIds(): string[] {
   return getDatabase()
-    .getAllSync<{ place_id: string }>(
-      "SELECT DISTINCT place_id FROM monitor_state WHERE state = 'inside' AND target_kind = 'place';",
+    .getAllSync<{ company_id: string }>(
+      "SELECT DISTINCT company_id FROM monitor_state WHERE state = 'inside' AND target_kind = 'company';",
     )
-    .map((row) => row.place_id);
+    .map((row) => row.company_id);
 }
 
 export function saveStates(
@@ -66,12 +66,12 @@ export function saveStates(
   for (const state of states) {
     db.runSync(
       `INSERT INTO monitor_state
-         (target_id, target_kind, place_id, state, transition_seq, since,
+         (target_id, target_kind, company_id, state, transition_seq, since,
           last_distance, pending_state, pending_count, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(target_id) DO UPDATE SET
          target_kind = excluded.target_kind,
-         place_id = excluded.place_id,
+         company_id = excluded.company_id,
          state = excluded.state,
          transition_seq = excluded.transition_seq,
          since = excluded.since,
@@ -82,7 +82,7 @@ export function saveStates(
       [
         state.targetId,
         state.targetKind,
-        state.placeId,
+        state.companyId,
         state.state,
         state.transitionSeq,
         state.since,

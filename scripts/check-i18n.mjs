@@ -7,21 +7,20 @@ const LOCALES = ['pt-BR', 'en'];
 const SOURCE_DIRS = ['src', 'app'];
 
 const DYNAMIC_KEYS = {
-  'events.kind': ['place_enter', 'place_exit', 'room_enter', 'room_exit'],
-  'events.scope': ['all', 'places', 'rooms'],
+  'events.kind': ['company_enter', 'company_exit', 'room_enter', 'room_exit'],
+  'events.scope': ['all', 'companies', 'rooms'],
   'events.source': ['native_region', 'location_update', 'simulator', 'initial_sync'],
   'messages.state': ['pending', 'scheduled', 'delivered', 'cancelled', 'failed'],
   'messages.receipts.state': ['pending', 'confirmed', 'exhausted'],
-  'monitor.startFailed': ['permissions', 'no_places', 'no_position'],
+  'monitor.startFailed': ['permissions', 'no_companies', 'no_position'],
   'permissions.state': ['granted', 'denied', 'undetermined'],
-  'places.filter': ['all', 'inside', 'residences', 'disabled'],
   'settings.languages': LOCALES,
 };
 
 const DYNAMIC_TEMPLATES = [
   { prefix: 'monitor.status', values: ['idle', 'regions', 'precise', 'blocked', 'busy'], suffixes: ['title', 'message'] },
   { prefix: 'simulator.kind', values: ['crossing', 'approach'], suffixes: ['label', 'hint'] },
-  { prefix: 'onboarding', values: ['location', 'notifications'], suffixes: ['action'] },
+  { prefix: 'onboarding', values: ['location', 'notifications', 'company'], suffixes: ['action'] },
 ];
 
 function walk(dir) {

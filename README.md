@@ -3,9 +3,9 @@
 Módulo de geolocalização em background com React Native + Expo (SDK 54), escrito para os
 exercícios práticos da Byst.End. Reúne os dois enunciados num app só, em módulos independentes:
 
-- **Geofencing** — monitora 520 locais, detecta entrada no `radius` e saída do `activeRadius`,
-  e resolve polígonos de cômodos dentro das residências. Funciona em foreground, background e
-  com o app fechado, dentro do que cada plataforma permite.
+- **Geofencing** — você cadastra uma empresa, desenha o perímetro dela no mapa e delimita os
+  cômodos por dentro. O app notifica na entrada e na saída do perímetro da empresa e de cada
+  cômodo, em foreground, background e com o app fechado, dentro do que cada plataforma permite.
 - **Mensagens** — duas sequências de notificações locais (onboarding e diária semanal), offline,
   em ordem, sem duplicidade, com confirmação de entrega enfileirada e com retry.
 
@@ -16,6 +16,7 @@ Sem serviços pagos, sem backend, sem conta. Todo o estado vive no aparelho.
 ## Índice
 
 - [O problema e a estratégia](#o-problema-e-a-estratégia)
+- [Cadastro da empresa](#cadastro-da-empresa)
 - [Arquitetura](#arquitetura)
 - [Detecção: raio, raio ativo e duplicidade](#detecção-raio-raio-ativo-e-duplicidade)
 - [Cômodos: por que polígono e não círculo](#cômodos-por-que-polígono-e-não-círculo)
@@ -74,6 +75,64 @@ outro lado da rua, e quando a origem já está dentro de um local a distância �
 ele vai naturalmente para o topo.
 
 > `src/domains/geofencing/services/regionReconciler.ts`
+
+### Sobre os 500 pontos
+
+O app não vem com dados de demonstração: ele monitora as empresas que você cadastrar, e na
+prática são poucas. A **capacidade** de 500+ é que precisa existir, e ela existe: o reconciliador
+e o índice espacial são exercitados em `src/__fixtures__/companies.json`, um conjunto
+determinístico de 520 locais (8 com polígono e cômodos, 512 circulares) gerado por
+`npm run seed`. Os testes verificam ali que a janela cabe em 20 regiões no iOS e em 100 no
+Android, que a sentinela nunca fica grande demais, e que uma caminhada completa produz
+exatamente os eventos certos — sobre o mesmo código que roda no aparelho.
+
+Os 512 pontos circulares do fixture também têm um papel: eles não têm polígono, e por isso
+exercitam a regra do enunciado na forma original — entrada no `radius`, saída do `activeRadius`.
+
+---
+
+## Cadastro da empresa
+
+O cadastro é um wizard de três passos, oferecido no fim do onboarding e disponível depois pela
+aba Empresas.
+
+1. **Nome** — é o que aparece na notificação.
+2. **Perímetro** — o mapa abre na sua posição com um **pino fixo no centro da tela**. Você
+   arrasta o mapa até o pino ficar sobre um canto do terreno e toca em "Adicionar ponto".
+3. **Cômodos** — mesma mecânica, repetida para cada área interna, com um nome para cada uma.
+
+### Por que o pino fixo, e não tocar no mapa
+
+Tocar direto no mapa é mais direto e tem menos toques. Também é impreciso da forma que mais
+importa aqui: **o dedo cobre exatamente o ponto que se quer marcar**. Num perímetro de terreno
+isso é tolerável; num cômodo de três metros é a diferença entre acertar e errar a parede.
+
+Com o pino parado no centro, o alvo fica sempre visível, o ajuste fino é feito arrastando o mapa
+(que tem toda a tela de alavanca) e a confirmação é um botão longe da área de mira. É o mesmo
+padrão que Uber e iFood usam para escolher endereço, pela mesma razão.
+
+### O que é derivado e o que é desenhado
+
+O `monitor` precisa de um círculo para registrar a região nativa, e a estrutura de dados do
+enunciado é circular. Ambos são **derivados do polígono**, não pedidos ao usuário:
+
+| Campo | Origem |
+|---|---|
+| `latitude` / `longitude` | centroide do perímetro |
+| `radius` | maior distância do centroide até um vértice (raio circunscrito) |
+| `activeRadius` | `radius` + 25 m de folga |
+
+Assim o círculo sempre contém o polígono inteiro — ele só precisa ser largo o bastante para
+acordar o app a tempo. A decisão de entrada continua sendo do polígono.
+
+### Validações que o modelo de dados não expressa
+
+- Um cômodo precisa caber **dentro** do perímetro da empresa. Verificado enquanto o desenho ainda
+  é rascunho, que é o único momento em que o usuário consegue corrigir.
+- Redesenhar o perímetro não pode deixar de fora um cômodo já cadastrado.
+- Área mínima, para recusar um polígono degenerado de três pontos quase colineares.
+
+> `src/domains/geofencing/screens/CompanyWizardScreen/` · `components/CrosshairMap.tsx`
 
 ---
 
@@ -134,7 +193,7 @@ Duas operações fazem perguntas geográficas, com frequências muito diferentes
 | Operação | Frequência | Abordagem |
 |---|---|---|
 | "quais locais podem me conter?" | a cada posição, várias vezes por minuto | índice de grade (`queryWithinRadius`) |
-| "quais são os 19 mais próximos?" | só ao cruzar a sentinela | varredura exata dos 520 |
+| "quais são os 19 mais próximos?" | só ao cruzar a sentinela | varredura exata de todas |
 
 O índice é uma grade uniforme de células de ~0,01° (≈1,1 km), construída uma vez e invalidada a
 cada escrita. A busca varre anéis de células e para assim que o `k`-ésimo melhor resultado já é
@@ -143,8 +202,8 @@ extensão ocupada do índice, o que mantém barata até uma consulta cuja origem
 dados — sem esse recorte, uma origem a 3.000 células de distância enumeraria milhões de chaves
 inexistentes.
 
-No caminho raro, uma ordenação exata de 520 elementos custa microssegundos e não tem margem de
-erro. Grade não é sempre melhor; é melhor onde a frequência paga a complexidade.
+No caminho raro, uma ordenação exata custa microssegundos mesmo com centenas de itens, e não tem
+margem de erro. Grade não é sempre melhor; é melhor onde a frequência paga a complexidade.
 
 > `src/core/geo/spatialIndex.ts`
 
@@ -154,14 +213,24 @@ erro. Grade não é sempre melhor; é melhor onde a frequência paga a complexid
 
 ### Histerese
 
-É o requisito funcional traduzido diretamente em código:
+Duas geometrias, a mesma ideia de banda morta.
+
+**Local circular** (sem polígono — a forma exata do enunciado):
 
 - **De fora**, entra quando `distância ≤ radius`.
 - **De dentro**, sai quando `distância > activeRadius`.
 
-A faixa entre os dois é uma **banda morta**: quem fica parado na borda não gera evento nenhum.
-Sem ela, alguém sentado num café a 60 m de um ponto com raio de 60 m produziria um fluxo infinito
-de entradas e saídas.
+**Empresa com perímetro** (o que o app cadastra):
+
+- **De fora**, entra quando o ponto está **dentro do polígono**.
+- **De dentro**, sai quando está fora do polígono por mais que a folga `activeRadius − radius`.
+
+A segunda forma é a primeira expressa em polígono: `radius` vira a própria borda desenhada e a
+folga até `activeRadius` continua sendo a banda morta.
+
+Em ambos os casos a faixa entre os dois limiares é uma **banda morta**: quem fica parado na borda
+não gera evento nenhum. Sem ela, alguém sentado junto à porta produziria um fluxo infinito de
+entradas e saídas.
 
 ### Margem de confiança
 
@@ -171,6 +240,13 @@ Na dúvida, o estado atual é mantido.
 
 A margem é limitada a metade do raio. Sem esse teto, uma leitura com 40 m de erro tornaria um
 geofence de 50 m impossível de entrar — o círculo de erro nunca caberia.
+
+**A margem geométrica não se aplica ao polígono, e isso é deliberado.** Um polígono não tem um
+raio único para escalar a margem contra, e exigir que o círculo de erro caiba dentro dele torna
+impossível entrar num escritório de 40 × 30 m com um GPS de 30 m — que é o caso comum em ambiente
+interno. Ali a proteção contra ruído fica por conta do descarte por acurácia, das confirmações
+consecutivas e do tempo de permanência. É uma troca explícita: precisão limitada pelo GPS, em vez
+de detecção que nunca dispara.
 
 Leituras com acurácia pior que 100 m são descartadas sem processamento. Uma leitura em que não se
 confia é pior que nenhuma: ela vira um evento falso que a camada de deduplicação persiste para
@@ -206,8 +282,8 @@ re-dispararia "entrou" em tudo que estivesse por perto.
 
 ## Cômodos: por que polígono e não círculo
 
-A extensão do enunciado — multipolígono com cômodos dentro de uma residência — não pode ser feita
-com geofences nativos, e a razão é dura:
+O multipolígono — cômodos dentro do perímetro da empresa — não pode ser feito com geofences
+nativos, e a razão é dura:
 
 > O `CLCircularRegion` do iOS deixa de disparar de forma confiável abaixo de aproximadamente
 > 100 m. Um quarto tem 3 m.
@@ -216,8 +292,8 @@ Então o modelo é hierárquico:
 
 | Nível | Geometria | Como é resolvido |
 |---|---|---|
-| Local (residência) | círculo `radius` / `activeRadius` | região nativa acorda o app, JS confirma |
-| Cômodo | polígono | ponto-em-polígono sobre posições de alta precisão |
+| Empresa | polígono desenhado + círculo derivado | a região nativa (círculo) acorda o app; o polígono decide a entrada |
+| Cômodo | polígono desenhado | ponto-em-polígono sobre posições de alta precisão |
 
 O teste é *ray casting* (número de cruzamentos): um raio na direção do leste cruza as arestas do
 polígono, e um número ímpar de cruzamentos significa dentro. Antes dele, um filtro de *bounding
@@ -438,7 +514,7 @@ cp .env.example .env     # preencha as chaves (veja abaixo)
 npx expo run:android     # ou run:ios
 ```
 
-O banco é criado e o dataset de 520 locais é carregado automaticamente na primeira abertura.
+O banco é criado na primeira abertura, vazio. O onboarding leva ao cadastro da primeira empresa.
 
 ### Variáveis de ambiente
 
@@ -487,10 +563,10 @@ Ele injeta uma rota sintética no mesmo pipeline que o GPS alimenta: mesma máqu
 mesma deduplicação, mesmas notificações. Não é um mock do resultado — é o caminho real, com uma
 fonte de posições diferente.
 
-1. Escolha uma das residências (`Casa 1 — Pinheiros` … `Casa 8`); são as que têm cômodos.
+1. Escolha a empresa que você cadastrou.
 2. Escolha "Atravessar" e toque em *Executar rota*.
-3. Acompanhe a aba **Eventos**: devem aparecer, em ordem, entrada no local, entrada num cômodo,
-   saída do cômodo, entrada no seguinte, saída dele e saída do local.
+3. Acompanhe a aba **Eventos**: devem aparecer, em ordem, entrada na empresa, entrada num cômodo,
+   saída do cômodo, entrada no seguinte, saída dele e saída da empresa.
 
 Experimente também mudar a acurácia simulada para ±120 m: as leituras passam a ser descartadas e
 nenhum evento é gerado, que é o comportamento correto.
@@ -500,11 +576,11 @@ logo em seguida sem esperar nada.
 
 ### No campo
 
-1. **Locais → Cadastrar local aqui** cria um local na sua posição atual.
-2. Ajuste raio e raio ativo (o raio ativo precisa ser maior ou igual — o app recusa o contrário).
-3. Salve, depois use **Desenhar cômodo no mapa** para marcar um polígono tocando nos cantos.
+1. **Empresas → Cadastrar empresa**, ou conclua o onboarding.
+2. Dê um nome e marque os cantos do perímetro arrastando o mapa sob o pino.
+3. Adicione um ou mais cômodos, com nome.
 4. **Monitor → Iniciar monitoramento**.
-5. Saia, afaste-se além do raio ativo, volte. As notificações chegam com o app fechado.
+5. Saia, afaste-se do perímetro, volte. As notificações chegam com o app fechado.
 
 ### Com o app fechado
 
@@ -518,7 +594,7 @@ comportamento descrito acima foi observado, e não suposto.
 ## Testes automatizados
 
 ```bash
-npm test          # 143 testes
+npm test          # 165 testes
 npm run verify    # typecheck + verificação de i18n + testes
 ```
 
@@ -527,18 +603,19 @@ O alvo são as funções puras, que é onde mora a lógica que o enunciado avali
 | Arquivo | O que cobre |
 |---|---|
 | `core/geo/haversine.test.ts` | distâncias conhecidas, antimeridiano, polos, simetria |
-| `core/geo/polygon.test.ts` | dentro/fora, vértice, aresta, polígono côncavo, prefiltro |
+| `core/geo/polygon.test.ts` | dentro/fora, vértice, aresta, polígono côncavo, prefiltro, distância à borda, contenção, área |
 | `core/geo/spatialIndex.test.ts` | k-vizinhos idêntico à força bruta em 520 pontos, várias células |
-| `geofencing/transitionEngine.test.ts` | histerese, banda morta, margem de confiança, debounce, dedup, cômodos exclusivos |
+| `geofencing/transitionEngine.test.ts` | histerese circular e por polígono, banda morta, margem de confiança, debounce, dedup, cômodos exclusivos |
 | `geofencing/regionReconciler.test.ts` | teto de 20 e de 100, raio da sentinela, estabilidade do conjunto |
 | `geofencing/routeSimulator.test.ts` | geometria e datação das rotas sintéticas |
-| `geofencing/pipeline.test.ts` | ponta a ponta sobre o dataset real que o app carrega |
+| `geofencing/pipeline.test.ts` | ponta a ponta sobre o fixture de 520 locais |
 | `messaging/sequencePlanner.test.ts` | ordem, horário fixo, janela, retomada após lacuna, reconciliação |
 | `messaging/receiptSender.test.ts` | backoff exponencial e esgotamento |
 
-O teste de pipeline é o que amarra tudo: percorre uma residência do `assets/seed/places.json` que
-o app realmente usa e verifica que a sequência de eventos é exatamente a que uma caminhada real
-produziria, cada um exatamente uma vez.
+O teste de pipeline é o que amarra tudo: percorre uma empresa do fixture de 520 locais e verifica
+que a sequência de eventos é exatamente a que uma caminhada real produziria — entrada na empresa,
+entrada no primeiro cômodo, saída dele, entrada no seguinte, saída dele, saída da empresa —, cada
+um exatamente uma vez.
 
 ---
 
@@ -560,12 +637,13 @@ src/
         regionReconciler.ts           ← janela de regiões nativas    [puro]
         routeSimulator.ts             ← rotas sintéticas             [puro]
         monitorService.ts             orquestra as camadas
-        placeRepository.ts            CRUD + índice espacial
+        companyRepository.ts          CRUD + índice espacial
         eventRepository.ts            log idempotente
         stateRepository.ts            presença persistida
         notifier.ts                   notificação por transição
+      components/CrosshairMap.tsx     mapa com pino fixo, usado no desenho
       tasks/                          TaskManager.defineTask
-      screens/                        Monitor · Locais · Editor · Eventos · Simulador
+      screens/                        Monitor · Empresas · Wizard · Editor · Eventos · Simulador
     messaging/
       services/
         sequencePlanner.ts            ← plano e diff                 [puro]
@@ -576,9 +654,9 @@ src/
     settings/, onboarding/
   components/                         atoms · molecules · organisms · templates
   i18n/                               pt-BR (padrão) + en
-assets/seed/places.json               520 locais, 8 residências, 32 cômodos
+src/__fixtures__/companies.json       520 locais para os testes de escala (não vai para o app)
 scripts/
-  gen-seed.mjs                        gera o dataset (determinístico)
+  gen-seed.mjs                        gera o fixture (determinístico)
   check-i18n.mjs                      garante que nenhuma chave de tradução falte
 ```
 
@@ -592,8 +670,11 @@ Toda tela é o trio `index.tsx` (container) + `<X>View.tsx` (interface pura) +
 - **Receiver de `BOOT_COMPLETED` no Android.** A permissão está declarada, mas retomar o
   monitoramento após reiniciar exigiria um config plugin com código nativo. Está documentado como
   limitação em vez de meio implementado.
-- **Edição de vértices de um cômodo já salvo.** Dá para desenhar e excluir; ajustar um vértice
-  existente exigiria manipulação de marcadores arrastáveis no mapa.
+- **Edição de vértices de um polígono já salvo.** Dá para desenhar de novo e excluir; arrastar um
+  vértice existente exigiria marcadores arrastáveis e um modo de edição próprio.
+- **Dados de demonstração no app.** O conjunto de 520 locais existe apenas como fixture de teste.
+  Um botão para carregá-lo no app seria fácil de adicionar, mas polui a lista de quem só quer ver
+  as próprias empresas.
 - **Sincronização com servidor.** O enunciado pede persistência local e proíbe serviços pagos.
   A única saída de rede é a confirmação de entrega, e mesmo ela é opcional.
 - **Modo claro.** A interface é escura, herdada dos tokens de tema do template.

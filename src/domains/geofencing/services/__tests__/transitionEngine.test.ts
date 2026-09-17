@@ -1,8 +1,8 @@
 import { METERS_PER_DEGREE_LATITUDE } from '@src/core/geo';
 import type { Fix } from '@src/core/geo';
 
-import { evaluateFix, invalidateRoomGeometry, type TransitionConfig } from '../transitionEngine';
-import type { GeofenceEvent, Place, Room, TargetState } from '../../types';
+import { evaluateFix, invalidateGeometry, type TransitionConfig } from '../transitionEngine';
+import type { GeofenceEvent, Company, Room, TargetState } from '../../types';
 
 const CONFIG: TransitionConfig = {
   maxAccuracyMeters: 100,
@@ -11,7 +11,7 @@ const CONFIG: TransitionConfig = {
   minimumDwellMs: 10_000,
 };
 
-const HOME: Place = {
+const HOME: Company = {
   id: 'home',
   name: 'Casa',
   latitude: -23.55,
@@ -41,29 +41,29 @@ interface RunResult {
 function run(
   fixes: Fix[],
   options: {
-    places?: Place[];
+    companies?: Company[];
     rooms?: Room[];
     config?: TransitionConfig;
     states?: Map<string, TargetState>;
   } = {},
 ): RunResult {
-  const places = options.places ?? [HOME];
+  const companies = options.companies ?? [HOME];
   const rooms = options.rooms ?? [];
   const config = options.config ?? CONFIG;
   const states = options.states ?? new Map<string, TargetState>();
 
-  const roomsByPlace = new Map<string, Room[]>();
+  const roomsByCompany = new Map<string, Room[]>();
   for (const room of rooms) {
-    const bucket = roomsByPlace.get(room.placeId) ?? [];
+    const bucket = roomsByCompany.get(room.companyId) ?? [];
     bucket.push(room);
-    roomsByPlace.set(room.placeId, bucket);
+    roomsByCompany.set(room.companyId, bucket);
   }
 
   const events: GeofenceEvent[] = [];
   let rejected = 0;
 
   for (const fix of fixes) {
-    const result = evaluateFix({ fix, places, roomsByPlace, states, config, source: 'location_update' });
+    const result = evaluateFix({ fix, companies, roomsByCompany, states, config, source: 'location_update' });
     if (!result.accepted) rejected += 1;
     for (const state of result.changedStates) states.set(state.targetId, state);
     events.push(...result.events);
@@ -75,7 +75,7 @@ function run(
 const hold = (meters: number, count: number, startAt = 0, step = 6_000, accuracy = 5): Fix[] =>
   Array.from({ length: count }, (_, i) => fixAt(meters, startAt + i * step, accuracy));
 
-beforeEach(() => invalidateRoomGeometry());
+beforeEach(() => invalidateGeometry());
 
 describe('accuracy gate', () => {
   it('rejects readings worse than the configured ceiling', () => {
@@ -88,7 +88,7 @@ describe('accuracy gate', () => {
   it('accepts readings with no reported accuracy', () => {
     const result = run(hold(10, 3, 0, 6_000).map((f) => ({ ...f, accuracy: null })));
     expect(result.rejected).toBe(0);
-    expect(result.events.map((e) => e.kind)).toEqual(['place_enter']);
+    expect(result.events.map((e) => e.kind)).toEqual(['company_enter']);
   });
 });
 
@@ -96,8 +96,8 @@ describe('entry uses radius, exit uses activeRadius', () => {
   it('enters once inside the radius', () => {
     const { events } = run(hold(20, 3));
     expect(events).toHaveLength(1);
-    expect(events[0].kind).toBe('place_enter');
-    expect(events[0].placeId).toBe('home');
+    expect(events[0].kind).toBe('company_enter');
+    expect(events[0].companyId).toBe('home');
   });
 
   it('does not enter while only inside the activeRadius', () => {
@@ -108,14 +108,14 @@ describe('entry uses radius, exit uses activeRadius', () => {
 
   it('exits only after clearing the activeRadius', () => {
     const enter = run(hold(20, 3));
-    expect(enter.events.map((e) => e.kind)).toEqual(['place_enter']);
+    expect(enter.events.map((e) => e.kind)).toEqual(['company_enter']);
 
     const band = run(hold(80, 4, 30_000), { states: enter.states });
     expect(band.events).toHaveLength(0);
     expect(band.states.get('home')?.state).toBe('inside');
 
     const out = run(hold(140, 3, 80_000), { states: band.states });
-    expect(out.events.map((e) => e.kind)).toEqual(['place_exit']);
+    expect(out.events.map((e) => e.kind)).toEqual(['company_exit']);
   });
 
   it('produces no events for a user loitering on the boundary', () => {
@@ -156,12 +156,12 @@ describe('debounce and dwell', () => {
     expect(tooSoon.states.get('home')?.state).toBe('inside');
 
     const later = run([fixAt(300, enteredAt + 11_000)], { states: tooSoon.states });
-    expect(later.events.map((e) => e.kind)).toEqual(['place_exit']);
+    expect(later.events.map((e) => e.kind)).toEqual(['company_exit']);
   });
 
   it('classifies a never-seen target without waiting out the dwell', () => {
     const { events } = run([fixAt(10, 1_000), fixAt(10, 2_000)]);
-    expect(events.map((e) => e.kind)).toEqual(['place_enter']);
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
   });
 });
 
@@ -173,13 +173,13 @@ describe('confidence margin', () => {
 
   it('still allows entry once the error circle fits', () => {
     const { events } = run(hold(25, 3, 0, 6_000, 30));
-    expect(events.map((e) => e.kind)).toEqual(['place_enter']);
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
   });
 
   it('caps the margin so a small geofence stays reachable', () => {
-    const tight: Place = { ...HOME, id: 'tight', radius: 40, activeRadius: 60 };
-    const { events } = run(hold(15, 3, 0, 6_000, 90), { places: [tight] });
-    expect(events.map((e) => e.kind)).toEqual(['place_enter']);
+    const tight: Company = { ...HOME, id: 'tight', radius: 40, activeRadius: 60 };
+    const { events } = run(hold(15, 3, 0, 6_000, 90), { companies: [tight] });
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
   });
 });
 
@@ -190,7 +190,7 @@ describe('deduplication', () => {
     const back = run(hold(20, 3, 120_000), { states: exit.states });
 
     const keys = [...enter.events, ...exit.events, ...back.events].map((e) => e.idempotencyKey);
-    expect(keys).toEqual(['home:1:place_enter', 'home:2:place_exit', 'home:3:place_enter']);
+    expect(keys).toEqual(['home:1:company_enter', 'home:2:company_exit', 'home:3:company_enter']);
     expect(new Set(keys).size).toBe(keys.length);
   });
 
@@ -201,9 +201,9 @@ describe('deduplication', () => {
   });
 });
 
-describe('disabled and distant places', () => {
-  it('ignores a disabled place', () => {
-    const { events, states } = run(hold(5, 4), { places: [{ ...HOME, enabled: false }] });
+describe('disabled and distant companies', () => {
+  it('ignores a disabled company', () => {
+    const { events, states } = run(hold(5, 4), { companies: [{ ...HOME, enabled: false }] });
     expect(events).toHaveLength(0);
     expect(states.size).toBe(0);
   });
@@ -211,8 +211,8 @@ describe('disabled and distant places', () => {
   it('reports no candidates when the list is empty', () => {
     const result = evaluateFix({
       fix: fixAt(0, 1_000),
-      places: [],
-      roomsByPlace: new Map(),
+      companies: [],
+      roomsByCompany: new Map(),
       states: new Map(),
       config: CONFIG,
       source: 'location_update',
@@ -224,7 +224,7 @@ describe('disabled and distant places', () => {
 
 const LIVING_ROOM: Room = {
   id: 'living',
-  placeId: 'home',
+  companyId: 'home',
   name: 'Sala',
   polygon: [
     { latitude: HOME.latitude - 0.000045, longitude: HOME.longitude - 0.000049 },
@@ -237,7 +237,7 @@ const LIVING_ROOM: Room = {
 
 const BEDROOM: Room = {
   id: 'bedroom',
-  placeId: 'home',
+  companyId: 'home',
   name: 'Quarto',
   polygon: LIVING_ROOM.polygon.map((vertex) => ({
     latitude: vertex.latitude + 20 / METERS_PER_DEGREE_LATITUDE,
@@ -249,14 +249,14 @@ const BEDROOM: Room = {
 describe('rooms', () => {
   const rooms = [LIVING_ROOM, BEDROOM];
 
-  it('reports the place and the room the user is standing in', () => {
+  it('reports the company and the room the user is standing in', () => {
     const { events } = run(hold(0, 3), { rooms });
-    expect(events.map((e) => e.kind).sort()).toEqual(['place_enter', 'room_enter']);
+    expect(events.map((e) => e.kind).sort()).toEqual(['company_enter', 'room_enter']);
 
     const roomEvent = events.find((e) => e.kind === 'room_enter')!;
     expect(roomEvent.roomId).toBe('living');
     expect(roomEvent.roomName).toBe('Sala');
-    expect(roomEvent.placeName).toBe('Casa');
+    expect(roomEvent.companyName).toBe('Casa');
   });
 
   it('does not enter a room the user is not standing in', () => {
@@ -265,7 +265,7 @@ describe('rooms', () => {
     expect(states.get('bedroom')?.state ?? 'outside').toBe('outside');
   });
 
-  it('switches rooms without touching the place state', () => {
+  it('switches rooms without touching the company state', () => {
     const start = run(hold(0, 3), { rooms });
     const moved = run(hold(20, 3, 60_000), { rooms, states: start.states });
 
@@ -275,29 +275,29 @@ describe('rooms', () => {
     expect(moved.states.get('home')?.state).toBe('inside');
   });
 
-  it('stays in the place when standing in none of its rooms', () => {
+  it('stays in the company when standing in none of its rooms', () => {
     const { events, states } = run(hold(40, 3), { rooms });
-    expect(events.map((e) => e.kind)).toEqual(['place_enter']);
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
     expect(states.get('living')?.state ?? 'outside').toBe('outside');
   });
 
-  it('evicts the occupied room when the place is left', () => {
+  it('evicts the occupied room when the company is left', () => {
     const inside = run(hold(0, 3), { rooms });
     expect(inside.states.get('living')?.state).toBe('inside');
 
     const gone = run(hold(500, 3, 60_000), { rooms, states: inside.states });
-    expect(gone.events.map((e) => e.kind)).toContain('place_exit');
+    expect(gone.events.map((e) => e.kind)).toContain('company_exit');
     expect(gone.events.map((e) => e.kind)).toContain('room_exit');
     expect(gone.states.get('living')?.state).toBe('outside');
     expect(gone.states.get('home')?.state).toBe('outside');
   });
 
-  it('can re-enter a room after leaving the place entirely', () => {
+  it('can re-enter a room after leaving the company entirely', () => {
     const first = run(hold(0, 3), { rooms });
     const away = run(hold(500, 3, 60_000), { rooms, states: first.states });
     const back = run(hold(0, 3, 120_000), { rooms, states: away.states });
 
-    expect(back.events.map((e) => e.kind).sort()).toEqual(['place_enter', 'room_enter']);
+    expect(back.events.map((e) => e.kind).sort()).toEqual(['company_enter', 'room_enter']);
     const keys = [...first.events, ...away.events, ...back.events].map((e) => e.idempotencyKey);
     expect(new Set(keys).size).toBe(keys.length);
   });
@@ -315,7 +315,7 @@ describe('rooms', () => {
 describe('overlapping rooms', () => {
   const WEST: Room = {
     id: 'a-west',
-    placeId: 'home',
+    companyId: 'home',
     name: 'Oeste',
     polygon: [
       { latitude: HOME.latitude - 0.00005, longitude: HOME.longitude - 0.0001 },
@@ -354,5 +354,71 @@ describe('overlapping rooms', () => {
         .map((state) => state.targetId);
 
     expect(occupiedIn(first)).toEqual(occupiedIn(second));
+  });
+});
+
+describe('companies delimited by a polygon', () => {
+  /** A 40 x 30 m office, centred on HOME. */
+  const halfWidth = 20 / (METERS_PER_DEGREE_LATITUDE * Math.cos((HOME.latitude * Math.PI) / 180));
+  const halfHeight = 15 / METERS_PER_DEGREE_LATITUDE;
+
+  const OFFICE: Company = {
+    ...HOME,
+    id: 'office',
+    name: 'Escritório',
+    radius: 25,
+    activeRadius: 45,
+    polygon: [
+      { latitude: HOME.latitude - halfHeight, longitude: HOME.longitude - halfWidth },
+      { latitude: HOME.latitude - halfHeight, longitude: HOME.longitude + halfWidth },
+      { latitude: HOME.latitude + halfHeight, longitude: HOME.longitude + halfWidth },
+      { latitude: HOME.latitude + halfHeight, longitude: HOME.longitude - halfWidth },
+    ],
+  };
+
+  it('enters on the outline, not on the circle', () => {
+    // 20 m north is inside the 25 m radius but 5 m past the polygon's north wall.
+    const outsideShape = run(hold(20, 4), { companies: [OFFICE] });
+    expect(outsideShape.events).toHaveLength(0);
+
+    const insideShape = run(hold(10, 3), { companies: [OFFICE] });
+    expect(insideShape.events.map((e) => e.kind)).toEqual(['company_enter']);
+  });
+
+  it('holds presence in the band just outside the outline', () => {
+    const entered = run(hold(10, 3), { companies: [OFFICE] });
+    expect(entered.states.get('office')?.state).toBe('inside');
+
+    // 25 m north: 10 m beyond the wall, inside the 20 m exit buffer.
+    const band = run(hold(25, 4, 40_000), { companies: [OFFICE], states: entered.states });
+    expect(band.events).toHaveLength(0);
+    expect(band.states.get('office')?.state).toBe('inside');
+  });
+
+  it('leaves only after clearing the outline by the exit buffer', () => {
+    const entered = run(hold(10, 3), { companies: [OFFICE] });
+    const band = run(hold(25, 3, 40_000), { companies: [OFFICE], states: entered.states });
+
+    // 60 m north is 45 m beyond the wall, well past the 20 m buffer.
+    const gone = run(hold(60, 3, 90_000), { companies: [OFFICE], states: band.states });
+    expect(gone.events.map((e) => e.kind)).toEqual(['company_exit']);
+  });
+
+  it('does not let a poor fix keep a small company from being entered', () => {
+    // The whole office is 40 x 30 m; a 30 m error circle can never fit inside
+    // it, so requiring containment would make entry impossible.
+    const { events } = run(hold(0, 3, 0, 6_000, 30), { companies: [OFFICE] });
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
+  });
+
+  it('still rejects a fix the platform does not trust', () => {
+    const { events, rejected } = run(hold(0, 3, 0, 6_000, 250), { companies: [OFFICE] });
+    expect(rejected).toBe(3);
+    expect(events).toHaveLength(0);
+  });
+
+  it('falls back to radius and activeRadius when there is no outline', () => {
+    const { events } = run(hold(20, 3), { companies: [{ ...OFFICE, polygon: null }] });
+    expect(events.map((e) => e.kind)).toEqual(['company_enter']);
   });
 });

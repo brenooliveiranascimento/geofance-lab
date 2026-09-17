@@ -1,6 +1,6 @@
 import { METERS_PER_DEGREE_LATITUDE, metersPerDegreeLongitude, type Fix } from '@src/core/geo';
 
-import type { Place } from '../types';
+import type { Company } from '../types';
 
 export interface RouteOptions {
   steps: number;
@@ -21,7 +21,7 @@ export const DEFAULT_ROUTE_OPTIONS: Omit<RouteOptions, 'endAt'> = {
   lateralOffsetMeters: 3,
 };
 
-export function buildCrossingRoute(place: Place, options: RouteOptions): Fix[] {
+export function buildCrossingRoute(company: Company, options: RouteOptions): Fix[] {
   const {
     steps,
     intervalMs,
@@ -33,9 +33,9 @@ export function buildCrossingRoute(place: Place, options: RouteOptions): Fix[] {
   } = options;
   if (steps < 2) return [];
 
-  const half = place.activeRadius + marginMeters;
+  const half = company.activeRadius + marginMeters;
   const radians = (bearingDegrees * Math.PI) / 180;
-  const metersPerLongitude = metersPerDegreeLongitude(place.latitude);
+  const metersPerLongitude = metersPerDegreeLongitude(company.latitude);
 
   const forwardNorth = Math.cos(radians);
   const forwardEast = Math.sin(radians);
@@ -51,16 +51,16 @@ export function buildCrossingRoute(place: Place, options: RouteOptions): Fix[] {
     const east = along * forwardEast + lateralOffsetMeters * sideEast;
 
     return {
-      latitude: place.latitude + north / METERS_PER_DEGREE_LATITUDE,
-      longitude: place.longitude + east / metersPerLongitude,
+      latitude: company.latitude + north / METERS_PER_DEGREE_LATITUDE,
+      longitude: company.longitude + east / metersPerLongitude,
       accuracy,
       timestamp: startAt + index * intervalMs,
     };
   });
 }
 
-export function buildApproachRoute(place: Place, options: RouteOptions): Fix[] {
-  const full = buildCrossingRoute(place, options);
+export function buildApproachRoute(company: Company, options: RouteOptions): Fix[] {
+  const full = buildCrossingRoute(company, options);
   const middle = Math.ceil(full.length / 2);
   const head = full.slice(0, middle);
 

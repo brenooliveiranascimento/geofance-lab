@@ -31,9 +31,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="places"
+        name="companies"
         options={{
-          title: t('tabs.places'),
+          title: t('tabs.companies'),
           tabBarIcon: ({ color }) => <IconSymbol size={22} name="mappin.circle.fill" color={color} />,
         }}
       />

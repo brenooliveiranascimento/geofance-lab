@@ -78,7 +78,7 @@ export function resetDatabase(): void {
       DELETE FROM geofence_events;
       DELETE FROM monitor_state;
       DELETE FROM rooms;
-      DELETE FROM places;
+      DELETE FROM companies;
       DELETE FROM message_schedule;
       DELETE FROM delivery_receipts;
       DELETE FROM app_log;

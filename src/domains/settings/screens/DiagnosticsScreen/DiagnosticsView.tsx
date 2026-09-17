@@ -45,12 +45,12 @@ export function DiagnosticsView({ viewModel }: DiagnosticsViewProps): React.JSX.
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('diagnostics.activePlaces')}</Text>
-            <Text style={styles.rowValue}>{viewModel.activePlaces}</Text>
+            <Text style={styles.rowLabel}>{t('diagnostics.activeCompanies')}</Text>
+            <Text style={styles.rowValue}>{viewModel.activeCompanies}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('diagnostics.places')}</Text>
-            <Text style={styles.rowValue}>{viewModel.totalPlaces}</Text>
+            <Text style={styles.rowLabel}>{t('diagnostics.companies')}</Text>
+            <Text style={styles.rowValue}>{viewModel.totalCompanies}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{t('diagnostics.events')}</Text>

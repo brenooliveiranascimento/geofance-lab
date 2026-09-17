@@ -6,11 +6,11 @@ import { Text } from '@src/components/atoms';
 import type { LatLng } from '@src/core/geo';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { Place, Room, TargetState } from '../types';
+import type { Company, Room, TargetState } from '../types';
 
-export interface PlacesMapProps {
+export interface CompaniesMapProps {
   center: LatLng | null;
-  places: readonly Place[];
+  companies: readonly Company[];
   rooms: readonly Room[];
   states: ReadonlyMap<string, TargetState>;
   spanMeters?: number;
@@ -32,9 +32,9 @@ function regionFor(center: LatLng, spanMeters: number): Region {
   };
 }
 
-export function PlacesMap({
+export function CompaniesMap({
   center,
-  places,
+  companies,
   rooms,
   states,
   spanMeters = 1200,
@@ -42,7 +42,7 @@ export function PlacesMap({
   extraPolygon = null,
   markers = [],
   emptyLabel,
-}: PlacesMapProps): React.JSX.Element {
+}: CompaniesMapProps): React.JSX.Element {
   const region = useMemo(() => (center ? regionFor(center, spanMeters) : null), [center, spanMeters]);
 
   if (!region) {
@@ -64,28 +64,28 @@ export function PlacesMap({
       toolbarEnabled={false}
       onPress={onPressMap ? (event) => onPressMap(event.nativeEvent.coordinate) : undefined}
     >
-      {places.map((place) => {
-        const inside = states.get(place.id)?.state === 'inside';
+      {companies.map((company) => {
+        const inside = states.get(company.id)?.state === 'inside';
         const accent = inside ? colors.success : colors.primary;
         return (
-          <React.Fragment key={place.id}>
+          <React.Fragment key={company.id}>
             <Circle
-              center={place}
-              radius={place.radius}
+              center={company}
+              radius={company.radius}
               strokeColor={accent}
               strokeWidth={2}
               fillColor={`${accent}26`}
             />
             <Circle
-              center={place}
-              radius={place.activeRadius}
+              center={company}
+              radius={company.activeRadius}
               strokeColor={`${accent}80`}
               strokeWidth={1}
               fillColor="transparent"
             />
-            {place.polygon && place.polygon.length >= 3 ? (
+            {company.polygon && company.polygon.length >= 3 ? (
               <Polygon
-                coordinates={place.polygon}
+                coordinates={company.polygon}
                 strokeColor={colors.textSecondary}
                 strokeWidth={1}
                 fillColor="transparent"

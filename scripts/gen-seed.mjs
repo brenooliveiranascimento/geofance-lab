@@ -43,7 +43,7 @@ const NEIGHBOURHOODS = [
   'Batel', 'Água Verde', 'Bigorrilho', 'Portão',
 ];
 
-const ROOM_NAMES = ['Sala', 'Cozinha', 'Quarto', 'Escritório'];
+const ROOM_NAMES = ['Recepção', 'Escritório', 'Almoxarifado', 'Copa'];
 
 const offset = (lat, lon, northMeters, eastMeters) => ({
   latitude: lat + northMeters / METERS_PER_DEGREE_LATITUDE,
@@ -52,7 +52,7 @@ const offset = (lat, lon, northMeters, eastMeters) => ({
 
 const round = (value, places = 7) => Number(value.toFixed(places));
 
-function makeResidence(id, name, latitude, longitude, halfWidthM, halfHeightM) {
+function makeCompany(id, name, latitude, longitude, halfWidthM, halfHeightM) {
   const corner = (north, east) => {
     const point = offset(latitude, longitude, north, east);
     return { latitude: round(point.latitude), longitude: round(point.longitude) };
@@ -100,16 +100,16 @@ function makeResidence(id, name, latitude, longitude, halfWidthM, halfHeightM) {
 
 function build(count) {
   const random = makeRandom(20260916);
-  const places = [];
+  const companies = [];
 
   const blockLat = -23.5615;
   const blockLon = -46.7021;
   for (let i = 0; i < 8; i += 1) {
     const point = offset(blockLat, blockLon, (i % 4) * 250, Math.floor(i / 4) * 250);
-    places.push(
-      makeResidence(
-        `casa-${String(i + 1).padStart(2, '0')}`,
-        `Casa ${i + 1} — Pinheiros`,
+    companies.push(
+      makeCompany(
+        `empresa-${String(i + 1).padStart(2, '0')}`,
+        `Empresa ${i + 1} — Pinheiros`,
         point.latitude,
         point.longitude,
         8,
@@ -119,7 +119,7 @@ function build(count) {
   }
 
   let index = 0;
-  while (places.length < count) {
+  while (companies.length < count) {
     const region = REGIONS[index % REGIONS.length];
     const kind = KINDS[Math.floor(random() * KINDS.length)];
     const neighbourhood = NEIGHBOURHOODS[Math.floor(random() * NEIGHBOURHOODS.length)];
@@ -134,7 +134,7 @@ function build(count) {
     );
 
     index += 1;
-    places.push({
+    companies.push({
       id: `ponto-${String(index).padStart(4, '0')}`,
       name: `${kind.label} ${neighbourhood} ${index}`,
       latitude: round(point.latitude),
@@ -144,7 +144,7 @@ function build(count) {
     });
   }
 
-  return places;
+  return companies;
 }
 
 function main() {
@@ -155,22 +155,22 @@ function main() {
   };
 
   const count = Number(readFlag('count', '520'));
-  const out = resolve(process.cwd(), readFlag('out', 'assets/seed/places.json'));
+  const out = resolve(process.cwd(), readFlag('out', 'src/__fixtures__/companies.json'));
 
-  const places = build(count);
+  const companies = build(count);
   const payload = {
     generatedBy: 'scripts/gen-seed.mjs',
-    count: places.length,
-    residences: places.filter((place) => place.rooms).length,
-    rooms: places.reduce((sum, place) => sum + (place.rooms?.length ?? 0), 0),
-    places,
+    count: companies.length,
+    withPolygon: companies.filter((company) => company.rooms).length,
+    rooms: companies.reduce((sum, company) => sum + (company.rooms?.length ?? 0), 0),
+    companies,
   };
 
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, `${JSON.stringify(payload, null, 0)}\n`);
 
   console.log(
-    `${payload.count} locais (${payload.residences} residências, ${payload.rooms} cômodos) → ${out}`,
+    `${payload.count} locais (${payload.withPolygon} com polígono, ${payload.rooms} cômodos) → ${out}`,
   );
 }
 

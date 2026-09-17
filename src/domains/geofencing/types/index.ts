@@ -1,6 +1,6 @@
 import type { Fix, LatLng, Ring } from '@src/core/geo';
 
-export interface Place {
+export interface Company {
   id: string;
   name: string;
   latitude: number;
@@ -14,19 +14,19 @@ export interface Place {
 
 export interface Room {
   id: string;
-  placeId: string;
+  companyId: string;
   name: string;
   polygon: Ring;
   createdAt: number;
 }
 
-export type MonitorTargetKind = 'place' | 'room';
+export type MonitorTargetKind = 'company' | 'room';
 export type PresenceState = 'inside' | 'outside';
 
 export interface TargetState {
   targetId: string;
   targetKind: MonitorTargetKind;
-  placeId: string;
+  companyId: string;
   state: PresenceState;
   transitionSeq: number;
   since: number;
@@ -36,7 +36,7 @@ export interface TargetState {
   updatedAt: number;
 }
 
-export type GeofenceEventKind = 'place_enter' | 'place_exit' | 'room_enter' | 'room_exit';
+export type GeofenceEventKind = 'company_enter' | 'company_exit' | 'room_enter' | 'room_exit';
 
 export type EventSource =
   | 'native_region'
@@ -48,8 +48,8 @@ export interface GeofenceEvent {
   id?: number;
   idempotencyKey: string;
   kind: GeofenceEventKind;
-  placeId: string;
-  placeName: string;
+  companyId: string;
+  companyName: string;
   roomId: string | null;
   roomName: string | null;
   occurredAt: number;
@@ -75,7 +75,7 @@ export type MonitorTier = 'idle' | 'regions' | 'precise';
 export interface MonitorSnapshot {
   running: boolean;
   tier: MonitorTier;
-  activePlaceIds: string[];
+  activeCompanyIds: string[];
   regionCount: number;
   lastFix: Fix | null;
   lastEvaluatedAt: number | null;

@@ -12,13 +12,13 @@ import { invalidateGeofencingData, invalidatePermissions } from '../../queries/i
 import { useEvents } from '../../queries/useEvents';
 import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
 import { usePermissions } from '../../queries/usePermissions';
-import { usePlaceStates } from '../../queries/usePlaceStates';
-import { usePlaces } from '../../queries/usePlaces';
-import { getPlaceIndex, getRoomsByPlace } from '../../services/placeRepository';
+import { useCompanyStates } from '../../queries/useCompanyStates';
+import { useCompanies } from '../../queries/useCompanies';
+import { getCompanyIndex, getRoomsByCompany } from '../../services/companyRepository';
 import { startMonitoring, stopMonitoring } from '../../services/monitorService';
-import type { GeofenceEvent, MonitorSnapshot, Place, Room, TargetState } from '../../types';
+import type { GeofenceEvent, MonitorSnapshot, Company, Room, TargetState } from '../../types';
 
-const MAP_PLACE_LIMIT = 40;
+const MAP_COMPANY_LIMIT = 40;
 
 export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy';
 
@@ -27,10 +27,10 @@ export interface MonitorViewModel {
   statusTitle: string;
   statusMessage: string;
   snapshot: MonitorSnapshot | undefined;
-  totalPlaces: number;
+  totalCompanies: number;
   insideNames: string[];
   center: LatLng | null;
-  mapPlaces: Place[];
+  mapCompanies: Company[];
   mapRooms: Room[];
   states: Map<string, TargetState>;
   recentEvents: GeofenceEvent[];
@@ -51,33 +51,33 @@ export function useMonitorViewModel(): MonitorViewModel {
 
   const { data: snapshot } = useMonitorSnapshot();
   const { data: permissions } = usePermissions();
-  const { data: places = [] } = usePlaces();
-  const { data: states = new Map<string, TargetState>() } = usePlaceStates();
+  const { data: companies = [] } = useCompanies();
+  const { data: states = new Map<string, TargetState>() } = useCompanyStates();
   const { data: recentEvents = [] } = useEvents({ limit: 5 });
 
   const center = snapshot?.lastFix ?? snapshot?.origin ?? null;
 
-  const mapPlaces = useMemo(() => {
-    if (!center || places.length === 0) return [];
-    return queryNearest(getPlaceIndex(), center, MAP_PLACE_LIMIT).map((result) => result.item);
-  }, [center, places.length]);
+  const mapCompanies = useMemo(() => {
+    if (!center || companies.length === 0) return [];
+    return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((result) => result.item);
+  }, [center, companies.length]);
 
   const mapRooms = useMemo(() => {
-    if (mapPlaces.length === 0) return [];
-    const grouped = getRoomsByPlace(mapPlaces.map((place) => place.id));
+    if (mapCompanies.length === 0) return [];
+    const grouped = getRoomsByCompany(mapCompanies.map((company) => company.id));
     return [...grouped.values()].flat();
-  }, [mapPlaces]);
+  }, [mapCompanies]);
 
   const insideNames = useMemo(() => {
     const names: string[] = [];
     for (const state of states.values()) {
       if (state.state !== 'inside') continue;
-      if (state.targetKind === 'place') {
-        names.push(places.find((place) => place.id === state.targetId)?.name ?? state.targetId);
+      if (state.targetKind === 'company') {
+        names.push(companies.find((company) => company.id === state.targetId)?.name ?? state.targetId);
       }
     }
     return names;
-  }, [states, places]);
+  }, [states, companies]);
 
   const needsPermission = permissions
     ? permissions.foregroundLocation !== 'granted' ||
@@ -126,15 +126,15 @@ export function useMonitorViewModel(): MonitorViewModel {
     statusTitle: t(`monitor.status.${status}.title`),
     statusMessage:
       status === 'precise'
-        ? t('monitor.status.precise.message', { total: snapshot?.activePlaceIds.length ?? 0 })
+        ? t('monitor.status.precise.message', { total: snapshot?.activeCompanyIds.length ?? 0 })
         : status === 'regions'
           ? t('monitor.status.regions.message', { total: snapshot?.regionCount ?? 0 })
           : t(`monitor.status.${status}.message`),
     snapshot,
-    totalPlaces: places.length,
+    totalCompanies: companies.length,
     insideNames,
     center,
-    mapPlaces,
+    mapCompanies,
     mapRooms,
     states,
     recentEvents,

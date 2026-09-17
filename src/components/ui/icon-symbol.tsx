@@ -24,6 +24,10 @@ const MAPPING = {
   'trash': 'delete',
   'wrench.and.screwdriver': 'build',
   'battery.25': 'battery-alert',
+  'mappin.and.ellipse': 'add-location-alt',
+  'building.2.fill': 'business',
+  'square.on.square': 'layers',
+  'arrow.uturn.backward': 'undo',
 } as IconMapping;
 
 export function IconSymbol({

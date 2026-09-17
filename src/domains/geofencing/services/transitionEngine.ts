@@ -1,11 +1,17 @@
-import { boundingBoxOfRing, distanceMeters, isPointInPolygon, ringCentroid } from '@src/core/geo';
-import type { BoundingBox, Fix, LatLng } from '@src/core/geo';
+import {
+  boundingBoxOfRing,
+  distanceMeters,
+  distanceToRingMeters,
+  isPointInPolygon,
+  ringCentroid,
+} from '@src/core/geo';
+import type { BoundingBox, Fix, LatLng, Ring } from '@src/core/geo';
 
 import type {
   EventSource,
   GeofenceEvent,
   GeofenceEventKind,
-  Place,
+  Company,
   PresenceState,
   Room,
   TargetState,
@@ -20,8 +26,8 @@ export interface TransitionConfig {
 
 export interface EvaluateInput {
   fix: Fix;
-  places: readonly Place[];
-  roomsByPlace: ReadonlyMap<string, readonly Room[]>;
+  companies: readonly Company[];
+  roomsByCompany: ReadonlyMap<string, readonly Room[]>;
   states: ReadonlyMap<string, TargetState>;
   config: TransitionConfig;
   source: EventSource;
@@ -39,27 +45,27 @@ export interface EvaluateResult {
 const OUTSIDE: PresenceState = 'outside';
 const INSIDE: PresenceState = 'inside';
 
-interface RoomGeometry {
+interface RingGeometry {
   box: BoundingBox | null;
   centroid: LatLng | null;
 }
 
-const geometryCache = new Map<string, RoomGeometry>();
+const geometryCache = new Map<string, RingGeometry>();
 
-function roomGeometry(room: Room): RoomGeometry {
-  const cached = geometryCache.get(room.id);
+function ringGeometry(id: string, ring: Ring): RingGeometry {
+  const cached = geometryCache.get(id);
   if (cached) return cached;
 
-  const geometry: RoomGeometry = {
-    box: boundingBoxOfRing(room.polygon),
-    centroid: ringCentroid(room.polygon),
+  const geometry: RingGeometry = {
+    box: boundingBoxOfRing(ring),
+    centroid: ringCentroid(ring),
   };
-  geometryCache.set(room.id, geometry);
+  geometryCache.set(id, geometry);
   return geometry;
 }
 
-export function invalidateRoomGeometry(roomId?: string): void {
-  if (roomId) geometryCache.delete(roomId);
+export function invalidateGeometry(id?: string): void {
+  if (id) geometryCache.delete(id);
   else geometryCache.clear();
 }
 
@@ -68,7 +74,7 @@ function resolveOccupiedRoom(fix: Fix, rooms: readonly Room[]): string | null {
   let bestDistance = Infinity;
 
   for (const room of rooms) {
-    const geometry = roomGeometry(room);
+    const geometry = ringGeometry(room.id, room.polygon);
     if (!isPointInPolygon(fix, room.polygon, geometry.box)) continue;
 
     const distance = geometry.centroid ? distanceMeters(fix, geometry.centroid) : 0;
@@ -88,13 +94,13 @@ function resolveOccupiedRoom(fix: Fix, rooms: readonly Room[]): string | null {
 function initialState(
   targetId: string,
   targetKind: TargetState['targetKind'],
-  placeId: string,
+  companyId: string,
   timestamp: number,
 ): TargetState {
   return {
     targetId,
     targetKind,
-    placeId,
+    companyId,
     state: OUTSIDE,
     transitionSeq: 0,
     since: 0,
@@ -114,20 +120,50 @@ function confidenceMargin(
   return Math.min(accuracy, threshold * ratio);
 }
 
-function desiredPlaceState(
+function desiredCircularState(
   current: PresenceState,
   distance: number,
-  place: Place,
+  company: Company,
   accuracy: number | null,
   config: TransitionConfig,
 ): PresenceState {
   if (current === OUTSIDE) {
-    const margin = confidenceMargin(accuracy, place.radius, config.maxAccuracyMarginRatio);
-    return distance + margin <= place.radius ? INSIDE : OUTSIDE;
+    const margin = confidenceMargin(accuracy, company.radius, config.maxAccuracyMarginRatio);
+    return distance + margin <= company.radius ? INSIDE : OUTSIDE;
   }
 
-  const margin = confidenceMargin(accuracy, place.activeRadius, config.maxAccuracyMarginRatio);
-  return distance - margin > place.activeRadius ? OUTSIDE : INSIDE;
+  const margin = confidenceMargin(accuracy, company.activeRadius, config.maxAccuracyMarginRatio);
+  return distance - margin > company.activeRadius ? OUTSIDE : INSIDE;
+}
+
+function desiredPolygonState(
+  current: PresenceState,
+  fix: Fix,
+  company: Company,
+  polygon: Ring,
+): PresenceState {
+  const geometry = ringGeometry(company.id, polygon);
+  const inside = isPointInPolygon(fix, polygon, geometry.box);
+
+  if (current === OUTSIDE) return inside ? INSIDE : OUTSIDE;
+  if (inside) return INSIDE;
+
+  const buffer = Math.max(company.activeRadius - company.radius, 0);
+  return distanceToRingMeters(fix, polygon) > buffer ? OUTSIDE : INSIDE;
+}
+
+function desiredCompanyState(
+  current: PresenceState,
+  fix: Fix,
+  distance: number,
+  company: Company,
+  config: TransitionConfig,
+): PresenceState {
+  const polygon = company.polygon;
+  if (polygon && polygon.length >= 3) {
+    return desiredPolygonState(current, fix, company, polygon);
+  }
+  return desiredCircularState(current, distance, company, fix.accuracy, config);
 }
 
 interface Commit {
@@ -199,7 +235,7 @@ function applyObservation(
 function makeEvent(
   kind: GeofenceEventKind,
   state: TargetState,
-  place: Place,
+  company: Company,
   room: Room | null,
   fix: Fix,
   distance: number | null,
@@ -208,8 +244,8 @@ function makeEvent(
   return {
     idempotencyKey: `${state.targetId}:${state.transitionSeq}:${kind}`,
     kind,
-    placeId: place.id,
-    placeName: place.name,
+    companyId: company.id,
+    companyName: company.name,
     roomId: room?.id ?? null,
     roomName: room?.name ?? null,
     occurredAt: fix.timestamp,
@@ -223,26 +259,26 @@ function makeEvent(
 }
 
 export function evaluateFix(input: EvaluateInput): EvaluateResult {
-  const { fix, places, roomsByPlace, states, config, source } = input;
+  const { fix, companies, roomsByCompany, states, config, source } = input;
 
   if (fix.accuracy !== null && fix.accuracy > config.maxAccuracyMeters) {
     return { accepted: false, rejectionReason: 'inaccurate', events: [], changedStates: [] };
   }
 
-  if (places.length === 0) {
+  if (companies.length === 0) {
     return { accepted: true, rejectionReason: 'no_candidates', events: [], changedStates: [] };
   }
 
   const events: GeofenceEvent[] = [];
   const changedStates: TargetState[] = [];
 
-  for (const place of places) {
-    if (!place.enabled) continue;
+  for (const company of companies) {
+    if (!company.enabled) continue;
 
-    const distance = distanceMeters(fix, place);
+    const distance = distanceMeters(fix, company);
     const previous =
-      states.get(place.id) ?? initialState(place.id, 'place', place.id, fix.timestamp);
-    const desired = desiredPlaceState(previous.state, distance, place, fix.accuracy, config);
+      states.get(company.id) ?? initialState(company.id, 'company', company.id, fix.timestamp);
+    const desired = desiredCompanyState(previous.state, fix, distance, company, config);
 
     const result = applyObservation(previous, desired, distance, fix.timestamp, config);
     if (result.changed) changedStates.push(result.state);
@@ -250,9 +286,9 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
     if (result.committed) {
       events.push(
         makeEvent(
-          result.state.state === INSIDE ? 'place_enter' : 'place_exit',
+          result.state.state === INSIDE ? 'company_enter' : 'company_exit',
           result.state,
-          place,
+          company,
           null,
           fix,
           distance,
@@ -261,16 +297,16 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
       );
     }
 
-    const rooms = roomsByPlace.get(place.id) ?? [];
+    const rooms = roomsByCompany.get(company.id) ?? [];
     if (rooms.length === 0) continue;
 
-    const insidePlace = result.state.state === INSIDE;
+    const insideCompany = result.state.state === INSIDE;
 
-    const occupiedRoomId = insidePlace ? resolveOccupiedRoom(fix, rooms) : null;
+    const occupiedRoomId = insideCompany ? resolveOccupiedRoom(fix, rooms) : null;
 
     for (const room of rooms) {
       const roomPrevious =
-        states.get(room.id) ?? initialState(room.id, 'room', place.id, fix.timestamp);
+        states.get(room.id) ?? initialState(room.id, 'room', company.id, fix.timestamp);
 
       const roomDesired = room.id === occupiedRoomId ? INSIDE : OUTSIDE;
 
@@ -279,7 +315,7 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
         roomDesired,
         null,
         fix.timestamp,
-        insidePlace ? config : { ...config, confirmations: 1, minimumDwellMs: 0 },
+        insideCompany ? config : { ...config, confirmations: 1, minimumDwellMs: 0 },
       );
 
       if (roomResult.changed) changedStates.push(roomResult.state);
@@ -289,7 +325,7 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
           makeEvent(
             roomResult.state.state === INSIDE ? 'room_enter' : 'room_exit',
             roomResult.state,
-            place,
+            company,
             room,
             fix,
             null,

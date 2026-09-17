@@ -142,13 +142,6 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
 
         <Text style={styles.sectionTitle}>{t('settings.data.title')}</Text>
         <Button
-          label={t('settings.data.reseed', { total: viewModel.seedSize })}
-          variant="secondary"
-          loading={viewModel.busy}
-          disabled={viewModel.busy}
-          onPress={() => void viewModel.reseedDataset()}
-        />
-        <Button
           label={t('settings.data.clearEvents')}
           variant="ghost"
           onPress={viewModel.clearEventLog}

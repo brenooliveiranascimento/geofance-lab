@@ -69,11 +69,11 @@ export function OnboardingView({ viewModel }: OnboardingViewProps): React.JSX.El
             disabled={viewModel.busy}
             onPress={() => void viewModel.advance()}
           />
-          {!viewModel.isLast ? (
-            <TouchableOpacity onPress={viewModel.skip} disabled={viewModel.busy}>
-              <Text style={styles.skip}>{t('onboarding.skip')}</Text>
-            </TouchableOpacity>
-          ) : null}
+          <TouchableOpacity onPress={viewModel.skip} disabled={viewModel.busy}>
+            <Text style={styles.skip}>
+              {viewModel.isLast ? t('onboarding.skipCompany') : t('onboarding.skip')}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScreenTemplate>

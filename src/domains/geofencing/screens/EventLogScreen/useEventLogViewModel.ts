@@ -9,11 +9,11 @@ import { useEvents } from '../../queries/useEvents';
 import { clearEvents, exportEventsAsJsonl } from '../../services/eventRepository';
 import type { GeofenceEvent, GeofenceEventKind } from '../../types';
 
-export type EventScope = 'all' | 'places' | 'rooms';
+export type EventScope = 'all' | 'companies' | 'rooms';
 
 const SCOPE_KINDS: Record<EventScope, GeofenceEventKind[] | undefined> = {
   all: undefined,
-  places: ['place_enter', 'place_exit'],
+  companies: ['company_enter', 'company_exit'],
   rooms: ['room_enter', 'room_exit'],
 };
 

@@ -9,7 +9,7 @@ import { colors, fontSize, radius, spacing } from '@src/theme';
 import type { GeofenceEvent } from '../../types';
 import type { EventLogViewModel, EventScope } from './useEventLogViewModel';
 
-const SCOPES: EventScope[] = ['all', 'places', 'rooms'];
+const SCOPES: EventScope[] = ['all', 'companies', 'rooms'];
 
 export interface EventLogViewProps {
   viewModel: EventLogViewModel;
@@ -28,7 +28,7 @@ export function EventLogView({ viewModel }: EventLogViewProps): React.JSX.Elemen
           <View style={[styles.marker, entering ? styles.markerIn : styles.markerOut]} />
           <View style={styles.rowBody}>
             <Text style={styles.rowTitle} numberOfLines={1}>
-              {item.roomName ? `${item.placeName} · ${item.roomName}` : item.placeName}
+              {item.roomName ? `${item.companyName} · ${item.roomName}` : item.companyName}
             </Text>
             <Text style={styles.rowMeta}>
               {t(`events.kind.${item.kind}`)} · {t(`events.source.${item.source}`)}

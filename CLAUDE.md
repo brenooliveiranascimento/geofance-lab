@@ -2,9 +2,9 @@
 
 > Código e comentários em **inglês**. Documentação em **português**.
 
-Módulo de geolocalização em background + entrega sequenciada de notificações locais.
-Sem backend, sem autenticação, sem monetização: todo o estado vive no aparelho.
-A explicação completa das decisões está no [README.md](README.md).
+Cadastro de empresas com perímetro e cômodos desenhados no mapa, monitorados em background,
+mais entrega sequenciada de notificações locais. Sem backend, sem autenticação, sem monetização:
+todo o estado vive no aparelho. A explicação completa das decisões está no [README.md](README.md).
 
 ## Stack
 
@@ -19,7 +19,7 @@ Expo SDK 54 · React Native 0.81 · TypeScript strict · Expo Router v6 ·
 app/                  rotas — re-exports de uma linha, sem lógica
 src/core/             db · geo (haversine, polígono, índice) · permissões · logger
 src/domains/
-  geofencing/         monitoramento de locais e cômodos
+  geofencing/         empresas, cômodos e o monitoramento em background
   messaging/          sequências de notificações locais
   settings/ onboarding/
 src/components/       atoms · molecules · organisms · templates
@@ -50,7 +50,11 @@ src/components/       atoms · molecules · organisms · templates
   `sequencePlanner`, `routeSimulator`. Sem I/O, sem React. É onde estão os testes, e é onde
   mudanças precisam de teste novo.
 - **Ao mexer em raio/raio ativo**, lembre que `activeRadius >= radius` é invariante: a folga
-  entre os dois é a banda morta que impede eventos repetidos na borda.
+  entre os dois é a banda morta que impede eventos repetidos na borda. Numa empresa os dois são
+  derivados do polígono — não peça ao usuário.
+- **Entrada numa empresa é decidida pelo polígono, não pelo círculo.** O círculo só existe para
+  registrar a região nativa e acordar o app. Um local sem polígono cai na regra circular do
+  enunciado, e essa via continua testada.
 - **Ao mudar conteúdo ou timing das mensagens**, não agende direto — mexa no plano e deixe o
   `scheduler` reconciliar. O identificador da notificação é a chave do slot, e o SO usa isso
   para recusar duplicatas.
@@ -58,6 +62,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (143 testes)
-npm run seed      # regenera assets/seed/places.json (determinístico)
+npm run verify    # typecheck + check:i18n + jest (165 testes)
+npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```

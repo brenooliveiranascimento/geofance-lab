@@ -74,7 +74,7 @@ export default function RootLayout() {
               <Stack.Screen name="index" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(onboarding)" />
-              <Stack.Screen name="places/[id]" options={{ presentation: 'card' }} />
+              <Stack.Screen name="companies/[id]" options={{ presentation: 'card' }} />
               <Stack.Screen name="simulator" options={{ presentation: 'modal' }} />
               <Stack.Screen name="diagnostics" options={{ presentation: 'modal' }} />
             </Stack>

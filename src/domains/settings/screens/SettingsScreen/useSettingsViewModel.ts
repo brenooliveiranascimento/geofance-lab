@@ -5,7 +5,6 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Platform } from 'react-native';
 
-import { SEED_SIZE, reseed } from '@src/core/bootstrap';
 import { resetDatabase } from '@src/core/db';
 import { clearLog } from '@src/core/logger';
 import {
@@ -21,7 +20,7 @@ import {
 } from '@src/domains/geofencing/queries/invalidate';
 import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
 import { clearEvents } from '@src/domains/geofencing/services/eventRepository';
-import { refreshMonitoring, stopMonitoring } from '@src/domains/geofencing/services/monitorService';
+import { stopMonitoring } from '@src/domains/geofencing/services/monitorService';
 import { DELIVERY_ENDPOINT } from '@src/domains/messaging';
 import { invalidateMessagingData } from '@src/domains/messaging/queries/useMessagingState';
 import { useToast } from '@src/lib/toast';
@@ -40,10 +39,8 @@ export interface SettingsViewModel {
   showBatteryOptOut: boolean;
   openBatterySettings: () => Promise<void>;
   appVersion: string;
-  seedSize: number;
   deliveryEndpoint: string;
   busy: boolean;
-  reseedDataset: () => Promise<void>;
   clearEventLog: () => void;
   resetEverything: () => void;
   openDiagnostics: () => void;
@@ -91,17 +88,6 @@ export function useSettingsViewModel(): SettingsViewModel {
     }
   }, []);
 
-  const reseedDataset = useCallback(async () => {
-    setBusy(true);
-    try {
-      const count = reseed();
-      invalidateGeofencingData();
-      await refreshMonitoring();
-      toast.show({ message: t('places.reseeded', { total: count }), type: 'success' });
-    } finally {
-      setBusy(false);
-    }
-  }, [t, toast]);
 
   const clearEventLog = useCallback(() => {
     clearEvents();
@@ -122,7 +108,6 @@ export function useSettingsViewModel(): SettingsViewModel {
             try {
               await stopMonitoring();
               resetDatabase();
-              reseed();
               invalidateGeofencingData();
               invalidateMessagingData();
               toast.show({ message: t('settings.reset.done'), type: 'success' });
@@ -146,10 +131,8 @@ export function useSettingsViewModel(): SettingsViewModel {
     showBatteryOptOut: needsBatteryOptimizationOptOut,
     openBatterySettings,
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
-    seedSize: SEED_SIZE,
     deliveryEndpoint: DELIVERY_ENDPOINT,
     busy,
-    reseedDataset,
     clearEventLog,
     resetEverything,
     openDiagnostics: () => router.push('/diagnostics'),

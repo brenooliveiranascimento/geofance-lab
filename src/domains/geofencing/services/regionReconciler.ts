@@ -1,7 +1,7 @@
 import { distanceMeters } from '@src/core/geo';
 import type { LatLng } from '@src/core/geo';
 
-import type { NativeRegion, Place } from '../types';
+import type { NativeRegion, Company } from '../types';
 
 export interface SelectRegionsOptions {
   limit: number;
@@ -10,25 +10,25 @@ export interface SelectRegionsOptions {
   guardIdentifier: string;
 }
 
-export interface SelectedPlace {
-  place: Place;
+export interface SelectedCompany {
+  company: Company;
   distanceMeters: number;
   edgeDistanceMeters: number;
 }
 
 export interface SelectRegionsResult {
   regions: NativeRegion[];
-  selected: SelectedPlace[];
+  selected: SelectedCompany[];
   guard: NativeRegion | null;
   omittedCount: number;
 }
 
-function toRegion(place: Place, minRadius: number): NativeRegion {
+function toRegion(company: Company, minRadius: number): NativeRegion {
   return {
-    identifier: place.id,
-    latitude: place.latitude,
-    longitude: place.longitude,
-    radius: Math.max(place.activeRadius, minRadius),
+    identifier: company.id,
+    latitude: company.latitude,
+    longitude: company.longitude,
+    radius: Math.max(company.activeRadius, minRadius),
     notifyOnEnter: true,
     notifyOnExit: true,
   };
@@ -44,25 +44,25 @@ function guardRadiusFor(
 }
 
 export function selectRegions(
-  places: readonly Place[],
+  companies: readonly Company[],
   origin: LatLng,
   options: SelectRegionsOptions,
 ): SelectRegionsResult {
   const { limit, minRegionRadiusMeters, minGuardRadiusMeters, guardIdentifier } = options;
 
-  const ranked: SelectedPlace[] = places
-    .filter((place) => place.enabled)
-    .map((place) => {
-      const distance = distanceMeters(origin, place);
+  const ranked: SelectedCompany[] = companies
+    .filter((company) => company.enabled)
+    .map((company) => {
+      const distance = distanceMeters(origin, company);
       return {
-        place,
+        company,
         distanceMeters: distance,
-        edgeDistanceMeters: distance - place.activeRadius,
+        edgeDistanceMeters: distance - company.activeRadius,
       };
     })
     .sort(
       (a, b) =>
-        a.edgeDistanceMeters - b.edgeDistanceMeters || a.place.id.localeCompare(b.place.id),
+        a.edgeDistanceMeters - b.edgeDistanceMeters || a.company.id.localeCompare(b.company.id),
     );
 
   if (limit <= 0) {
@@ -71,7 +71,7 @@ export function selectRegions(
 
   if (ranked.length <= limit) {
     return {
-      regions: ranked.map((entry) => toRegion(entry.place, minRegionRadiusMeters)),
+      regions: ranked.map((entry) => toRegion(entry.company, minRegionRadiusMeters)),
       selected: ranked,
       guard: null,
       omittedCount: 0,
@@ -99,7 +99,7 @@ export function selectRegions(
   };
 
   return {
-    regions: [...selected.map((entry) => toRegion(entry.place, minRegionRadiusMeters)), guard],
+    regions: [...selected.map((entry) => toRegion(entry.company, minRegionRadiusMeters)), guard],
     selected,
     guard,
     omittedCount: ranked.length - selected.length,

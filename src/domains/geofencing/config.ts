@@ -27,11 +27,18 @@ export const MONITOR_CONFIG = {
   },
 } as const;
 
+export const COMPANY_SHAPE = {
+  exitBufferMeters: 25,
+  minVertices: 3,
+  minCompanyAreaSquareMeters: 20,
+  minRoomAreaSquareMeters: 2,
+} as const;
+
 export const MONITOR_KEYS = {
   running: 'monitor.running',
   origin: 'monitor.origin',
   regions: 'monitor.regions',
-  activePlaces: 'monitor.activePlaces',
+  activeCompanies: 'monitor.activeCompanies',
   lastFix: 'monitor.lastFix',
   lastEvaluatedAt: 'monitor.lastEvaluatedAt',
 } as const;

@@ -7,7 +7,7 @@ import { StatCard, StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import { PlacesMap } from '../../components/PlacesMap';
+import { CompaniesMap } from '../../components/CompaniesMap';
 import type { MonitorViewModel } from './useMonitorViewModel';
 
 export interface MonitorViewProps {
@@ -21,10 +21,10 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
     status,
     statusTitle,
     statusMessage,
-    totalPlaces,
+    totalCompanies,
     insideNames,
     center,
-    mapPlaces,
+    mapCompanies,
     mapRooms,
     states,
     recentEvents,
@@ -50,9 +50,9 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
 
         <View style={styles.mapFrame}>
           {mapAvailable ? (
-            <PlacesMap
+            <CompaniesMap
               center={center}
-              places={mapPlaces}
+              companies={mapCompanies}
               rooms={mapRooms}
               states={states}
               emptyLabel={t('monitor.noPosition')}
@@ -67,9 +67,9 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
 
         <View style={styles.stats}>
           <StatCard
-            label={t('monitor.stats.places')}
-            value={String(totalPlaces)}
-            hint={t('monitor.stats.placesHint')}
+            label={t('monitor.stats.companies')}
+            value={String(totalCompanies)}
+            hint={t('monitor.stats.companiesHint')}
           />
           <StatCard
             label={t('monitor.stats.regions')}
@@ -107,7 +107,7 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
               <View key={event.idempotencyKey} style={styles.eventRow}>
                 <Text style={styles.eventKind}>{t(`events.kind.${event.kind}`)}</Text>
                 <Text style={styles.eventName} numberOfLines={1}>
-                  {event.roomName ? `${event.placeName} · ${event.roomName}` : event.placeName}
+                  {event.roomName ? `${event.companyName} · ${event.roomName}` : event.companyName}
                 </Text>
                 <Text style={styles.eventTime}>
                   {new Date(event.occurredAt).toLocaleTimeString('pt-BR')}

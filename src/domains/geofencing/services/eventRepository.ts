@@ -7,8 +7,8 @@ interface EventRow {
   id: number;
   idempotency_key: string;
   kind: GeofenceEventKind;
-  place_id: string;
-  place_name: string;
+  company_id: string;
+  company_name: string;
   room_id: string | null;
   room_name: string | null;
   occurred_at: number;
@@ -24,8 +24,8 @@ const toEvent = (row: EventRow): GeofenceEvent => ({
   id: row.id,
   idempotencyKey: row.idempotency_key,
   kind: row.kind,
-  placeId: row.place_id,
-  placeName: row.place_name,
+  companyId: row.company_id,
+  companyName: row.company_name,
   roomId: row.room_id,
   roomName: row.room_name,
   occurredAt: row.occurred_at,
@@ -50,14 +50,14 @@ export function commitEvaluation(
     for (const event of events) {
       const result = db.runSync(
         `INSERT OR IGNORE INTO geofence_events
-           (idempotency_key, kind, place_id, place_name, room_id, room_name,
+           (idempotency_key, kind, company_id, company_name, room_id, room_name,
             occurred_at, latitude, longitude, accuracy, distance, source, notified)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
         [
           event.idempotencyKey,
           event.kind,
-          event.placeId,
-          event.placeName,
+          event.companyId,
+          event.companyName,
           event.roomId,
           event.roomName,
           event.occurredAt,
@@ -84,7 +84,7 @@ export function markNotified(ids: readonly number[]): void {
 }
 
 export interface EventFilter {
-  placeId?: string;
+  companyId?: string;
   kinds?: GeofenceEventKind[];
   limit?: number;
 }
@@ -93,9 +93,9 @@ export function listEvents(filter: EventFilter = {}): GeofenceEvent[] {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
 
-  if (filter.placeId) {
-    conditions.push('place_id = ?');
-    params.push(filter.placeId);
+  if (filter.companyId) {
+    conditions.push('company_id = ?');
+    params.push(filter.companyId);
   }
   if (filter.kinds && filter.kinds.length > 0) {
     conditions.push(`kind IN (${filter.kinds.map(() => '?').join(',')})`);

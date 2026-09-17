@@ -2,10 +2,10 @@ import { getDatabase, transaction } from '@src/core/db';
 import { buildGridIndex, type GridIndex, type LatLng, type Ring } from '@src/core/geo';
 import { logger } from '@src/core/logger';
 
-import { invalidateRoomGeometry } from './transitionEngine';
-import type { Place, Room } from '../types';
+import { invalidateGeometry } from './transitionEngine';
+import type { Company, Room } from '../types';
 
-interface PlaceRow {
+interface CompanyRow {
   id: string;
   name: string;
   latitude: number;
@@ -19,7 +19,7 @@ interface PlaceRow {
 
 interface RoomRow {
   id: string;
-  place_id: string;
+  company_id: string;
   name: string;
   polygon: string;
   created_at: number;
@@ -35,7 +35,7 @@ function parseRing(raw: string | null): Ring | null {
   }
 }
 
-const toPlace = (row: PlaceRow): Place => ({
+const toCompany = (row: CompanyRow): Company => ({
   id: row.id,
   name: row.name,
   latitude: row.latitude,
@@ -49,13 +49,13 @@ const toPlace = (row: PlaceRow): Place => ({
 
 const toRoom = (row: RoomRow): Room => ({
   id: row.id,
-  placeId: row.place_id,
+  companyId: row.company_id,
   name: row.name,
   polygon: parseRing(row.polygon) ?? [],
   createdAt: row.created_at,
 });
 
-let indexCache: GridIndex<Place> | null = null;
+let indexCache: GridIndex<Company> | null = null;
 let maxActiveRadiusCache: number | null = null;
 
 function invalidateCaches(): void {
@@ -63,31 +63,31 @@ function invalidateCaches(): void {
   maxActiveRadiusCache = null;
 }
 
-export function listPlaces(): Place[] {
-  return getDatabase().getAllSync<PlaceRow>('SELECT * FROM places ORDER BY name;').map(toPlace);
+export function listCompanies(): Company[] {
+  return getDatabase().getAllSync<CompanyRow>('SELECT * FROM companies ORDER BY name;').map(toCompany);
 }
 
-export function listEnabledPlaces(): Place[] {
+export function listEnabledCompanies(): Company[] {
   return getDatabase()
-    .getAllSync<PlaceRow>('SELECT * FROM places WHERE enabled = 1 ORDER BY name;')
-    .map(toPlace);
+    .getAllSync<CompanyRow>('SELECT * FROM companies WHERE enabled = 1 ORDER BY name;')
+    .map(toCompany);
 }
 
-export function getPlace(id: string): Place | null {
-  const row = getDatabase().getFirstSync<PlaceRow>('SELECT * FROM places WHERE id = ?;', id);
-  return row ? toPlace(row) : null;
+export function getCompany(id: string): Company | null {
+  const row = getDatabase().getFirstSync<CompanyRow>('SELECT * FROM companies WHERE id = ?;', id);
+  return row ? toCompany(row) : null;
 }
 
-export function countPlaces(): number {
+export function countCompanies(): number {
   const row = getDatabase().getFirstSync<{ total: number }>(
-    'SELECT COUNT(*) AS total FROM places;',
+    'SELECT COUNT(*) AS total FROM companies;',
   );
   return row?.total ?? 0;
 }
 
-export function getPlaceIndex(): GridIndex<Place> {
+export function getCompanyIndex(): GridIndex<Company> {
   if (!indexCache) {
-    indexCache = buildGridIndex(listEnabledPlaces(), (place) => place as LatLng);
+    indexCache = buildGridIndex(listEnabledCompanies(), (company) => company as LatLng);
   }
   return indexCache;
 }
@@ -95,16 +95,16 @@ export function getPlaceIndex(): GridIndex<Place> {
 export function getMaxActiveRadius(): number {
   if (maxActiveRadiusCache === null) {
     const row = getDatabase().getFirstSync<{ value: number | null }>(
-      'SELECT MAX(active_radius) AS value FROM places WHERE enabled = 1;',
+      'SELECT MAX(active_radius) AS value FROM companies WHERE enabled = 1;',
     );
     maxActiveRadiusCache = row?.value ?? 0;
   }
   return maxActiveRadiusCache;
 }
 
-export function upsertPlace(place: Place): void {
+export function upsertCompany(company: Company): void {
   getDatabase().runSync(
-    `INSERT INTO places (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
+    `INSERT INTO companies (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        name = excluded.name,
@@ -115,37 +115,37 @@ export function upsertPlace(place: Place): void {
        polygon = excluded.polygon,
        enabled = excluded.enabled;`,
     [
-      place.id,
-      place.name,
-      place.latitude,
-      place.longitude,
-      place.radius,
-      place.activeRadius,
-      place.polygon ? JSON.stringify(place.polygon) : null,
-      place.enabled ? 1 : 0,
-      place.createdAt,
+      company.id,
+      company.name,
+      company.latitude,
+      company.longitude,
+      company.radius,
+      company.activeRadius,
+      company.polygon ? JSON.stringify(company.polygon) : null,
+      company.enabled ? 1 : 0,
+      company.createdAt,
     ],
   );
   invalidateCaches();
 }
 
-export function setPlaceEnabled(id: string, enabled: boolean): void {
-  getDatabase().runSync('UPDATE places SET enabled = ? WHERE id = ?;', enabled ? 1 : 0, id);
+export function setCompanyEnabled(id: string, enabled: boolean): void {
+  getDatabase().runSync('UPDATE companies SET enabled = ? WHERE id = ?;', enabled ? 1 : 0, id);
   invalidateCaches();
 }
 
-export function deletePlace(id: string): void {
+export function deleteCompany(id: string): void {
   transaction((db) => {
-    db.runSync('DELETE FROM monitor_state WHERE place_id = ?;', id);
-    db.runSync('DELETE FROM places WHERE id = ?;', id);
+    db.runSync('DELETE FROM monitor_state WHERE company_id = ?;', id);
+    db.runSync('DELETE FROM companies WHERE id = ?;', id);
   });
   invalidateCaches();
-  invalidateRoomGeometry();
+  invalidateGeometry();
 }
 
-export function listRooms(placeId: string): Room[] {
+export function listRooms(companyId: string): Room[] {
   return getDatabase()
-    .getAllSync<RoomRow>('SELECT * FROM rooms WHERE place_id = ? ORDER BY name;', placeId)
+    .getAllSync<RoomRow>('SELECT * FROM rooms WHERE company_id = ? ORDER BY name;', companyId)
     .map(toRoom);
 }
 
@@ -153,37 +153,44 @@ export function listAllRooms(): Room[] {
   return getDatabase().getAllSync<RoomRow>('SELECT * FROM rooms ORDER BY name;').map(toRoom);
 }
 
-export function getRoomsByPlace(placeIds?: readonly string[]): Map<string, Room[]> {
+export function getRoomsByCompany(companyIds?: readonly string[]): Map<string, Room[]> {
   const rooms =
-    placeIds && placeIds.length > 0
+    companyIds && companyIds.length > 0
       ? getDatabase()
           .getAllSync<RoomRow>(
-            `SELECT * FROM rooms WHERE place_id IN (${placeIds.map(() => '?').join(',')});`,
-            placeIds as string[],
+            `SELECT * FROM rooms WHERE company_id IN (${companyIds.map(() => '?').join(',')});`,
+            companyIds as string[],
           )
           .map(toRoom)
       : listAllRooms();
 
   const grouped = new Map<string, Room[]>();
   for (const room of rooms) {
-    const bucket = grouped.get(room.placeId);
+    const bucket = grouped.get(room.companyId);
     if (bucket) bucket.push(room);
-    else grouped.set(room.placeId, [room]);
+    else grouped.set(room.companyId, [room]);
   }
   return grouped;
 }
 
+export function countRoomsByCompany(): Map<string, number> {
+  const rows = getDatabase().getAllSync<{ company_id: string; total: number }>(
+    'SELECT company_id, COUNT(*) AS total FROM rooms GROUP BY company_id;',
+  );
+  return new Map(rows.map((row) => [row.company_id, row.total]));
+}
+
 export function upsertRoom(room: Room): void {
   getDatabase().runSync(
-    `INSERT INTO rooms (id, place_id, name, polygon, created_at)
+    `INSERT INTO rooms (id, company_id, name, polygon, created_at)
      VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
-       place_id = excluded.place_id,
+       company_id = excluded.company_id,
        name = excluded.name,
        polygon = excluded.polygon;`,
-    [room.id, room.placeId, room.name, JSON.stringify(room.polygon), room.createdAt],
+    [room.id, room.companyId, room.name, JSON.stringify(room.polygon), room.createdAt],
   );
-  invalidateRoomGeometry(room.id);
+  invalidateGeometry(room.id);
 }
 
 export function deleteRoom(id: string): void {
@@ -191,11 +198,11 @@ export function deleteRoom(id: string): void {
     db.runSync('DELETE FROM monitor_state WHERE target_id = ?;', id);
     db.runSync('DELETE FROM rooms WHERE id = ?;', id);
   });
-  invalidateRoomGeometry(id);
+  invalidateGeometry(id);
 }
 
 export interface SeedPayload {
-  places: {
+  companies: {
     id: string;
     name: string;
     latitude: number;
@@ -207,20 +214,20 @@ export interface SeedPayload {
   }[];
 }
 
-export function seedPlaces(payload: SeedPayload, { replace = true } = {}): number {
+export function seedCompanies(payload: SeedPayload, { replace = true } = {}): number {
   const now = Date.now();
 
   const inserted = transaction((db) => {
     if (replace) {
       db.runSync('DELETE FROM monitor_state;');
       db.runSync('DELETE FROM rooms;');
-      db.runSync('DELETE FROM places;');
+      db.runSync('DELETE FROM companies;');
     }
 
     let count = 0;
-    for (const entry of payload.places) {
+    for (const entry of payload.companies) {
       db.runSync(
-        `INSERT INTO places (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
+        `INSERT INTO companies (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
@@ -243,10 +250,10 @@ export function seedPlaces(payload: SeedPayload, { replace = true } = {}): numbe
 
       for (const room of entry.rooms ?? []) {
         db.runSync(
-          `INSERT INTO rooms (id, place_id, name, polygon, created_at)
+          `INSERT INTO rooms (id, company_id, name, polygon, created_at)
            VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
-             place_id = excluded.place_id,
+             company_id = excluded.company_id,
              name = excluded.name,
              polygon = excluded.polygon;`,
           [room.id, entry.id, room.name, JSON.stringify(room.polygon), now],
@@ -259,7 +266,7 @@ export function seedPlaces(payload: SeedPayload, { replace = true } = {}): numbe
   });
 
   invalidateCaches();
-  invalidateRoomGeometry();
-  logger.info('places', 'seeded dataset', { places: inserted });
+  invalidateGeometry();
+  logger.info('companies', 'seeded dataset', { companies: inserted });
   return inserted;
 }
