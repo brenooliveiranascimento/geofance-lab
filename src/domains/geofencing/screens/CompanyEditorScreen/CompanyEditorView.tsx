@@ -51,8 +51,9 @@ export function CompanyEditorView({ viewModel }: CompanyEditorViewProps): React.
         <View style={styles.mapFill}>
           {viewModel.mapAvailable ? (
             <CrosshairMap
+              key={mode}
               initialCenter={company}
-              spanMeters={redrawingOutline ? 160 : 70}
+              spanMeters={Math.max(company.activeRadius * 3, 60)}
               draft={viewModel.draft}
               parentPolygon={redrawingOutline ? null : company.polygon}
               siblings={redrawingOutline ? [] : rooms}

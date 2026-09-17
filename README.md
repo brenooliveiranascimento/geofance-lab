@@ -101,6 +101,11 @@ aba Empresas.
    arrasta o mapa até o pino ficar sobre um canto do terreno e toca em "Adicionar ponto".
 3. **Cômodos** — mesma mecânica, repetida para cada área interna, com um nome para cada uma.
 
+O mapa do passo 3 abre **sobre o perímetro que acabou de ser traçado**, não sobre a posição do
+aparelho. Parece detalhe e não é: o perímetro costuma ser desenhado arrastando o mapa para longe
+de onde o telefone está, e um mapa que voltasse ao GPS faria todo cômodo desenhado cair fora da
+empresa — e falhar na validação de contenção.
+
 ### Por que o pino fixo, e não tocar no mapa
 
 Tocar direto no mapa é mais direto e tem menos toques. Também é impreciso da forma que mais
@@ -433,6 +438,10 @@ plataformas sem fingir que o campo existe onde não existe.
 
 **SQLite para tudo que a tarefa de background toca. MMKV apenas para preferência de interface.**
 
+O banco fica em `Documents/SQLite/geofence-lab.db` e sobrevive a fechar o app, reiniciar o
+aparelho e atualizar a versão — é persistência local de verdade, mais forte que `localStorage` ou
+`AsyncStorage`, que só guardam pares chave-valor sem transação nem consulta.
+
 A divisão é deliberada. MMKV é rápido e síncrono, mas o contexto *headless* do TaskManager é o
 lugar menos tolerante onde este app roda, e SQLite dá transações ali: uma posição que produz uma
 transição precisa gravar o estado novo e o evento juntos, ou um encerramento no meio deixaria o
@@ -459,6 +468,7 @@ publicadas.
 
 | Decisão | Por quê |
 |---|---|
+| Gravar a empresa antes de ligar o monitoramento | permissão negada é uma falha legítima e não pode desfazer um cadastro que o usuário já concluiu |
 | Janela móvel + região sentinela | única forma de cobrir 500+ pontos dentro do teto de 20 do iOS |
 | Círculo nativo como campainha | permite raios menores que o mínimo da plataforma e viabiliza cômodos |
 | Ordenar por distância à borda | um geofence largo e distante pode ser mais iminente que um estreito e próximo |

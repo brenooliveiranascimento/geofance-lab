@@ -13,6 +13,7 @@ import {
   type LatLng,
   type Ring,
 } from '@src/core/geo';
+import { logger } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 import { useStore } from '@src/store';
 
@@ -58,6 +59,9 @@ export interface CompanyWizardViewModel {
   canAdvance: boolean;
   tangled: boolean;
   draftAreaSquareMeters: number;
+  /** Where the drawing map opens, and how wide. */
+  drawingCenter: LatLng | null;
+  drawingSpanMeters: number;
 
   onCenterMove: (center: LatLng) => void;
   addPoint: () => void;
@@ -159,6 +163,23 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
   );
 
   /**
+   * A room is drawn over the perimeter that was just traced, not over wherever
+   * the phone happens to be. The map unmounts while the rooms list is on
+   * screen, so without this it would remount centred on the GPS position —
+   * which is usually nowhere near the site the user panned to, and every room
+   * drawn there would fail the containment check.
+   */
+  const outlineCentroid = useMemo(() => ringCentroid(outline), [outline]);
+
+  const drawingCenter = step === 'roomDraw' ? (outlineCentroid ?? origin) : origin;
+
+  const drawingSpanMeters = useMemo(() => {
+    if (step !== 'roomDraw' || !outlineCentroid) return step === 'roomDraw' ? 70 : 160;
+    // Wide enough to show the whole perimeter, with room to breathe.
+    return Math.max(circumscribedRadiusMeters(outline, outlineCentroid) * 3, 40);
+  }, [step, outline, outlineCentroid]);
+
+  /**
    * The rule the data model cannot express: a room has to sit inside the
    * company it belongs to. Catching it here, while the shape is still a draft,
    * is the only moment the user can actually fix it.
@@ -256,11 +277,30 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
       }
 
       invalidateGeofencingData();
-
-      if (readSnapshot().running) await refreshMonitoring();
-      else await startMonitoring();
-
       toast.show({ message: t('wizard.saved', { name: company.name }), type: 'success' });
+
+      // The company is already on disk. Monitoring is a separate concern that
+      // can legitimately fail — permission denied, location services off — and
+      // must never strand the user on a screen that looks like nothing was
+      // saved.
+      try {
+        if (readSnapshot().running) {
+          await refreshMonitoring();
+        } else {
+          const result = await startMonitoring();
+          if (!result.started) {
+            toast.show({
+              message: t(`monitor.startFailed.${result.reason ?? 'permissions'}`),
+              type: 'warning',
+            });
+          }
+        }
+      } catch (error) {
+        logger.error('wizard', 'company saved but monitoring failed to start', {
+          error: String(error),
+        });
+        toast.show({ message: t('wizard.savedButNotMonitoring'), type: 'warning' });
+      }
 
       if (!onboardingCompleted) {
         setOnboardingCompleted(true);
@@ -301,6 +341,8 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     canAdvance: error === null,
     tangled,
     draftAreaSquareMeters,
+    drawingCenter,
+    drawingSpanMeters,
     onCenterMove,
     addPoint,
     undoPoint,
@@ -313,6 +355,9 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     back,
     startRoom: () => {
       setDraft([]);
+      // Seed the crosshair too: the first "add point" can happen before the map
+      // reports a region change.
+      if (outlineCentroid) centerRef.current = outlineCentroid;
       setStep('roomDraw');
     },
     removeRoom: (id) => setRooms((current) => current.filter((room) => room.id !== id)),

@@ -14,6 +14,9 @@ const DYNAMIC_KEYS = {
   'messages.receipts.state': ['pending', 'confirmed', 'exhausted'],
   'monitor.startFailed': ['permissions', 'no_companies', 'no_position'],
   'permissions.state': ['granted', 'denied', 'undetermined'],
+  'notifications.company': ['enter', 'exit'],
+  'notifications.room': ['enter', 'exit'],
+  'notifications.body': ['perimeter', 'distance'],
   'settings.languages': LOCALES,
 };
 

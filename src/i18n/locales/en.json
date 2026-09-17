@@ -202,7 +202,8 @@
       "body": "The corners were marked out of order, so the edges cross. That will not do: the inside/outside rule starts treating part of the drawn area as external, and the area comes out wrong.",
       "action": "Reorder points",
       "hint": "Reordering is a suggestion — the app finds an outline without crossings, but the same marks admit more than one shape. Check it on the map; if it is not what you meant, undo the points and mark them again."
-    }
+    },
+    "savedButNotMonitoring": "Company saved, but monitoring did not start. Check the permissions in Settings."
   },
   "simulator": {
     "title": "Simulator",
@@ -377,6 +378,21 @@
         "confirmed": "confirmed",
         "exhausted": "exhausted"
       }
+    }
+  },
+  "notifications": {
+    "channel": "Entries and exits",
+    "company": {
+      "enter": "Arrived at {{name}}",
+      "exit": "Left {{name}}"
+    },
+    "room": {
+      "enter": "Entered {{name}}",
+      "exit": "Left {{name}}"
+    },
+    "body": {
+      "perimeter": "Monitored perimeter",
+      "distance": "{{meters}} m from the centre"
     }
   }
 }

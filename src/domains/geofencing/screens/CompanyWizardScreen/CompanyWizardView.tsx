@@ -167,8 +167,9 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
       <View style={styles.mapFrame}>
         {viewModel.mapAvailable ? (
           <CrosshairMap
-            initialCenter={viewModel.origin}
-            spanMeters={drawingOutline ? 160 : 70}
+            key={step}
+            initialCenter={viewModel.drawingCenter ?? viewModel.origin}
+            spanMeters={viewModel.drawingSpanMeters}
             draft={ring}
             parentPolygon={drawingOutline ? null : viewModel.outline}
             siblings={drawingOutline ? [] : viewModel.rooms}
@@ -217,6 +218,8 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
         ) : null}
         {viewModel.tangled ? (
           <Text style={styles.hintText}>{t('wizard.tangled.hint')}</Text>
+        ) : viewModel.error && ring.length >= 3 ? (
+          <StatusBanner tone="warning" title={viewModel.error} />
         ) : viewModel.error && ring.length > 0 ? (
           <Text style={styles.error}>{viewModel.error}</Text>
         ) : null}

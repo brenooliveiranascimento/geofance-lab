@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import i18n from '@src/i18n';
 import { logger } from '@src/core/logger';
 
 import { markNotified } from './eventRepository';
@@ -15,7 +16,7 @@ export async function ensureNotificationChannel(): Promise<void> {
 
   try {
     await Notifications.setNotificationChannelAsync(GEOFENCE_CHANNEL_ID, {
-      name: 'Entradas e saídas',
+      name: i18n.t('notifications.channel'),
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 200, 100, 200],
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
@@ -31,17 +32,21 @@ function describe(event: GeofenceEvent): { title: string; body: string } {
 
   if (event.kind === 'room_enter' || event.kind === 'room_exit') {
     return {
-      title: entering ? `Entrou em ${event.roomName}` : `Saiu de ${event.roomName}`,
+      title: i18n.t(entering ? 'notifications.room.enter' : 'notifications.room.exit', {
+        name: event.roomName ?? '',
+      }),
       body: event.companyName,
     };
   }
 
   return {
-    title: entering ? `Chegou em ${event.companyName}` : `Saiu de ${event.companyName}`,
+    title: i18n.t(entering ? 'notifications.company.enter' : 'notifications.company.exit', {
+      name: event.companyName,
+    }),
     body:
       event.distance === null
-        ? 'Perímetro monitorado'
-        : `A ${Math.round(event.distance)} m do centro`,
+        ? i18n.t('notifications.body.perimeter')
+        : i18n.t('notifications.body.distance', { meters: Math.round(event.distance) }),
   };
 }
 
