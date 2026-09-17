@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { bootstrapDatabase } from '@src/core/bootstrap';
@@ -65,20 +66,22 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={DarkTheme}>
-        <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(onboarding)" />
-            <Stack.Screen name="places/[id]" options={{ presentation: 'card' }} />
-            <Stack.Screen name="simulator" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="diagnostics" options={{ presentation: 'modal' }} />
-          </Stack>
-          <StatusBar style="light" />
-        </ToastProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={DarkTheme}>
+          <ToastProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(onboarding)" />
+              <Stack.Screen name="places/[id]" options={{ presentation: 'card' }} />
+              <Stack.Screen name="simulator" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="diagnostics" options={{ presentation: 'modal' }} />
+            </Stack>
+            <StatusBar style="light" />
+          </ToastProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

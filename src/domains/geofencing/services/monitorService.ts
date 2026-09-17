@@ -262,12 +262,23 @@ export async function handleRegionEvent(
     return;
   }
 
+  const active = new Set(readActivePlaces());
+
+  if (isExit && !active.has(identifier)) {
+    const known = loadStatesFor([identifier]).get(identifier);
+    if (!known || known.state === 'outside') {
+      logger.debug(TAG, 'exit for a region we were not inside, ignoring', {
+        region: identifier,
+      });
+      return;
+    }
+  }
+
   logger.info(TAG, 'native region event', {
     region: identifier,
     type: isExit ? 'exit' : 'enter',
   });
 
-  const active = new Set(readActivePlaces());
   if (isExit) active.delete(identifier);
   else active.add(identifier);
 
