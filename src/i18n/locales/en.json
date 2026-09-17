@@ -36,7 +36,7 @@
       "no_position": "Could not obtain a position"
     },
     "mapUnavailable": {
-      "body": "Map unavailable: the Google Maps key is missing from .env."
+      "body": "Map unavailable: the Google Maps key did not make it into this build. Check .env and rebuild."
     },
     "addCompany": "Register a company",
     "history": "History",

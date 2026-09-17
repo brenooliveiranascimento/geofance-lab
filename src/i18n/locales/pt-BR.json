@@ -36,7 +36,7 @@
       "no_position": "Não foi possível obter uma posição"
     },
     "mapUnavailable": {
-      "body": "Mapa indisponível: falta a chave do Google Maps no .env."
+      "body": "Mapa indisponível: a chave do Google Maps não entrou neste build. Confira o .env e gere o app de novo."
     },
     "addCompany": "Cadastrar empresa",
     "history": "Histórico",

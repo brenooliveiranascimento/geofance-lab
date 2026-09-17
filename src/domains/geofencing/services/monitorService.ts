@@ -59,6 +59,16 @@ const toFix = (position: Location.LocationObject): Fix => ({
   timestamp: position.timestamp,
 });
 
+export async function getApproximateFix(): Promise<Fix | null> {
+  try {
+    const last = await Location.getLastKnownPositionAsync({ maxAge: 24 * 60 * 60_000 });
+    if (last) return toFix(last);
+  } catch (error) {
+    logger.debug(TAG, 'no cached position available', { error: String(error) });
+  }
+  return getCurrentFix();
+}
+
 export async function getCurrentFix(): Promise<Fix | null> {
   try {
     const position = await Location.getCurrentPositionAsync({

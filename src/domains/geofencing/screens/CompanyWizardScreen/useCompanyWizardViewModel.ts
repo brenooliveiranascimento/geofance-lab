@@ -22,7 +22,7 @@ import { isMapAvailable } from '../../mapAvailability';
 import { invalidateGeofencingData } from '../../queries/invalidate';
 import { upsertCompany, upsertRoom } from '../../services/companyRepository';
 import {
-  getCurrentFix,
+  getApproximateFix,
   readSnapshot,
   refreshMonitoring,
   startMonitoring,
@@ -103,7 +103,7 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     let cancelled = false;
 
     void (async () => {
-      const fix = (await getCurrentFix()) ?? readSnapshot().lastFix;
+      const fix = (await getApproximateFix()) ?? readSnapshot().lastFix;
       if (cancelled) return;
       if (fix) {
         const point = { latitude: fix.latitude, longitude: fix.longitude };

@@ -564,7 +564,7 @@ Ambas opcionais — o app funciona sem elas.
 
 | Variável | Para quê |
 |---|---|
-| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mapa no Android. Sem ela a tela cai em modo lista. Emita em console.cloud.google.com com a *Maps SDK for Android* habilitada; carregamento de mapa em apps móveis não é cobrado. No iOS o MapKit é usado e nenhuma chave é necessária. |
+| `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mapa no Android. **Depois de preencher, rode `npx expo prebuild -p android` e `npm run apk`** — a chave precisa entrar em dois lugares: no `AndroidManifest.xml` (escrito pelo prebuild, para o SDK do Google Maps inicializar) e no bundle JS (embutido na compilação, para o app saber que pode montar o mapa). Mexer só no `.env` não muda nada em um build já feito. Sem ela a tela cai em modo lista. Emita em console.cloud.google.com com a *Maps SDK for Android* habilitada; carregamento de mapa em apps móveis não é cobrado. No iOS o MapKit é usado e nenhuma chave é necessária. |
 | `EXPO_PUBLIC_DELIVERY_ENDPOINT` | valor padrão do endpoint de confirmação de entrega. Opcional — o endereço também pode ser informado em Ajustes → Confirmação de entrega, e o que estiver salvo lá tem precedência. |
 
 ### Gerar o APK
@@ -579,10 +579,18 @@ Ou localmente, sem conta em nenhum serviço:
 
 ```bash
 export ANDROID_HOME="$HOME/Library/Android/sdk"   # ajuste ao seu caminho
-npx expo prebuild -p android --clean
-cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+npx expo prebuild -p android
+npm run apk
 # android/app/build/outputs/apk/release/app-release.apk
 ```
+
+**Use `npm run apk`, não `gradlew assembleRelease` direto.** A task
+`createBundleReleaseJsAndAssets` do plugin do React Native marca-se como
+`UP-TO-DATE` em situações em que o JavaScript mudou de verdade — mexer no `.env`
+é uma delas, porque ele não é declarado como entrada da task. O resultado é um
+APK que compila, instala e roda **com o bundle antigo dentro**, sem nenhum aviso.
+O script apaga a saída do bundle antes de montar, o que força a regeração sem
+pagar o preço de um `clean` completo: são 18 segundos em vez de vários minutos.
 
 O `-PreactNativeArchitectures=arm64-v8a` importa: sem ele o Gradle empacota as quatro
 arquiteturas no mesmo APK e o arquivo passa de 120 MB. Restrito ao arm64 — que é o que todo

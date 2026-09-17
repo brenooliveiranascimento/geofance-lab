@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking } from 'react-native';
 
@@ -15,7 +15,11 @@ import { useEvents } from '../../queries/useEvents';
 import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
 import { usePermissions } from '../../queries/usePermissions';
 import { getCompanyIndex, getRoomsByCompany } from '../../services/companyRepository';
-import { startMonitoring, stopMonitoring } from '../../services/monitorService';
+import {
+  getApproximateFix,
+  startMonitoring,
+  stopMonitoring,
+} from '../../services/monitorService';
 import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '../../types';
 
 const MAP_COMPANY_LIMIT = 24;
@@ -58,7 +62,26 @@ export function useMonitorViewModel(): MonitorViewModel {
   const { data: states = new Map<string, TargetState>() } = useCompanyStates();
   const { data: recent = [] } = useEvents({ limit: 1 });
 
-  const center = snapshot?.lastFix ?? snapshot?.origin ?? companies[0] ?? null;
+  const [deviceCenter, setDeviceCenter] = useState<LatLng | null>(null);
+
+  const center = snapshot?.lastFix ?? snapshot?.origin ?? companies[0] ?? deviceCenter ?? null;
+
+  const hasAnchor = Boolean(snapshot?.lastFix ?? snapshot?.origin ?? companies[0]);
+
+  useEffect(() => {
+    if (hasAnchor || deviceCenter) return;
+
+    let cancelled = false;
+    void (async () => {
+      const fix = await getApproximateFix();
+      if (cancelled || !fix) return;
+      setDeviceCenter({ latitude: fix.latitude, longitude: fix.longitude });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasAnchor, deviceCenter]);
 
   const mapCompanies = useMemo(() => {
     if (!center || companies.length === 0) return [];
