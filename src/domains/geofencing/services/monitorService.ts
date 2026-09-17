@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 
 import { readJson, writeJson } from '@src/core/db';
+import i18n from '@src/i18n';
 import { queryWithinRadius, type Fix, type LatLng } from '@src/core/geo';
 import { logger } from '@src/core/logger';
 import { isMonitoringAllowed, readPermissions } from '@src/core/permissions';
@@ -156,8 +157,8 @@ async function startPreciseUpdates(): Promise<void> {
     activityType: Location.ActivityType.Other,
     showsBackgroundLocationIndicator: true,
     foregroundService: {
-      notificationTitle: 'Geofence Lab',
-      notificationBody: 'Monitorando os cômodos do local em que você está',
+      notificationTitle: i18n.t('notifications.foreground.title'),
+      notificationBody: i18n.t('notifications.foreground.body'),
       notificationColor: '#2563EB',
     },
   });

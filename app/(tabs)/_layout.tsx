@@ -18,6 +18,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
+        sceneStyle: styles.scene,
         tabBarLabelStyle: styles.label,
       }}
     >
@@ -63,4 +64,5 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   label: { fontSize: 11, fontWeight: '500' },
+  scene: { backgroundColor: colors.background },
 });

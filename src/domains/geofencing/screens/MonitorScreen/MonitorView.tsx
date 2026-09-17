@@ -37,6 +37,8 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
             states={viewModel.states}
             spanMeters={600}
             emptyLabel=""
+            onRecenter={viewModel.recenter}
+            recenterLabel={t('monitor.recenter')}
           />
         ) : (
           <View style={styles.mapFallback}>
@@ -46,32 +48,38 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
           </View>
         )}
 
-        <View style={styles.statusPill} pointerEvents="none">
-          <View style={[styles.dot, { backgroundColor: DOT_COLOR[status] ?? colors.textMuted }]} />
-          <View style={styles.statusText}>
-            <Text style={styles.statusLabel}>{viewModel.statusLabel}</Text>
-            {viewModel.statusDetail ? (
-              <Text style={styles.statusDetail} numberOfLines={1}>
-                {viewModel.statusDetail}
-              </Text>
-            ) : null}
+        <View style={styles.overlayTop} pointerEvents="box-none">
+          <View style={styles.statusPill} pointerEvents="none">
+            <View style={[styles.dot, { backgroundColor: DOT_COLOR[status] ?? colors.textMuted }]} />
+            <View style={styles.statusText}>
+              <Text style={styles.statusLabel}>{viewModel.statusLabel}</Text>
+              {viewModel.statusDetail ? (
+                <Text style={styles.statusDetail} numberOfLines={1}>
+                  {viewModel.statusDetail}
+                </Text>
+              ) : null}
+            </View>
           </View>
-        </View>
 
-        {lastEvent ? (
-          <TouchableOpacity style={styles.eventPill} onPress={viewModel.openHistory} activeOpacity={0.8}>
-            <Text style={styles.eventKind}>{t(`events.kind.${lastEvent.kind}`)}</Text>
-            <Text style={styles.eventName} numberOfLines={1}>
-              {lastEvent.roomName ?? lastEvent.companyName}
-            </Text>
-            <Text style={styles.eventTime}>
-              {new Date(lastEvent.occurredAt).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
+          {lastEvent ? (
+            <TouchableOpacity
+              style={styles.eventPill}
+              onPress={viewModel.openHistory}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.eventKind}>{t(`events.kind.${lastEvent.kind}`)}</Text>
+              <Text style={styles.eventName} numberOfLines={1}>
+                {lastEvent.roomName ?? lastEvent.companyName}
+              </Text>
+              <Text style={styles.eventTime}>
+                {new Date(lastEvent.occurredAt).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.actions}>
@@ -118,11 +126,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  statusPill: {
+  overlayTop: {
     position: 'absolute',
     top: spacing.md,
     left: spacing.md,
     right: spacing.md,
+    gap: spacing.sm,
+  },
+  statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
@@ -136,10 +147,6 @@ const styles = StyleSheet.create({
   statusLabel: { color: colors.text, fontSize: fontSize.sm, fontWeight: '600' },
   statusDetail: { color: colors.text, opacity: 0.7, fontSize: fontSize.xs, marginTop: 1 },
   eventPill: {
-    position: 'absolute',
-    bottom: 34,
-    left: spacing.md,
-    right: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,

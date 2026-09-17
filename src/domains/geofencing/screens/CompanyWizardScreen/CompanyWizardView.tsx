@@ -175,6 +175,8 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
             onCenterMove={viewModel.onCenterMove}
             readoutLabel={t('wizard.crosshair')}
             invalid={viewModel.tangled}
+            onRecenter={viewModel.recenter}
+            recenterLabel={t('monitor.recenter')}
           />
         ) : (
           <View style={styles.mapFallback}>

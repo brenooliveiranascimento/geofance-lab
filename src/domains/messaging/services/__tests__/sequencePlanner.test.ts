@@ -24,6 +24,10 @@ const CONTENT: PlannerContent = {
     title: `Diária ${i}`,
     body: 'corpo',
   })),
+  subtitle: {
+    onboarding: (position, total) => `Mensagem ${position} de ${total}`,
+    daily: (week, position, total) => `Semana ${week} · Mensagem ${position} de ${total}`,
+  },
 };
 
 const ENROLLED_AT = new Date(2026, 2, 10, 14, 32, 0, 0).getTime();

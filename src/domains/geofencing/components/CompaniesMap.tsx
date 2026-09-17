@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
-import { Text } from '@src/components/atoms';
+import { Icon, Text } from '@src/components/atoms';
 import type { LatLng } from '@src/core/geo';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
+import { DARK_MAP_STYLE } from './mapStyle';
 import type { Company, Room, TargetState } from '../types';
 
 export interface CompaniesMapProps {
@@ -18,20 +19,12 @@ export interface CompaniesMapProps {
   extraPolygon?: { coordinates: LatLng[]; color: string } | null;
   markers?: readonly { id: string; coordinate: LatLng; title?: string }[];
   emptyLabel: string;
+  onRecenter?: () => Promise<LatLng | null>;
+  recenterLabel?: string;
 }
 
 const METERS_PER_DEGREE_LATITUDE = 111320;
 
-const DARK_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#1a1a1e' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a93' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0d0d0d' }] },
-  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2e2e34' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6b6b74' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#12161c' }] },
-];
 
 function regionFor(center: LatLng, spanMeters: number): Region {
   const latitudeDelta = spanMeters / METERS_PER_DEGREE_LATITUDE;
@@ -53,8 +46,27 @@ export function CompaniesMap({
   extraPolygon = null,
   markers = [],
   emptyLabel,
+  onRecenter,
+  recenterLabel,
 }: CompaniesMapProps): React.JSX.Element {
+  const mapRef = useRef<MapView>(null);
+  const [recentering, setRecentering] = useState(false);
   const region = useMemo(() => (center ? regionFor(center, spanMeters) : null), [center, spanMeters]);
+
+  const applyInitialRegion = useCallback(() => {
+    if (region) mapRef.current?.animateToRegion(region, 0);
+  }, [region]);
+
+  const handleRecenter = useCallback(async () => {
+    if (!onRecenter || recentering) return;
+    setRecentering(true);
+    try {
+      const target = await onRecenter();
+      if (target) mapRef.current?.animateToRegion(regionFor(target, spanMeters), 400);
+    } finally {
+      setRecentering(false);
+    }
+  }, [onRecenter, recentering, spanMeters]);
 
   if (!region) {
     return (
@@ -65,18 +77,20 @@ export function CompaniesMap({
   }
 
   return (
-    <MapView
-      style={styles.map}
-      provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-      initialRegion={region}
-      region={region}
-      userInterfaceStyle="dark"
-      customMapStyle={DARK_MAP_STYLE}
-      showsUserLocation
-      showsMyLocationButton={false}
-      toolbarEnabled={false}
-      onPress={onPressMap ? (event) => onPressMap(event.nativeEvent.coordinate) : undefined}
-    >
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+        initialRegion={region}
+        userInterfaceStyle="dark"
+        customMapStyle={DARK_MAP_STYLE}
+        onMapReady={applyInitialRegion}
+        showsUserLocation
+        showsMyLocationButton={false}
+        toolbarEnabled={false}
+        onPress={onPressMap ? (event) => onPressMap(event.nativeEvent.coordinate) : undefined}
+      >
       {companies.map((company) => {
         const inside = states.get(company.id)?.state === 'inside';
         const accent = inside ? colors.success : colors.primary;
@@ -130,15 +144,48 @@ export function CompaniesMap({
         />
       ) : null}
 
-      {markers.map((marker) => (
-        <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title} pinColor={colors.primary} />
-      ))}
-    </MapView>
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={marker.coordinate}
+            title={marker.title}
+            pinColor={colors.primary}
+          />
+        ))}
+      </MapView>
+
+      {onRecenter ? (
+        <TouchableOpacity
+          style={styles.recenter}
+          onPress={() => void handleRecenter()}
+          accessibilityRole="button"
+          accessibilityLabel={recenterLabel}
+          hitSlop={8}
+        >
+          <Icon
+            name="location.fill"
+            size={20}
+            color={recentering ? colors.textMuted : colors.text}
+          />
+        </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  map: { flex: 1 },
+  container: { flex: 1, overflow: 'hidden' },
+  recenter: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: 34,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.overlayStrong,
+  },
   placeholder: {
     flex: 1,
     alignItems: 'center',

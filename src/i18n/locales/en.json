@@ -49,19 +49,23 @@
       "busy": "Applying"
     },
     "detail": {
-      "idle": "{{total}} company(ies) registered",
+      "idle_one": "{{count}} company registered",
+      "idle_other": "{{count}} companies registered",
       "empty": "Register the first one to begin",
-      "regions": "{{total}} regions with the system · GPS idle",
+      "regions_one": "{{count}} region with the system · GPS idle",
+      "regions_other": "{{count}} regions with the system · GPS idle",
       "precise": "GPS active",
       "blocked": "Needs \"always\" location access"
-    }
+    },
+    "recenter": "Centre on my position"
   },
   "companies": {
     "title": "Companies",
     "subtitle": "{{total}} registered",
     "searchPlaceholder": "Search by name",
-    "radii": "radius {{radius}} m · active {{activeRadius}} m",
-    "rooms": "{{total}} room(s)",
+    "radii": "radius {{radius, number(maximumFractionDigits: 0)}} m · active {{activeRadius, number(maximumFractionDigits: 0)}} m",
+    "rooms_one": "{{count}} room",
+    "rooms_other": "{{count}} rooms",
     "residence": "has an outline",
     "youAreHere": "You are here right now",
     "create": "Register a company",
@@ -341,6 +345,145 @@
         "confirmed": "confirmed",
         "exhausted": "exhausted"
       }
+    },
+    "channel": "Messages",
+    "subtitle": {
+      "onboarding": "Message {{position}} of {{total}}",
+      "daily": "Week {{week}} · Message {{position}} of {{total}}"
+    },
+    "content": {
+      "onb-01": {
+        "title": "Welcome to Geofence Lab",
+        "body": "Register a place and draw its rooms to start tracking entries and exits."
+      },
+      "onb-02": {
+        "title": "Location permission",
+        "body": "To work with the app closed, monitoring needs \"always\" access."
+      },
+      "onb-03": {
+        "title": "Radius and active radius",
+        "body": "Entry is detected at the radius; the exit only past the active radius. The slack between them prevents repeated events."
+      },
+      "onb-04": {
+        "title": "Rooms",
+        "body": "Inside a place, polygons bound each room and raise events of their own."
+      },
+      "onb-05": {
+        "title": "Simulator",
+        "body": "Use the simulator to play a fake route and watch the events without leaving your chair."
+      },
+      "d-1-1": {
+        "title": "Geofencing lives in the system",
+        "body": "Region monitoring runs in the OS, not in the app — which is why it works with the app closed."
+      },
+      "d-1-2": {
+        "title": "The region ceiling",
+        "body": "iOS monitors 20 regions per app; Android, 100. A moving window covers all 500 places."
+      },
+      "d-1-3": {
+        "title": "Guard region",
+        "body": "One of the slots watches the set itself: leaving it is the signal that the window went stale."
+      },
+      "d-1-4": {
+        "title": "Minimum radius",
+        "body": "Circles under about 100 m do not fire reliably on iOS. That is why rooms use polygons."
+      },
+      "d-1-5": {
+        "title": "Two tiers",
+        "body": "The native region wakes the app; continuous GPS only turns on afterwards, while you are inside."
+      },
+      "d-1-6": {
+        "title": "Battery",
+        "body": "At rest the app asks for no position at all — the device's own radio does the waiting."
+      },
+      "d-1-7": {
+        "title": "Persistence",
+        "body": "State and events live in SQLite, the only storage you can trust inside a background task."
+      },
+      "d-2-1": {
+        "title": "Accuracy matters",
+        "body": "A reading with 300 m of error is not information: it is discarded before it can become an event."
+      },
+      "d-2-2": {
+        "title": "Confidence margin",
+        "body": "Entry is only declared once the whole error circle fits inside the radius."
+      },
+      "d-2-3": {
+        "title": "Confirmations",
+        "body": "A transition needs consecutive readings that agree — GPS noise does not turn into a notification."
+      },
+      "d-2-4": {
+        "title": "Dwell time",
+        "body": "A freshly assumed state is held for a few seconds before it can change again."
+      },
+      "d-2-5": {
+        "title": "Ray casting",
+        "body": "Telling whether a point sits in a room is counting how many edges a ray crosses: odd means inside."
+      },
+      "d-2-6": {
+        "title": "Bounding box",
+        "body": "Before testing the edges, four comparisons rule out whatever is plainly outside."
+      },
+      "d-2-7": {
+        "title": "The boundary",
+        "body": "A point exactly on the edge always counts as inside — the rule is explicit, not a coin toss."
+      },
+      "d-3-1": {
+        "title": "No duplicates",
+        "body": "Every transition carries a sequence number: repeating the same reading raises no second event."
+      },
+      "d-3-2": {
+        "title": "Initial state on iOS",
+        "body": "iOS reports the state of every region at each app start. Without the persisted key, everything would fire again."
+      },
+      "d-3-3": {
+        "title": "Transaction",
+        "body": "The new state and the event are written together, or neither of them is."
+      },
+      "d-3-4": {
+        "title": "Offline is the normal case",
+        "body": "The queue is the state: nothing is lost because a request failed."
+      },
+      "d-3-5": {
+        "title": "Backoff",
+        "body": "Each retry waits twice as long as the last, up to a ceiling — and gives up after a few."
+      },
+      "d-3-6": {
+        "title": "Reconciliation",
+        "body": "The scheduler compares the plan against what the OS holds, and corrects the difference."
+      },
+      "d-3-7": {
+        "title": "Sliding window",
+        "body": "Only the next notifications are handed to the OS, well under the iOS ceiling of 64."
+      },
+      "d-4-1": {
+        "title": "Terminated app on Android",
+        "body": "A killed app is not relaunched by a geofence event — hence the foreground service."
+      },
+      "d-4-2": {
+        "title": "Terminated app on iOS",
+        "body": "iOS relaunches the app to deliver a region event, with a few seconds of runtime."
+      },
+      "d-4-3": {
+        "title": "Manufacturers",
+        "body": "Battery managers from some manufacturers kill the service anyway."
+      },
+      "d-4-4": {
+        "title": "Device reboot",
+        "body": "Without a boot receiver, monitoring does not come back on its own after a restart."
+      },
+      "d-4-5": {
+        "title": "Subtitle",
+        "body": "The notification subtitle only exists on iOS; on Android it becomes the first line of the body."
+      },
+      "d-4-6": {
+        "title": "Two-step permission",
+        "body": "Background access can only be asked for once foreground access has been granted."
+      },
+      "d-4-7": {
+        "title": "End of the series",
+        "body": "You have walked through all four weeks. The event log keeps recording everything."
+      }
     }
   },
   "notifications": {
@@ -356,6 +499,10 @@
     "body": {
       "perimeter": "Monitored perimeter",
       "distance": "{{meters}} m from the centre"
+    },
+    "foreground": {
+      "title": "Geofence Lab",
+      "body": "Tracking the rooms of the place you are in"
     }
   },
   "history": {
@@ -370,6 +517,7 @@
     "nothingToCopy": "Nothing to copy",
     "monitoring": "Monitoring",
     "regions": "Regions",
+    "task": "{{name}} task",
     "registered": "active",
     "notRegistered": "inactive",
     "empty": {

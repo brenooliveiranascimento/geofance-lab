@@ -1,9 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polygon, Polyline, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
-import { Text } from '@src/components/atoms';
+import { Icon, Text } from '@src/components/atoms';
 import type { LatLng, Ring } from '@src/core/geo';
+
+import { DARK_MAP_STYLE } from './mapStyle';
 import { colors, fontSize, radius as radii, spacing } from '@src/theme';
 
 const METERS_PER_DEGREE_LATITUDE = 111320;
@@ -27,6 +29,8 @@ export interface CrosshairMapProps {
   onCenterMove: (center: LatLng) => void;
   readoutLabel: string;
   invalid?: boolean;
+  onRecenter?: () => Promise<LatLng | null>;
+  recenterLabel?: string;
 }
 
 export function CrosshairMap({
@@ -38,9 +42,22 @@ export function CrosshairMap({
   onCenterMove,
   readoutLabel,
   invalid = false,
+  onRecenter,
+  recenterLabel,
 }: CrosshairMapProps): React.JSX.Element {
   const [readout, setReadout] = useState<LatLng>(initialCenter);
   const initialRegion = useRef(regionFor(initialCenter, spanMeters)).current;
+  const mapRef = useRef<MapView>(null);
+
+  const applyInitialRegion = useCallback(() => {
+    mapRef.current?.animateToRegion(initialRegion, 0);
+  }, [initialRegion]);
+
+  const handleRecenter = useCallback(async () => {
+    if (!onRecenter) return;
+    const target = await onRecenter();
+    if (target) mapRef.current?.animateToRegion(regionFor(target, spanMeters), 400);
+  }, [onRecenter, spanMeters]);
 
   const handleRegionChange = useCallback(
     (region: Region) => {
@@ -59,13 +76,16 @@ export function CrosshairMap({
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={StyleSheet.absoluteFill}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         initialRegion={initialRegion}
         userInterfaceStyle="dark"
+        customMapStyle={DARK_MAP_STYLE}
         showsUserLocation
         showsMyLocationButton={false}
         toolbarEnabled={false}
+        onMapReady={applyInitialRegion}
         onRegionChange={handleRegionChange}
         onRegionChangeComplete={handleRegionChangeComplete}
       >
@@ -121,6 +141,18 @@ export function CrosshairMap({
         <View style={styles.crosshairStem} />
       </View>
 
+      {onRecenter ? (
+        <TouchableOpacity
+          style={styles.recenter}
+          onPress={() => void handleRecenter()}
+          accessibilityRole="button"
+          accessibilityLabel={recenterLabel}
+          hitSlop={8}
+        >
+          <Icon name="location.fill" size={20} color={colors.text} />
+        </TouchableOpacity>
+      ) : null}
+
       <View style={styles.readout} pointerEvents="none">
         <Text style={styles.readoutLabel}>{readoutLabel}</Text>
         <Text style={styles.readoutValue}>
@@ -175,10 +207,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   vertexLabel: { color: colors.background, fontSize: 10, fontWeight: '700' },
+  recenter: {
+    position: 'absolute',
+    right: spacing.sm,
+    bottom: spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.overlayStrong,
+  },
   readout: {
     position: 'absolute',
     left: spacing.sm,
-    bottom: spacing.sm,
+    top: spacing.sm,
     backgroundColor: colors.overlay,
     borderRadius: radii.sm,
     paddingVertical: spacing.xs,

@@ -22,7 +22,13 @@ const DYNAMIC_KEYS = {
   'settings.languages': LOCALES,
 };
 
+const MESSAGE_IDS = readFileSync(resolve(ROOT, 'src/domains/messaging/content/messages.ts'), 'utf8')
+  .split('const resolve')[0]
+  .match(/'[a-z]+-[\d-]+'/g)
+  .map((quoted) => quoted.slice(1, -1));
+
 const DYNAMIC_TEMPLATES = [
+  { prefix: 'messages.content', values: MESSAGE_IDS, suffixes: ['title', 'body'] },
   { prefix: 'simulator.kind', values: ['crossing', 'approach'], suffixes: ['label', 'hint'] },
   { prefix: 'onboarding', values: ['location', 'notifications', 'company'], suffixes: ['action'] },
 ];
@@ -69,6 +75,11 @@ function collectUsedKeys() {
 const lookup = (tree, key) =>
   key.split('.').reduce((node, part) => (node == null ? undefined : node[part]), tree);
 
+const resolves = (tree, key) =>
+  typeof lookup(tree, key) === 'string' ||
+  (typeof lookup(tree, `${key}_one`) === 'string' &&
+    typeof lookup(tree, `${key}_other`) === 'string');
+
 function flatten(tree, prefix = '') {
   const out = [];
   for (const [key, value] of Object.entries(tree)) {
@@ -92,8 +103,7 @@ function main() {
 
   for (const key of used) {
     for (const locale of LOCALES) {
-      const value = lookup(bundles[locale], key);
-      if (typeof value !== 'string') {
+      if (!resolves(bundles[locale], key)) {
         problems.push(`${locale}: chave ausente ou não textual → ${key}`);
       }
     }

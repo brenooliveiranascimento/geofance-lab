@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { transaction } from '@src/core/db';
+import i18n from '@src/i18n';
 import { logger } from '@src/core/logger';
 
 import { countPendingReceipts, enqueueReceipt } from './receiptSender';
@@ -18,7 +19,7 @@ import {
   writeLastReconciledAt,
 } from './scheduleRepository';
 import { buildPlan, diffSchedule, slotKey, type PlannerContent } from './sequencePlanner';
-import { DAILY_MESSAGES, ONBOARDING_MESSAGES } from '../content/messages';
+import { dailyMessages, onboardingMessages, subtitleFormatter } from '../content/messages';
 import { MESSAGING_CONFIG } from '../config';
 import type { MessagingSnapshot, PlannedMessage, SequenceId } from '../types';
 
@@ -26,10 +27,11 @@ const TAG = 'messaging';
 
 export const MESSAGES_CHANNEL_ID = 'daily-messages';
 
-const CONTENT: PlannerContent = {
-  onboarding: ONBOARDING_MESSAGES,
-  daily: DAILY_MESSAGES,
-};
+const content = (): PlannerContent => ({
+  onboarding: onboardingMessages(),
+  daily: dailyMessages(),
+  subtitle: subtitleFormatter,
+});
 
 let channelReady = false;
 
@@ -37,7 +39,7 @@ async function ensureChannel(): Promise<void> {
   if (Platform.OS !== 'android' || channelReady) return;
   try {
     await Notifications.setNotificationChannelAsync(MESSAGES_CHANNEL_ID, {
-      name: 'Mensagens',
+      name: i18n.t('messages.channel'),
       importance: Notifications.AndroidImportance.DEFAULT,
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     });
@@ -79,7 +81,7 @@ export async function reconcileSchedule(now = Date.now()): Promise<ReconcileSumm
 
   await ensureChannel();
 
-  const plan = buildPlan(enrolledAt, MESSAGING_CONFIG, CONTENT);
+  const plan = buildPlan(enrolledAt, MESSAGING_CONFIG, content());
   const existing = listSchedule();
 
   let liveIds: Set<string> | null = null;
@@ -219,7 +221,7 @@ export function readPlanWithState(): {
 
   const rows = new Map(listSchedule().map((row) => [slotKey(row.sequence, row.position), row]));
 
-  return buildPlan(enrolledAt, MESSAGING_CONFIG, CONTENT).map((message) => {
+  return buildPlan(enrolledAt, MESSAGING_CONFIG, content()).map((message) => {
     const row = rows.get(slotKey(message.sequence, message.position));
     return {
       message,

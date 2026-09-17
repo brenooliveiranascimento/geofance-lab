@@ -16,7 +16,8 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'geofencelab',
-  userInterfaceStyle: 'automatic',
+  userInterfaceStyle: 'dark',
+  backgroundColor: BACKGROUND,
   newArchEnabled: true,
 
   ios: {

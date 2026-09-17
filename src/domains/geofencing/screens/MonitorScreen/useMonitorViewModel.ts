@@ -48,6 +48,7 @@ export interface MonitorViewModel {
   openSimulator: () => void;
   openHistory: () => void;
   openCompanies: () => void;
+  recenter: () => Promise<LatLng | null>;
 }
 
 export function useMonitorViewModel(): MonitorViewModel {
@@ -154,9 +155,9 @@ export function useMonitorViewModel(): MonitorViewModel {
       case 'precise':
         return insideName ?? t('monitor.detail.precise');
       case 'regions':
-        return t('monitor.detail.regions', { total: snapshot?.regionCount ?? 0 });
+        return t('monitor.detail.regions', { count: snapshot?.regionCount ?? 0 });
       default:
-        return t('monitor.detail.idle', { total: companies.length });
+        return t('monitor.detail.idle', { count: companies.length });
     }
   }, [status, insideName, snapshot?.regionCount, companies.length, t]);
 
@@ -185,5 +186,12 @@ export function useMonitorViewModel(): MonitorViewModel {
     openSimulator: () => router.push('/simulator'),
     openHistory: () => router.push('/history'),
     openCompanies: () => router.push('/(tabs)/companies'),
+    recenter: async () => {
+      const fix = await getApproximateFix();
+      if (!fix) return null;
+      const point = { latitude: fix.latitude, longitude: fix.longitude };
+      setDeviceCenter(point);
+      return point;
+    },
   };
 }

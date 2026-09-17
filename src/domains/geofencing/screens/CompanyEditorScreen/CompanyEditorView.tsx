@@ -60,6 +60,8 @@ export function CompanyEditorView({ viewModel }: CompanyEditorViewProps): React.
               onCenterMove={viewModel.onCenterMove}
               readoutLabel={t('wizard.crosshair')}
               invalid={viewModel.tangled}
+              onRecenter={viewModel.recenter}
+              recenterLabel={t('monitor.recenter')}
             />
           ) : (
             <View style={styles.mapFallback}>
@@ -157,6 +159,8 @@ export function CompanyEditorView({ viewModel }: CompanyEditorViewProps): React.
               states={viewModel.states}
               spanMeters={Math.max(company.activeRadius * 4, 160)}
               emptyLabel={t('monitor.noPosition')}
+              onRecenter={viewModel.recenter}
+              recenterLabel={t('monitor.recenter')}
             />
           ) : (
             <View style={styles.mapFallback}>

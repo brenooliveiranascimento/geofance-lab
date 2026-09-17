@@ -118,7 +118,7 @@ export function HistoryView({ viewModel }: HistoryViewProps): React.JSX.Element 
               </View>
               {viewModel.tasks.map((task) => (
                 <View key={task.name} style={styles.statusRow}>
-                  <Text style={styles.statusLabel}>{task.name}</Text>
+                  <Text style={styles.statusLabel}>{t('history.task', { name: task.name })}</Text>
                   <Text style={[styles.statusValue, task.registered && styles.statusOn]}>
                     {t(task.registered ? 'history.registered' : 'history.notRegistered')}
                   </Text>

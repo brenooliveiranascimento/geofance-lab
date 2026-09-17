@@ -74,6 +74,7 @@ export interface CompanyWizardViewModel {
   removeRoom: (id: string) => void;
   finish: () => Promise<void>;
   cancel: () => void;
+  recenter: () => Promise<LatLng | null>;
 }
 
 const STEP_ORDER: WizardStep[] = ['name', 'outline', 'rooms'];
@@ -335,5 +336,12 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     removeRoom: (id) => setRooms((current) => current.filter((room) => room.id !== id)),
     finish,
     cancel,
+    recenter: async () => {
+      const fix = await getApproximateFix();
+      if (!fix) return null;
+      const point = { latitude: fix.latitude, longitude: fix.longitude };
+      centerRef.current = point;
+      return point;
+    },
   };
 }

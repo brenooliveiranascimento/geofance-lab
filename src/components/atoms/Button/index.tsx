@@ -13,12 +13,26 @@ export function Button({
   label,
   variant = 'primary',
   loading = false,
+  disabled,
   style,
   ...props
 }: ButtonProps): React.JSX.Element {
+  const inactive = Boolean(disabled) || loading;
+
   return (
-    <TouchableOpacity style={[styles.base, styles[variant], style]} activeOpacity={0.85} {...props}>
-      <Text style={variant === 'ghost' ? styles.ghostLabel : styles.label}>
+    <TouchableOpacity
+      style={[styles.base, styles[variant], inactive && styles.inactive, style]}
+      activeOpacity={0.85}
+      disabled={inactive}
+      accessibilityState={{ disabled: inactive }}
+      {...props}
+    >
+      <Text
+        style={[
+          variant === 'ghost' ? styles.ghostLabel : styles.label,
+          inactive && styles.inactiveLabel,
+        ]}
+      >
         {loading ? '...' : label}
       </Text>
     </TouchableOpacity>
@@ -40,6 +54,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   ghost: { backgroundColor: 'transparent' },
+  inactive: { opacity: 0.35 },
+  inactiveLabel: { color: colors.textSecondary },
   destructive: { backgroundColor: colors.error },
   label: { color: colors.textOnPrimary, fontWeight: '600' },
   ghostLabel: { color: colors.textSecondary, fontWeight: '600' },

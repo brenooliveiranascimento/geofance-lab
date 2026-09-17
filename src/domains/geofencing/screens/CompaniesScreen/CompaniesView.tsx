@@ -36,10 +36,10 @@ export function CompaniesView({ viewModel }: CompaniesViewProps): React.JSX.Elem
               {item.company.name}
             </Text>
             <Text style={styles.rowMeta}>
-              {t('companies.rooms', { total: item.roomCount })} ·{' '}
+              {t('companies.rooms', { count: item.roomCount })} ·{' '}
               {t('companies.radii', {
-                radius: Math.round(item.company.radius),
-                activeRadius: Math.round(item.company.activeRadius),
+                radius: item.company.radius,
+                activeRadius: item.company.activeRadius,
               })}
             </Text>
             {inside ? <Text style={styles.rowInside}>{t('companies.youAreHere')}</Text> : null}

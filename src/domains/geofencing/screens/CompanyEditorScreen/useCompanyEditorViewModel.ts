@@ -28,7 +28,7 @@ import {
   upsertCompany,
   upsertRoom,
 } from '../../services/companyRepository';
-import { refreshMonitoring } from '../../services/monitorService';
+import { getApproximateFix, refreshMonitoring } from '../../services/monitorService';
 import type { Company, Room, TargetState } from '../../types';
 
 export type EditorMode = 'view' | 'outlineDraw' | 'roomDraw' | 'roomName';
@@ -66,6 +66,7 @@ export interface CompanyEditorViewModel {
   saveName: () => void;
   removeRoom: (room: Room) => void;
   removeCompany: () => void;
+  recenter: () => Promise<LatLng | null>;
   goBack: () => void;
 }
 
@@ -285,6 +286,10 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     saveName,
     removeRoom,
     removeCompany,
+    recenter: async () => {
+      const fix = await getApproximateFix();
+      return fix ? { latitude: fix.latitude, longitude: fix.longitude } : null;
+    },
     goBack: () => router.back(),
   };
 }

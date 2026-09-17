@@ -11,9 +11,15 @@ export interface PlannerConfig {
   };
 }
 
+export interface SubtitleFormatter {
+  onboarding: (position: number, total: number) => string;
+  daily: (week: number, position: number, total: number) => string;
+}
+
 export interface PlannerContent {
   onboarding: readonly MessageDefinition[];
   daily: readonly MessageDefinition[];
+  subtitle: SubtitleFormatter;
 }
 
 export const slotKey = (sequence: SequenceId, position: number): string =>
@@ -49,7 +55,7 @@ export function buildPlan(
       messageId: message.id,
       title: message.title,
       body: message.body,
-      subtitle: `Mensagem ${position + 1} de ${onboardingCount}`,
+      subtitle: content.subtitle.onboarding(position + 1, onboardingCount),
       scheduledFor: enrolledAt + config.onboarding.offsetsMinutes[position] * 60_000,
     });
   }
@@ -72,7 +78,7 @@ export function buildPlan(
       messageId: message.id,
       title: message.title,
       body: message.body,
-      subtitle: `Semana ${week} · Mensagem ${withinWeek} de ${config.daily.perWeek}`,
+      subtitle: content.subtitle.daily(week, withinWeek, config.daily.perWeek),
       scheduledFor: atLocalTime(
         onboardingEnd,
         config.daily.startsAfterOnboardingDays + position,
