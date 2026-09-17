@@ -11,8 +11,11 @@ import {
   useReceipts,
   type PlanEntry,
 } from '../../queries/useMessagingState';
-import { DELIVERY_ENDPOINT } from '../../config';
-import { drainReceipts, retryExhaustedReceipts } from '../../services/receiptSender';
+import {
+  drainReceipts,
+  readDeliveryEndpoint,
+  retryExhaustedReceipts,
+} from '../../services/receiptSender';
 import { enrol, resetEnrolment } from '../../services/scheduleRepository';
 import { cancelAllMessages, reconcileSchedule } from '../../services/scheduler';
 import type { DeliveryReceipt, MessagingSnapshot } from '../../types';
@@ -105,7 +108,7 @@ export function useMessagesViewModel(): MessagesViewModel {
     snapshot,
     plan,
     receipts,
-    endpoint: DELIVERY_ENDPOINT,
+    endpoint: readDeliveryEndpoint(),
     busy,
     notificationPermission,
     signUp,

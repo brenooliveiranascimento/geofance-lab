@@ -21,7 +21,13 @@ import {
 import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
 import { clearEvents } from '@src/domains/geofencing/services/eventRepository';
 import { stopMonitoring } from '@src/domains/geofencing/services/monitorService';
-import { DELIVERY_ENDPOINT } from '@src/domains/messaging';
+import {
+  drainReceipts,
+  parseEndpoint,
+  probeDeliveryEndpoint,
+  readDeliveryEndpoint,
+  writeDeliveryEndpoint,
+} from '@src/domains/messaging';
 import { invalidateMessagingData } from '@src/domains/messaging/queries/useMessagingState';
 import { useToast } from '@src/lib/toast';
 import { useStore } from '@src/store';
@@ -40,6 +46,11 @@ export interface SettingsViewModel {
   openBatterySettings: () => Promise<void>;
   appVersion: string;
   deliveryEndpoint: string;
+  deliveryDraft: string;
+  setDeliveryDraft: (value: string) => void;
+  deliveryState: DeliveryState;
+  saveDelivery: () => void;
+  testDelivery: () => Promise<void>;
   busy: boolean;
   clearEventLog: () => void;
   resetEverything: () => void;
@@ -47,11 +58,17 @@ export interface SettingsViewModel {
   openSimulator: () => void;
 }
 
+export type DeliveryState = 'idle' | 'testing' | 'ok' | 'failed' | 'invalid';
+
 export function useSettingsViewModel(): SettingsViewModel {
   const { t } = useTranslation();
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+
+  const [deliveryEndpoint, setDeliveryEndpoint] = useState(() => readDeliveryEndpoint());
+  const [deliveryDraft, setDeliveryDraft] = useState(deliveryEndpoint);
+  const [deliveryState, setDeliveryState] = useState<DeliveryState>('idle');
 
   const storedLanguage = useStore((s) => s.language);
   const setStoredLanguage = useStore((s) => s.setLanguage);
@@ -120,6 +137,36 @@ export function useSettingsViewModel(): SettingsViewModel {
     ]);
   }, [t, toast]);
 
+  const saveDelivery = useCallback(() => {
+    const parsed = parseEndpoint(deliveryDraft);
+    if (!parsed.valid) {
+      setDeliveryState('invalid');
+      return;
+    }
+
+    writeDeliveryEndpoint(parsed.value);
+    setDeliveryEndpoint(parsed.value);
+    setDeliveryDraft(parsed.value);
+    setDeliveryState('idle');
+    toast.show({
+      message: parsed.value ? t('settings.delivery.saved') : t('settings.delivery.cleared'),
+      type: 'success',
+    });
+    if (parsed.value) void drainReceipts();
+  }, [deliveryDraft, t, toast]);
+
+  const testDelivery = useCallback(async () => {
+    const parsed = parseEndpoint(deliveryDraft);
+    if (!parsed.valid || !parsed.value) {
+      setDeliveryState('invalid');
+      return;
+    }
+
+    setDeliveryState('testing');
+    const result = await probeDeliveryEndpoint(parsed.value);
+    setDeliveryState(result.ok ? 'ok' : 'failed');
+  }, [deliveryDraft]);
+
   return {
     language,
     languages: SUPPORTED_LANGUAGES,
@@ -131,7 +178,15 @@ export function useSettingsViewModel(): SettingsViewModel {
     showBatteryOptOut: needsBatteryOptimizationOptOut,
     openBatterySettings,
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
-    deliveryEndpoint: DELIVERY_ENDPOINT,
+    deliveryEndpoint,
+    deliveryDraft,
+    setDeliveryDraft: (value) => {
+      setDeliveryDraft(value);
+      setDeliveryState('idle');
+    },
+    deliveryState,
+    saveDelivery,
+    testDelivery,
     busy,
     clearEventLog,
     resetEverything,

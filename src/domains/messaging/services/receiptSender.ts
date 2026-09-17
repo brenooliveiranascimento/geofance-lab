@@ -1,8 +1,8 @@
-import { getDatabase } from '@src/core/db';
+import { getDatabase, readJson, writeJson } from '@src/core/db';
 import { logger } from '@src/core/logger';
 
 import { slotKey } from './sequencePlanner';
-import { DELIVERY_ENDPOINT, MESSAGING_CONFIG } from '../config';
+import { DELIVERY_ENDPOINT_DEFAULT, MESSAGING_CONFIG, MESSAGING_KEYS } from '../config';
 import type { DeliveryReceipt, ReceiptState, SequenceId } from '../types';
 
 const TAG = 'receipts';
@@ -11,6 +11,53 @@ export interface BackoffConfig {
   maxAttempts: number;
   baseDelayMs: number;
   maxDelayMs: number;
+}
+
+export interface ParsedEndpoint {
+  valid: boolean;
+  value: string;
+}
+
+export function parseEndpoint(raw: string): ParsedEndpoint {
+  const trimmed = raw.trim();
+  if (trimmed === '') return { valid: true, value: '' };
+  if (!/^https?:\/\/[^\s]+$/i.test(trimmed)) return { valid: false, value: trimmed };
+  return { valid: true, value: trimmed.replace(/\/+$/, '') };
+}
+
+export function readDeliveryEndpoint(): string {
+  const stored = readJson<string>(MESSAGING_KEYS.deliveryEndpoint);
+  if (typeof stored === 'string') return stored;
+  return DELIVERY_ENDPOINT_DEFAULT;
+}
+
+export function writeDeliveryEndpoint(endpoint: string): void {
+  writeJson(MESSAGING_KEYS.deliveryEndpoint, endpoint);
+}
+
+export interface ProbeResult {
+  ok: boolean;
+  status?: number;
+  error?: string;
+}
+
+export async function probeDeliveryEndpoint(endpoint: string): Promise<ProbeResult> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), MESSAGING_CONFIG.receipts.requestTimeoutMs);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'probe' },
+      body: JSON.stringify({ probe: true, at: Date.now() }),
+      signal: controller.signal,
+    });
+    return { ok: response.ok, status: response.status };
+  } catch (error) {
+    return { ok: false, error: String(error) };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function computeBackoffMs(attempts: number, config: BackoffConfig): number | null {
@@ -90,7 +137,7 @@ function dueReceipts(now: number, limit: number): DeliveryReceipt[] {
     .map(toReceipt);
 }
 
-async function post(receipt: DeliveryReceipt): Promise<void> {
+async function post(receipt: DeliveryReceipt, endpoint: string): Promise<void> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
@@ -98,7 +145,7 @@ async function post(receipt: DeliveryReceipt): Promise<void> {
   );
 
   try {
-    const response = await fetch(DELIVERY_ENDPOINT, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -126,7 +173,8 @@ export interface DrainResult {
 export async function drainReceipts(limit = 20): Promise<DrainResult> {
   const result: DrainResult = { attempted: 0, confirmed: 0, retried: 0, exhausted: 0 };
 
-  if (!DELIVERY_ENDPOINT) return result;
+  const endpoint = readDeliveryEndpoint();
+  if (!endpoint) return result;
 
   const db = getDatabase();
   const pending = dueReceipts(Date.now(), limit);
@@ -134,7 +182,7 @@ export async function drainReceipts(limit = 20): Promise<DrainResult> {
   for (const receipt of pending) {
     result.attempted += 1;
     try {
-      await post(receipt);
+      await post(receipt, endpoint);
       db.runSync(
         `UPDATE delivery_receipts
             SET state = 'confirmed', confirmed_at = ?, last_error = NULL, attempts = attempts + 1

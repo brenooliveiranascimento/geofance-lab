@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { Text } from '@src/components/atoms';
+import { Input, Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
 import { APP_CONFIG } from '@src/config/app';
 import type { PermissionState } from '@src/core/permissions';
@@ -145,12 +145,45 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
           ) : null}
         </Section>
 
+        <Section title={t('settings.delivery.title')}>
+          <Text style={styles.note}>{t('settings.delivery.hint')}</Text>
+          <Input
+            value={viewModel.deliveryDraft}
+            onChangeText={viewModel.setDeliveryDraft}
+            placeholder={t('settings.delivery.placeholder')}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            style={styles.input}
+          />
+          <View style={styles.inlineActions}>
+            <TouchableOpacity onPress={viewModel.saveDelivery}>
+              <Text style={styles.action}>{t('settings.delivery.save')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => void viewModel.testDelivery()}
+              disabled={viewModel.deliveryState === 'testing'}
+            >
+              <Text style={styles.action}>
+                {t(
+                  viewModel.deliveryState === 'testing'
+                    ? 'settings.delivery.testing'
+                    : 'settings.delivery.test',
+                )}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {viewModel.deliveryState === 'ok' ? (
+            <Text style={[styles.note, styles.ok]}>{t('settings.delivery.testOk')}</Text>
+          ) : viewModel.deliveryState === 'failed' ? (
+            <Text style={[styles.note, styles.bad]}>{t('settings.delivery.testFailed')}</Text>
+          ) : viewModel.deliveryState === 'invalid' ? (
+            <Text style={[styles.note, styles.bad]}>{t('settings.delivery.invalid')}</Text>
+          ) : null}
+        </Section>
+
         <Section title={t('settings.about.title')}>
           <Row label={t('settings.about.version')} value={viewModel.appVersion} />
-          <Row
-            label={t('settings.about.endpoint')}
-            value={viewModel.deliveryEndpoint || t('settings.about.endpointEmpty')}
-          />
           <TouchableOpacity onPress={viewModel.resetEverything} disabled={viewModel.busy}>
             <Text style={[styles.action, styles.danger]}>{t('settings.data.reset')}</Text>
           </TouchableOpacity>
@@ -179,6 +212,10 @@ const styles = StyleSheet.create({
   action: { color: colors.primary, fontSize: fontSize.sm, paddingVertical: 12 },
   danger: { color: colors.error },
   note: { color: colors.textMuted, fontSize: fontSize.xs, lineHeight: 16, paddingBottom: 12 },
+  ok: { color: colors.success },
+  bad: { color: colors.error },
+  input: { marginBottom: spacing.sm },
+  inlineActions: { flexDirection: 'row', gap: spacing.lg },
   chips: { flexDirection: 'row', gap: spacing.lg, paddingVertical: 12 },
   chip: { color: colors.textMuted, fontSize: fontSize.sm },
   chipActive: { color: colors.text, fontWeight: '600' },

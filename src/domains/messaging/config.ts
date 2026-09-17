@@ -24,8 +24,9 @@ export const MESSAGING_CONFIG = {
 export const MESSAGING_KEYS = {
   enrolledAt: 'messaging.enrolledAt',
   lastReconciledAt: 'messaging.lastReconciledAt',
+  deliveryEndpoint: 'messaging.deliveryEndpoint',
 } as const;
 
 export const MESSAGING_TASK = 'geofence-lab.messaging';
 
-export const DELIVERY_ENDPOINT = process.env.EXPO_PUBLIC_DELIVERY_ENDPOINT ?? '';
+export const DELIVERY_ENDPOINT_DEFAULT = process.env.EXPO_PUBLIC_DELIVERY_ENDPOINT ?? '';

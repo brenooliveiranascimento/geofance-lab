@@ -283,9 +283,20 @@
     "about": {
       "title": "About",
       "app": "Application",
-      "version": "Version",
-      "endpoint": "Confirmation endpoint",
-      "endpointEmpty": "not configured"
+      "version": "Version"
+    },
+    "delivery": {
+      "title": "Delivery confirmation",
+      "hint": "Every delivered message POSTs to this URL. Generate one at webhook.site to try it.",
+      "placeholder": "https://webhook.site/...",
+      "save": "Save",
+      "saved": "Endpoint saved",
+      "cleared": "Sending disabled",
+      "test": "Test",
+      "testing": "Testing…",
+      "testOk": "The endpoint responded.",
+      "testFailed": "No response from the endpoint.",
+      "invalid": "Enter an http:// or https:// URL, or leave it empty to disable."
     }
   },
   "messages": {

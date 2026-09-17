@@ -1,7 +1,7 @@
 import './tasks';
 
 export * from './types';
-export { MESSAGING_CONFIG, DELIVERY_ENDPOINT } from './config';
+export { MESSAGING_CONFIG } from './config';
 export { registerMessagingTask, unregisterMessagingTask } from './tasks';
 export {
   cancelAllMessages,
@@ -13,6 +13,10 @@ export {
 export {
   drainReceipts,
   listReceipts,
+  parseEndpoint,
+  probeDeliveryEndpoint,
+  readDeliveryEndpoint,
   retryExhaustedReceipts,
+  writeDeliveryEndpoint,
 } from './services/receiptSender';
 export { enrol, readEnrolledAt, resetEnrolment } from './services/scheduleRepository';

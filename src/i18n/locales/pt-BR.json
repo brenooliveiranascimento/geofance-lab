@@ -283,9 +283,20 @@
     "about": {
       "title": "Sobre",
       "app": "Aplicativo",
-      "version": "Versão",
-      "endpoint": "Endpoint de confirmação",
-      "endpointEmpty": "não configurado"
+      "version": "Versão"
+    },
+    "delivery": {
+      "title": "Confirmação de entrega",
+      "hint": "Cada mensagem entregue envia um POST para esta URL. Gere uma em webhook.site para testar.",
+      "placeholder": "https://webhook.site/...",
+      "save": "Salvar",
+      "saved": "Endpoint salvo",
+      "cleared": "Envio desligado",
+      "test": "Testar",
+      "testing": "Testando…",
+      "testOk": "O endpoint respondeu.",
+      "testFailed": "Não houve resposta do endpoint.",
+      "invalid": "Informe uma URL http:// ou https://, ou deixe vazio para desligar."
     }
   },
   "messages": {

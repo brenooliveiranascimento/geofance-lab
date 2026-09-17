@@ -421,8 +421,16 @@ entregue; enviá-la é outro problema, que pode falhar e ser retentado por horas
 - Cabeçalho `Idempotency-Key` na requisição, porque uma resposta que nunca chegou é
   indistinguível de uma que nunca aconteceu.
 
-O endpoint é configurável por `EXPO_PUBLIC_DELIVERY_ENDPOINT`. Sem ele, a fila continua sendo
-gravada e pode ser inspecionada na aba Mensagens.
+O endpoint é informado **dentro do app**, em Ajustes → Confirmação de entrega, com um botão que
+dispara um POST de teste na hora. `EXPO_PUBLIC_DELIVERY_ENDPOINT` serve apenas como valor padrão
+do build, e o que estiver salvo no app tem precedência.
+
+A escolha é deliberada: variáveis `EXPO_PUBLIC_*` são embutidas no bundle, então uma URL fixada no
+`.env` viaja dentro do APK e aponta para um endereço que quem recebe o app não controla. Com o
+campo no app, quem for testar cola a própria URL de webhook.site e vê as requisições chegando no
+próprio navegador.
+
+Sem endpoint nenhum, a fila continua sendo gravada e fica visível na aba Mensagens.
 
 **Sobre o subtítulo:** `content.subtitle` do `expo-notifications` existe apenas no iOS — o
 equivalente do Android (`setSubText`) não é exposto. A string "Semana X · Mensagem Y de 7" é
@@ -557,7 +565,7 @@ Ambas opcionais — o app funciona sem elas.
 | Variável | Para quê |
 |---|---|
 | `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | mapa no Android. Sem ela a tela cai em modo lista. Emita em console.cloud.google.com com a *Maps SDK for Android* habilitada; carregamento de mapa em apps móveis não é cobrado. No iOS o MapKit é usado e nenhuma chave é necessária. |
-| `EXPO_PUBLIC_DELIVERY_ENDPOINT` | para onde as confirmações de entrega são enviadas. Use uma URL descartável de webhook.site para demonstrar. Vazio desliga o envio; a fila continua local. |
+| `EXPO_PUBLIC_DELIVERY_ENDPOINT` | valor padrão do endpoint de confirmação de entrega. Opcional — o endereço também pode ser informado em Ajustes → Confirmação de entrega, e o que estiver salvo lá tem precedência. |
 
 ### Gerar o APK
 

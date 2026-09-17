@@ -1,4 +1,9 @@
-import { computeBackoffMs, type BackoffConfig } from '../receiptSender';
+import {
+  computeBackoffMs,
+  parseEndpoint,
+  readDeliveryEndpoint,
+  type BackoffConfig,
+} from '../receiptSender';
 
 const CONFIG: BackoffConfig = {
   maxAttempts: 10,
@@ -44,5 +49,51 @@ describe('computeBackoffMs', () => {
     const once: BackoffConfig = { ...CONFIG, maxAttempts: 1 };
     expect(computeBackoffMs(0, once)).toBe(30_000);
     expect(computeBackoffMs(1, once)).toBeNull();
+  });
+});
+
+describe('parseEndpoint', () => {
+  it('accepts http and https', () => {
+    expect(parseEndpoint('https://webhook.site/abc')).toEqual({
+      valid: true,
+      value: 'https://webhook.site/abc',
+    });
+    expect(parseEndpoint('http://192.168.1.10:3000/receipts').valid).toBe(true);
+  });
+
+  it('treats empty as switching sending off', () => {
+    expect(parseEndpoint('')).toEqual({ valid: true, value: '' });
+    expect(parseEndpoint('   ')).toEqual({ valid: true, value: '' });
+  });
+
+  it('trims surrounding whitespace', () => {
+    expect(parseEndpoint('  https://webhook.site/abc  ').value).toBe('https://webhook.site/abc');
+  });
+
+  it('drops trailing slashes so the same URL is stored one way', () => {
+    expect(parseEndpoint('https://webhook.site/abc//').value).toBe('https://webhook.site/abc');
+  });
+
+  it('rejects a URL with no scheme', () => {
+    expect(parseEndpoint('webhook.site/abc').valid).toBe(false);
+  });
+
+  it('rejects other schemes', () => {
+    expect(parseEndpoint('ftp://example.com').valid).toBe(false);
+    expect(parseEndpoint('javascript:alert(1)').valid).toBe(false);
+  });
+
+  it('rejects anything with whitespace inside', () => {
+    expect(parseEndpoint('https://webhook.site/a b').valid).toBe(false);
+  });
+
+  it('keeps the raw text when rejecting, so the field is not cleared', () => {
+    expect(parseEndpoint('webhook.site').value).toBe('webhook.site');
+  });
+});
+
+describe('readDeliveryEndpoint', () => {
+  it('falls back to the build-time default when nothing is stored', () => {
+    expect(readDeliveryEndpoint()).toBe(process.env.EXPO_PUBLIC_DELIVERY_ENDPOINT ?? '');
   });
 });
