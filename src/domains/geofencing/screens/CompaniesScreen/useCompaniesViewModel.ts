@@ -48,7 +48,7 @@ export function useCompaniesViewModel(): CompaniesViewModel {
       .filter((company) => !needle || company.name.toLowerCase().includes(needle))
       .map((company) => ({
         company,
-        state: states.get(company.id),
+        state: company.enabled ? states.get(company.id) : undefined,
         roomCount: roomCounts.get(company.id) ?? 0,
         distanceMeters: origin ? distanceMeters(origin, company) : null,
       }));

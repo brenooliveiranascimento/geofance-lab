@@ -61,7 +61,8 @@
   },
   "companies": {
     "title": "Companies",
-    "subtitle": "{{total}} registered",
+    "subtitle_one": "{{count}} registered",
+    "subtitle_other": "{{count}} registered",
     "searchPlaceholder": "Search by name",
     "radii": "radius {{radius, number(maximumFractionDigits: 0)}} m · active {{activeRadius, number(maximumFractionDigits: 0)}} m",
     "rooms_one": "{{count}} room",

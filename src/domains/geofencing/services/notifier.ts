@@ -76,7 +76,7 @@ export async function notifyEvents(events: readonly GeofenceEvent[]): Promise<vo
             idempotencyKey: event.idempotencyKey,
           },
         },
-        trigger: null,
+        trigger: Platform.OS === 'android' ? { channelId: GEOFENCE_CHANNEL_ID } : null,
       });
       if (event.id !== undefined) delivered.push(event.id);
     } catch (error) {

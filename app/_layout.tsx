@@ -9,7 +9,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Appearance, AppState, StyleSheet, View, type AppStateStatus } from 'react-native';
+import { Appearance, AppState, StyleSheet, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
@@ -21,10 +21,10 @@ import {
   reconcileSchedule,
 } from '@src/domains/messaging/services/scheduler';
 import { queryClient } from '@src/lib/query/client';
+import { ToastProvider } from '@src/lib/toast';
 import { colors } from '@src/theme';
 
 Appearance.setColorScheme('dark');
-import { ToastProvider } from '@src/lib/toast';
 
 SplashScreen.preventAutoHideAsync();
 

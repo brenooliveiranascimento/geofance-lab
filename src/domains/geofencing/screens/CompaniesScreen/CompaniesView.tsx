@@ -62,7 +62,7 @@ export function CompaniesView({ viewModel }: CompaniesViewProps): React.JSX.Elem
     <ScreenTemplate>
       <View style={styles.header}>
         <Text style={styles.heading}>{t('companies.title')}</Text>
-        <Text style={styles.subheading}>{t('companies.subtitle', { total: viewModel.total })}</Text>
+        <Text style={styles.subheading}>{t('companies.subtitle', { count: viewModel.total })}</Text>
 
         {viewModel.total > 6 ? (
           <Input

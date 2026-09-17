@@ -61,7 +61,8 @@
   },
   "companies": {
     "title": "Empresas",
-    "subtitle": "{{total}} cadastrada(s)",
+    "subtitle_one": "{{count}} cadastrada",
+    "subtitle_other": "{{count}} cadastradas",
     "searchPlaceholder": "Buscar por nome",
     "radii": "raio {{radius, number(maximumFractionDigits: 0)}} m · ativo {{activeRadius, number(maximumFractionDigits: 0)}} m",
     "rooms_one": "{{count}} cômodo",

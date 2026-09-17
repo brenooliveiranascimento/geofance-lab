@@ -23,6 +23,7 @@ import { clearEvents } from '@src/domains/geofencing/services/eventRepository';
 import { refreshNotificationChannel } from '@src/domains/geofencing/services/notifier';
 import { stopMonitoring } from '@src/domains/geofencing/services/monitorService';
 import {
+  cancelAllMessages,
   drainReceipts,
   parseEndpoint,
   probeDeliveryEndpoint,
@@ -66,6 +67,7 @@ export type DeliveryState = 'idle' | 'testing' | 'ok' | 'failed' | 'invalid';
 export function useSettingsViewModel(): SettingsViewModel {
   const { t } = useTranslation();
   const router = useRouter();
+  const setOnboardingCompleted = useStore((state) => state.setOnboardingCompleted);
   const toast = useToast();
   const [busy, setBusy] = useState(false);
 
@@ -131,10 +133,13 @@ export function useSettingsViewModel(): SettingsViewModel {
             setBusy(true);
             try {
               await stopMonitoring();
+              await cancelAllMessages();
               resetDatabase();
               invalidateGeofencingData();
               invalidateMessagingData();
+              setOnboardingCompleted(false);
               toast.show({ message: t('settings.reset.done'), type: 'success' });
+              router.replace('/(onboarding)');
             } finally {
               setBusy(false);
             }
@@ -142,7 +147,7 @@ export function useSettingsViewModel(): SettingsViewModel {
         },
       },
     ]);
-  }, [t, toast]);
+  }, [router, setOnboardingCompleted, t, toast]);
 
   const saveDelivery = useCallback(() => {
     const parsed = parseEndpoint(deliveryDraft);

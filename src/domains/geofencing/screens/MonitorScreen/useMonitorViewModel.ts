@@ -114,7 +114,8 @@ export function useMonitorViewModel(): MonitorViewModel {
     }
     for (const state of states.values()) {
       if (state.state === 'inside' && state.targetKind === 'company') {
-        return companies.find((c) => c.id === state.targetId)?.name ?? null;
+        const company = companies.find((c) => c.id === state.targetId);
+        if (company?.enabled) return company.name;
       }
     }
     return null;
