@@ -231,6 +231,22 @@ export function readPlanWithState(): {
   });
 }
 
+export async function rescheduleForLocale(): Promise<void> {
+  if (readEnrolledAt() === null) return;
+
+  for (const row of listSchedule()) {
+    if (row.state !== 'scheduled') continue;
+    try {
+      await Notifications.cancelScheduledNotificationAsync(slotKey(row.sequence, row.position));
+    } catch {
+    }
+  }
+
+  channelReady = false;
+  await reconcileSchedule();
+  logger.info(TAG, 'rescheduled for locale');
+}
+
 export async function cancelAllMessages(): Promise<void> {
   for (const row of listSchedule()) {
     try {

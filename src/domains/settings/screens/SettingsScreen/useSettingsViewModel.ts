@@ -20,12 +20,14 @@ import {
 } from '@src/domains/geofencing/queries/invalidate';
 import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
 import { clearEvents } from '@src/domains/geofencing/services/eventRepository';
+import { refreshNotificationChannel } from '@src/domains/geofencing/services/notifier';
 import { stopMonitoring } from '@src/domains/geofencing/services/monitorService';
 import {
   drainReceipts,
   parseEndpoint,
   probeDeliveryEndpoint,
   readDeliveryEndpoint,
+  rescheduleForLocale,
   writeDeliveryEndpoint,
 } from '@src/domains/messaging';
 import { invalidateMessagingData } from '@src/domains/messaging/queries/useMessagingState';
@@ -49,6 +51,7 @@ export interface SettingsViewModel {
   deliveryDraft: string;
   setDeliveryDraft: (value: string) => void;
   deliveryState: DeliveryState;
+  deliveryDetail: string | null;
   saveDelivery: () => void;
   testDelivery: () => Promise<void>;
   busy: boolean;
@@ -69,6 +72,7 @@ export function useSettingsViewModel(): SettingsViewModel {
   const [deliveryEndpoint, setDeliveryEndpoint] = useState(() => readDeliveryEndpoint());
   const [deliveryDraft, setDeliveryDraft] = useState(deliveryEndpoint);
   const [deliveryState, setDeliveryState] = useState<DeliveryState>('idle');
+  const [deliveryDetail, setDeliveryDetail] = useState<string | null>(null);
 
   const storedLanguage = useStore((s) => s.language);
   const setStoredLanguage = useStore((s) => s.setLanguage);
@@ -79,7 +83,10 @@ export function useSettingsViewModel(): SettingsViewModel {
   const setLanguage = useCallback(
     (code: LanguageCode) => {
       setStoredLanguage(code);
-      void i18n.changeLanguage(code);
+      void i18n.changeLanguage(code).then(async () => {
+        await Promise.all([rescheduleForLocale(), refreshNotificationChannel()]);
+        invalidateMessagingData();
+      });
     },
     [setStoredLanguage],
   );
@@ -164,6 +171,7 @@ export function useSettingsViewModel(): SettingsViewModel {
 
     setDeliveryState('testing');
     const result = await probeDeliveryEndpoint(parsed.value);
+    setDeliveryDetail(result.ok ? null : (result.status ? `HTTP ${result.status}` : (result.error ?? null)));
     setDeliveryState(result.ok ? 'ok' : 'failed');
   }, [deliveryDraft]);
 
@@ -185,6 +193,7 @@ export function useSettingsViewModel(): SettingsViewModel {
       setDeliveryState('idle');
     },
     deliveryState,
+    deliveryDetail,
     saveDelivery,
     testDelivery,
     busy,

@@ -52,8 +52,10 @@ export async function probeDeliveryEndpoint(endpoint: string): Promise<ProbeResu
       body: JSON.stringify({ probe: true, at: Date.now() }),
       signal: controller.signal,
     });
+    if (!response.ok) logger.warn(TAG, 'probe rejected', { status: response.status });
     return { ok: response.ok, status: response.status };
   } catch (error) {
+    logger.warn(TAG, 'probe failed', { error: String(error) });
     return { ok: false, error: String(error) };
   } finally {
     clearTimeout(timeout);

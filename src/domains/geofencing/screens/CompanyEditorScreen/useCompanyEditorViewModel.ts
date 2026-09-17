@@ -103,8 +103,13 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     [router, t, toast],
   );
 
+  const loadedId = useRef<string | null>(null);
+
   useEffect(() => {
-    if (typeof id === 'string') reload(id);
+    if (typeof id === 'string' && loadedId.current !== id) {
+      loadedId.current = id;
+      reload(id);
+    }
     setLoading(false);
   }, [id, reload]);
 

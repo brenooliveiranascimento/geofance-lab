@@ -176,7 +176,10 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
           {viewModel.deliveryState === 'ok' ? (
             <Text style={[styles.note, styles.ok]}>{t('settings.delivery.testOk')}</Text>
           ) : viewModel.deliveryState === 'failed' ? (
-            <Text style={[styles.note, styles.bad]}>{t('settings.delivery.testFailed')}</Text>
+            <Text style={[styles.note, styles.bad]}>
+              {t('settings.delivery.testFailed')}
+              {viewModel.deliveryDetail ? ` (${viewModel.deliveryDetail})` : ''}
+            </Text>
           ) : viewModel.deliveryState === 'invalid' ? (
             <Text style={[styles.note, styles.bad]}>{t('settings.delivery.invalid')}</Text>
           ) : null}

@@ -55,8 +55,8 @@ export function CompanyEditorView({ viewModel }: CompanyEditorViewProps): React.
               initialCenter={company}
               spanMeters={Math.max(company.activeRadius * 3, 60)}
               draft={viewModel.draft}
-              parentPolygon={redrawingOutline ? null : company.polygon}
-              siblings={redrawingOutline ? [] : rooms}
+              parentPolygon={company.polygon}
+              siblings={rooms}
               onCenterMove={viewModel.onCenterMove}
               readoutLabel={t('wizard.crosshair')}
               invalid={viewModel.tangled}

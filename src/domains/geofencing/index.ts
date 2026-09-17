@@ -13,3 +13,4 @@ export {
   stopMonitoring,
   submitSimulatedFix,
 } from './services/monitorService';
+export { refreshNotificationChannel } from './services/notifier';

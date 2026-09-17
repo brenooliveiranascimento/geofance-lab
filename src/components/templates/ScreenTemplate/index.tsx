@@ -1,6 +1,6 @@
 import React, { type PropsWithChildren } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@src/theme';
 
@@ -12,10 +12,15 @@ export function ScreenTemplate({
   children,
   scrollable = false,
 }: ScreenTemplateProps): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {scrollable ? (
-        <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 + insets.bottom }]}
+        >
           {children}
         </ScrollView>
       ) : (

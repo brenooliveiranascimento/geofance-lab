@@ -1,6 +1,7 @@
 import React, {
   createContext,
   useCallback,
+  useMemo,
   useContext,
   useRef,
   useState,
@@ -82,9 +83,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
   );
 
   const cfg = toast ? TYPE_CONFIG[toast.type] : null;
+  const value = useMemo(() => ({ show }), [show]);
 
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={value}>
       <View style={styles.root}>
         {children}
         <Animated.View

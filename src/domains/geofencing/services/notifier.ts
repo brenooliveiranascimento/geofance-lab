@@ -27,6 +27,11 @@ export async function ensureNotificationChannel(): Promise<void> {
   }
 }
 
+export async function refreshNotificationChannel(): Promise<void> {
+  channelReady = false;
+  await ensureNotificationChannel();
+}
+
 function describe(event: GeofenceEvent): { title: string; body: string } {
   const entering = event.kind === 'company_enter' || event.kind === 'room_enter';
 

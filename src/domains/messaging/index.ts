@@ -9,6 +9,7 @@ export {
   readMessagingSnapshot,
   readPlanWithState,
   reconcileSchedule,
+  rescheduleForLocale,
 } from './services/scheduler';
 export {
   drainReceipts,
