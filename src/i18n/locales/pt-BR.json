@@ -103,6 +103,8 @@
     "deleteCompany": "Excluir empresa",
     "deleteTitle": "Excluir empresa",
     "deleteBody": "Excluir \"{{name}}\" e todos os seus cômodos? Os eventos já registrados permanecem no log.",
+    "deleteRoomTitle": "Excluir cômodo",
+    "deleteRoomBody": "Excluir \"{{name}}\"? O polígono desenhado se perde.",
     "derivedHint": "Derivados do perímetro. O círculo acorda o app; o polígono decide a entrada.",
     "outlineRedraw": "Redesenhar perímetro",
     "outlineRedrawHint": "Os cômodos precisam continuar dentro do novo perímetro.",

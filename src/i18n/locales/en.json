@@ -103,6 +103,8 @@
     "deleteCompany": "Delete company",
     "deleteTitle": "Delete company",
     "deleteBody": "Delete \"{{name}}\" and all of its rooms? Events already recorded stay in the log.",
+    "deleteRoomTitle": "Delete room",
+    "deleteRoomBody": "Delete \"{{name}}\"? The polygon you drew is lost.",
     "derivedHint": "Derived from the perimeter. The circle wakes the app; the polygon decides entry.",
     "outlineRedraw": "Redraw perimeter",
     "outlineRedrawHint": "The rooms must remain inside the new perimeter.",

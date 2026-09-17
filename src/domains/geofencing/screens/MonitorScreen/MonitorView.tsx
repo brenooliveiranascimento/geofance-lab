@@ -31,7 +31,7 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
       <View style={styles.map}>
         {viewModel.mapAvailable && viewModel.center ? (
           <CompaniesMap
-            center={viewModel.center}
+            center={viewModel.mapFocus}
             companies={viewModel.mapCompanies}
             rooms={viewModel.mapRooms}
             states={viewModel.states}

@@ -38,6 +38,7 @@ export interface MonitorViewModel {
   center: LatLng | null;
   mapCompanies: Company[];
   mapRooms: Room[];
+  mapFocus: LatLng | null;
   mapSpanMeters: number;
   states: Map<string, TargetState>;
   lastEvent: GeofenceEvent | null;
@@ -91,6 +92,8 @@ export function useMonitorViewModel(): MonitorViewModel {
     if (!center || companies.length === 0) return [];
     return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((r) => r.item);
   }, [center, companies.length]);
+
+  const mapFocus = mapCompanies[0] ?? center;
 
   const mapSpanMeters = useMemo(() => {
     const nearest = mapCompanies[0];
@@ -182,6 +185,7 @@ export function useMonitorViewModel(): MonitorViewModel {
     center,
     mapCompanies,
     mapRooms,
+    mapFocus,
     mapSpanMeters,
     states,
     lastEvent: recent[0] ?? null,

@@ -229,11 +229,20 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
 
   const removeRoom = useCallback(
     (room: Room) => {
-      deleteRoom(room.id);
-      if (company) setRooms(listRooms(company.id));
-      invalidateGeofencingData();
+      Alert.alert(t('editor.deleteRoomTitle'), t('editor.deleteRoomBody', { name: room.name }), [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            deleteRoom(room.id);
+            if (company) setRooms(listRooms(company.id));
+            invalidateGeofencingData();
+          },
+        },
+      ]);
     },
-    [company],
+    [company, t],
   );
 
   const removeCompany = useCallback(() => {

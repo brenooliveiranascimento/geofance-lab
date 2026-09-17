@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapView, { Circle, Marker, Polygon, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
 
@@ -53,16 +53,40 @@ export function CompaniesMap({
   const [recentering, setRecentering] = useState(false);
   const region = useMemo(() => (center ? regionFor(center, spanMeters) : null), [center, spanMeters]);
 
+  const ready = useRef(false);
+  const framed = useRef<string | null>(null);
+
+  const frameKey = region
+    ? `${region.latitude.toFixed(5)}:${region.longitude.toFixed(5)}:${region.latitudeDelta.toFixed(5)}`
+    : null;
+
+  const applyRegion = useCallback(
+    (animated: boolean) => {
+      if (!region || frameKey === null || framed.current === frameKey) return;
+      framed.current = frameKey;
+      mapRef.current?.animateToRegion(region, animated ? 400 : 0);
+    },
+    [region, frameKey],
+  );
+
   const applyInitialRegion = useCallback(() => {
-    if (region) mapRef.current?.animateToRegion(region, 0);
-  }, [region]);
+    ready.current = true;
+    applyRegion(false);
+  }, [applyRegion]);
+
+  useEffect(() => {
+    if (ready.current) applyRegion(true);
+  }, [applyRegion]);
 
   const handleRecenter = useCallback(async () => {
     if (!onRecenter || recentering) return;
     setRecentering(true);
     try {
       const target = await onRecenter();
-      if (target) mapRef.current?.animateToRegion(regionFor(target, spanMeters), 400);
+      if (target) {
+        framed.current = null;
+        mapRef.current?.animateToRegion(regionFor(target, spanMeters), 400);
+      }
     } finally {
       setRecentering(false);
     }
