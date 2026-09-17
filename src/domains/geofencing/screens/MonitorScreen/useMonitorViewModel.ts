@@ -23,6 +23,8 @@ import {
 import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '../../types';
 
 const MAP_COMPANY_LIMIT = 24;
+const MAP_SPAN_MIN_METERS = 150;
+const MAP_SPAN_MAX_METERS = 1200;
 
 export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy' | 'empty';
 
@@ -36,6 +38,7 @@ export interface MonitorViewModel {
   center: LatLng | null;
   mapCompanies: Company[];
   mapRooms: Room[];
+  mapSpanMeters: number;
   states: Map<string, TargetState>;
   lastEvent: GeofenceEvent | null;
   mapAvailable: boolean;
@@ -88,6 +91,13 @@ export function useMonitorViewModel(): MonitorViewModel {
     if (!center || companies.length === 0) return [];
     return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((r) => r.item);
   }, [center, companies.length]);
+
+  const mapSpanMeters = useMemo(() => {
+    const nearest = mapCompanies[0];
+    if (!nearest) return MAP_SPAN_MAX_METERS;
+    const span = nearest.activeRadius * 5;
+    return Math.min(Math.max(span, MAP_SPAN_MIN_METERS), MAP_SPAN_MAX_METERS);
+  }, [mapCompanies]);
 
   const mapRooms = useMemo(() => {
     if (mapCompanies.length === 0) return [];
@@ -171,6 +181,7 @@ export function useMonitorViewModel(): MonitorViewModel {
     center,
     mapCompanies,
     mapRooms,
+    mapSpanMeters,
     states,
     lastEvent: recent[0] ?? null,
     mapAvailable: isMapAvailable,

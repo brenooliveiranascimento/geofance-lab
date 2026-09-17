@@ -33,9 +33,12 @@ src/components/       atoms · molecules · organisms · templates
    handlers, com interface tipada exportada).
 3. **Rotas em `app/` são re-exports de uma linha.** Nenhuma lógica ali.
 4. **Cores, espaçamentos e tipografia vêm de `@src/theme`.** Nunca hex solto.
-5. **Todo texto visível passa por `useTranslation()`**, com a chave nos dois locales.
-   `node scripts/check-i18n.mjs` verifica isso; `count` é reservado pelo i18next para
-   pluralização, então placeholders numéricos usam `total`, `regions`, `vertices`.
+5. **Todo texto visível passa por `useTranslation()`**, com a chave nos dois locales, e isso
+   inclui o conteúdo das mensagens sequenciadas (`messages.content.<id>`) e os textos que saem
+   de fora do React — notificações e serviço em primeiro plano usam `i18n.t` direto.
+   `node scripts/check-i18n.mjs` verifica isso. `count` é o parâmetro de pluralização do
+   i18next: use-o quando a frase realmente flexiona (chaves `_one`/`_other`) e `total`,
+   `regions` ou `vertices` quando for só um número interpolado.
 6. `React.JSX.Element`, nunca `JSX.Element`. `StyleSheet.create({})` ao final do arquivo.
 
 ## O que exige cuidado
@@ -62,6 +65,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (165 testes)
+npm run verify    # typecheck + check:i18n + jest (206 testes)
 npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```

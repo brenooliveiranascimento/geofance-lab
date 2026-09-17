@@ -35,7 +35,7 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
             companies={viewModel.mapCompanies}
             rooms={viewModel.mapRooms}
             states={viewModel.states}
-            spanMeters={600}
+            spanMeters={viewModel.mapSpanMeters}
             emptyLabel=""
             onRecenter={viewModel.recenter}
             recenterLabel={t('monitor.recenter')}

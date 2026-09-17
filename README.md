@@ -665,12 +665,29 @@ banco, sem abrir o app:
 A sequência registrada no encerramento foi exatamente a projetada: evento de região nativa →
 `precise updates started` → `company_enter` → `room_enter`.
 
-**O que não foi medido:** nada disso foi verificado em **aparelho físico** nem no **Android**. O
-simulador exercita o caminho real do CoreLocation, mas não reproduz orçamento de execução em
-background, estado de bateria nem os gerenciadores de fabricante. E o Android é documentadamente
-diferente: um app finalizado **não** é relançado por evento de geofence, o que é justamente o que
-o serviço em primeiro plano existe para mitigar. A tabela de limitações abaixo continua valendo
-como o que se espera, não como o que se mediu.
+No **emulador de Android** (imagem com Google Play Services 26.33), com o APK de release
+instalado, movendo a posição por `adb emu geo fix` e confirmando o estado do processo com
+`adb shell pidof`:
+
+| Situação | Resultado |
+|---|---|
+| App em primeiro plano | entra e sai da empresa e dos cômodos |
+| **App em segundo plano** (tela inicial à frente, processo vivo) | `company_exit` ao se afastar e `room_enter` ao voltar, com notificação — sem abrir o app |
+| **App fora dos recentes** (processo confirmado morto, nenhum serviço ativo) | nenhum evento: o Android **não** relançou o app ao cruzar a região |
+
+A última linha é a limitação documentada do Android, medida em vez de suposta. Ela só não se
+aplica enquanto o app está dentro de uma empresa, porque aí o serviço em primeiro plano está
+ativo e segura o processo — que é exatamente o motivo de ele existir.
+
+O exercício de mensagens foi medido no mesmo emulador: com a rede desligada (`svc wifi disable`),
+a mensagem venceu e foi entregue, a confirmação ficou na fila e **nada** chegou ao endpoint; ao
+restaurar a rede, a fila drenou sozinha. Três reconciliações seguidas depois disso não geraram
+nenhum POST repetido — a chave de idempotência acompanha cada confirmação.
+
+**O que não foi medido:** nada disso foi verificado em **aparelho físico**. Emulador e simulador
+exercitam o caminho real do CoreLocation e do Play Services, mas não reproduzem orçamento de
+execução em background, estado de bateria nem os gerenciadores de fabricante. A tabela de
+limitações abaixo continua valendo como o que se espera, não como o que se mediu.
 
 ### Recuperação ao subir
 
@@ -696,7 +713,7 @@ comportamento descrito acima foi observado, e não suposto.
 ## Testes automatizados
 
 ```bash
-npm test          # 165 testes
+npm test          # 206 testes
 npm run verify    # typecheck + verificação de i18n + testes
 ```
 
