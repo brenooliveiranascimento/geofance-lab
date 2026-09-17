@@ -1,13 +1,6 @@
-/**
- * Central design tokens — the single source of truth for colors, spacing and type.
- * Dark-first: these apps ship with a dark UI by default (highest-converting
- * pattern for AI utility apps). Never hardcode hex values in components.
- */
-
 export const colors = {
-  /** Brand accent — filled at app creation. */
   primary: '#2563EB',
-  primaryMuted: '#2563EB33', // 20% alpha overlay of the accent
+  primaryMuted: '#2563EB33',
 
   background: '#0D0D0D',
   surface: '#1A1A1E',

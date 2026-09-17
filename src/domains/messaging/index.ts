@@ -1,4 +1,3 @@
-// Importing this module registers the periodic upkeep task.
 import './tasks';
 
 export * from './types';

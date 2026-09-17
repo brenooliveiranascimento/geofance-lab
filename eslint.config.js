@@ -1,4 +1,3 @@
-// https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
@@ -9,8 +8,7 @@ module.exports = defineConfig([
   },
   {
     rules: {
-      // Unused values are almost always a leftover; an underscore prefix is the
-      // explicit way to say "intentionally ignored".
+      'import/no-named-as-default-member': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },

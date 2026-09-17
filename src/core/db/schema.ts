@@ -1,11 +1,4 @@
-/**
- * Schema migrations, applied in order and tracked with `PRAGMA user_version`.
- *
- * Append-only: never edit a shipped migration, add another one. The array index
- * plus one is the version a migration takes the database to.
- */
 export const MIGRATIONS: readonly string[] = [
-  // ---- v1: places, rooms, state machine, events, messaging, log -------------
   `
   CREATE TABLE IF NOT EXISTS places (
     id            TEXT    PRIMARY KEY NOT NULL,
@@ -14,7 +7,6 @@ export const MIGRATIONS: readonly string[] = [
     longitude     REAL    NOT NULL,
     radius        REAL    NOT NULL,
     active_radius REAL    NOT NULL,
-    -- JSON array of {latitude, longitude}; null for a plain circular place.
     polygon       TEXT,
     enabled       INTEGER NOT NULL DEFAULT 1,
     created_at    INTEGER NOT NULL
@@ -29,9 +21,6 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_rooms_place ON rooms(place_id);
 
-  -- One row per monitored target. \`transition_seq\` is the monotonic counter
-  -- that makes every emitted event uniquely identifiable, so a process restart
-  -- cannot replay one.
   CREATE TABLE IF NOT EXISTS monitor_state (
     target_id      TEXT    PRIMARY KEY NOT NULL,
     target_kind    TEXT    NOT NULL,
@@ -40,8 +29,6 @@ export const MIGRATIONS: readonly string[] = [
     transition_seq INTEGER NOT NULL DEFAULT 0,
     since          INTEGER NOT NULL,
     last_distance  REAL,
-    -- Debounce bookkeeping: a candidate flip only commits after N consecutive
-    -- fixes agree, which is what keeps GPS jitter from producing event storms.
     pending_state  TEXT,
     pending_count  INTEGER NOT NULL DEFAULT 0,
     updated_at     INTEGER NOT NULL
@@ -106,8 +93,6 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_log_created ON app_log(created_at DESC);
 
-  -- Small scalars the background tasks need without loading a whole domain:
-  -- monitor origin, enrollment timestamp, active region set.
   CREATE TABLE IF NOT EXISTS kv (
     key   TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL

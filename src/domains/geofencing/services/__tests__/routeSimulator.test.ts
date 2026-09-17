@@ -47,7 +47,6 @@ describe('buildCrossingRoute', () => {
   });
 
   it('applies the offset perpendicular to the bearing', () => {
-    // Heading north with a positive offset moves the whole path east.
     expect(route.every((fix) => fix.longitude > PLACE.longitude)).toBe(true);
   });
 

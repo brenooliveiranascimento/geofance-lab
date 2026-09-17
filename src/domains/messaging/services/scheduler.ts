@@ -47,15 +47,6 @@ async function ensureChannel(): Promise<void> {
   }
 }
 
-/**
- * Builds the notification content for a slot.
- *
- * `subtitle` is an iOS-only field in expo-notifications — Android's equivalent
- * (`setSubText`) is not exposed — so on Android the same string is promoted to
- * the first line of the body. The requirement is that "Semana X; Mensagem Y de
- * Z" is visible on the notification, and this is how it stays visible on both
- * platforms without pretending the field exists where it does not.
- */
 function contentFor(message: PlannedMessage): Notifications.NotificationContentInput {
   if (Platform.OS === 'ios') {
     return {
@@ -80,17 +71,6 @@ export interface ReconcileSummary {
   skipped: boolean;
 }
 
-/**
- * Brings the OS queue in line with the plan.
- *
- * Idempotent, and that is the whole design: instead of "schedule the next one
- * when this one fires" — which loses the thread the moment a delivery is missed
- * — it recomputes what *should* be queued and fixes only the difference. Running
- * it twice changes nothing; running it after a week offline catches up cleanly.
- *
- * Notification identifiers are the slot keys, so the OS itself refuses to hold
- * two notifications for the same message: re-scheduling a slot replaces it.
- */
 export async function reconcileSchedule(now = Date.now()): Promise<ReconcileSummary> {
   const enrolledAt = readEnrolledAt();
   if (enrolledAt === null) {
@@ -102,16 +82,11 @@ export async function reconcileSchedule(now = Date.now()): Promise<ReconcileSumm
   const plan = buildPlan(enrolledAt, MESSAGING_CONFIG, CONTENT);
   const existing = listSchedule();
 
-  // Ask the OS what it still holds. A row can claim to be queued while the
-  // notification is gone — reinstall, restored backup, or the user clearing
-  // everything — and only the OS can tell us.
   let liveIds: Set<string> | null = null;
   try {
     const live = await Notifications.getAllScheduledNotificationsAsync();
     liveIds = new Set(live.map((request) => request.identifier));
   } catch (error) {
-    // Without the cross-check the diff simply trusts the local rows, which is
-    // the safe direction: it may miss a lost notification, never duplicate one.
     logger.warn(TAG, 'could not read queued notifications', { error: String(error) });
   }
 
@@ -126,14 +101,10 @@ export async function reconcileSchedule(now = Date.now()): Promise<ReconcileSumm
     try {
       await Notifications.cancelScheduledNotificationAsync(key);
     } catch {
-      // Already gone — the desired end state either way.
     }
     markCancelled(row.sequence, row.position);
   }
 
-  // Deliveries observed only by their time having passed. The in-app listener
-  // reports the rest as they arrive; `markDelivered` ignores whichever comes
-  // second, so a message never produces two receipts.
   for (const row of diff.toMarkDelivered) {
     const planned = plan.find((m) => m.sequence === row.sequence && m.position === row.position);
     recordDelivery(row.sequence, row.position, row.messageId, planned?.subtitle ?? '', row.scheduledFor);
@@ -174,13 +145,6 @@ export async function reconcileSchedule(now = Date.now()): Promise<ReconcileSumm
   return summary;
 }
 
-/**
- * Marks a slot delivered and queues its confirmation, in one transaction.
- *
- * Both halves or neither: a delivery recorded without its receipt would never be
- * confirmed, and a receipt without the delivery would be sent again on the next
- * pass.
- */
 export function recordDelivery(
   sequence: SequenceId,
   position: number,
@@ -207,7 +171,6 @@ export function recordDelivery(
   });
 }
 
-/** Wired to `addNotificationReceivedListener` while the app is running. */
 export function handleNotificationReceived(notification: Notifications.Notification): void {
   const data = notification.request.content.data as
     | { sequence?: SequenceId; position?: number; messageId?: string }
@@ -246,7 +209,6 @@ export function readMessagingSnapshot(): MessagingSnapshot {
   };
 }
 
-/** Full plan with live state attached, for the Messages screen. */
 export function readPlanWithState(): {
   message: PlannedMessage;
   state: string;
@@ -267,13 +229,11 @@ export function readPlanWithState(): {
   });
 }
 
-/** Cancels everything we queued and forgets the schedule. */
 export async function cancelAllMessages(): Promise<void> {
   for (const row of listSchedule()) {
     try {
       await Notifications.cancelScheduledNotificationAsync(slotKey(row.sequence, row.position));
     } catch {
-      // Best effort.
     }
   }
   clearSchedule();

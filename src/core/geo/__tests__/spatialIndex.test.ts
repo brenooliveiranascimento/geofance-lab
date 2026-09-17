@@ -11,7 +11,6 @@ interface Point extends LatLng {
   id: string;
 }
 
-/** mulberry32 — deterministic, so a failure is always reproducible. */
 function makeRandom(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
@@ -22,7 +21,6 @@ function makeRandom(seed: number): () => number {
   };
 }
 
-/** 520 points scattered over roughly the São Paulo / Rio corridor. */
 function makePoints(count: number, seed = 42): Point[] {
   const random = makeRandom(seed);
   return Array.from({ length: count }, (_, index) => ({

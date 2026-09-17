@@ -3,8 +3,6 @@ import type { ColorSchemePreference, LanguageCode } from '@src/domains/settings/
 
 export interface SettingsSlice {
   colorScheme: ColorSchemePreference;
-  // null = follow the device locale (default until the user picks one).
-  // Persisted by the store's partialize so the choice survives restarts.
   language: LanguageCode | null;
   setColorScheme: (scheme: ColorSchemePreference) => void;
   setLanguage: (lang: LanguageCode) => void;

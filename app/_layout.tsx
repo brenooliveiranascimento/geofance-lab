@@ -1,7 +1,4 @@
 import '@src/i18n';
-// Registers the TaskManager tasks. These imports must stay at the top: the OS
-// can launch this process purely to deliver a region event, and the task has to
-// already be defined by the time the module graph finishes loading.
 import '@src/domains/geofencing';
 import { registerMessagingTask } from '@src/domains/messaging';
 
@@ -27,7 +24,6 @@ import { ToastProvider } from '@src/lib/toast';
 
 SplashScreen.preventAutoHideAsync();
 
-// Schema and seed are ready before any screen mounts or any task runs.
 bootstrapDatabase();
 
 Notifications.setNotificationHandler({
@@ -39,14 +35,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-/**
- * Brings the messaging module back in sync.
- *
- * Runs on launch and on every return to the foreground, because the periodic
- * background task is best-effort — the OS may not have run it for hours, or at
- * all if Background App Refresh is off. Both operations are idempotent, so
- * calling them more often than necessary costs nothing.
- */
 async function catchUp(): Promise<void> {
   try {
     await reconcileSchedule();
@@ -64,8 +52,6 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    // Deliveries seen while the app is running are recorded immediately; the
-    // reconciler catches the rest by noticing their time has passed.
     const received = Notifications.addNotificationReceivedListener(handleNotificationReceived);
 
     const appState = AppState.addEventListener('change', (status: AppStateStatus) => {
@@ -80,7 +66,6 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Dark-first UI: the tokens in @src/theme assume a dark background. */}
       <ThemeProvider value={DarkTheme}>
         <ToastProvider>
           <Stack screenOptions={{ headerShown: false }}>

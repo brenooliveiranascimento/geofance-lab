@@ -18,7 +18,6 @@ import type { Place } from '../../types';
 
 export type RouteKind = 'crossing' | 'approach';
 
-/** Real milliseconds between submissions. The route's own clock is simulated. */
 const PLAYBACK_INTERVAL_MS = 120;
 
 export interface SimulatorViewModel {
@@ -52,11 +51,8 @@ export function useSimulatorViewModel(): SimulatorViewModel {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // A ref rather than state: the playback loop reads it between awaits, and a
-  // state value captured in the closure would be stale by then.
   const cancelled = useRef(false);
 
-  /** Residences first — they are the ones with rooms to demonstrate. */
   const places = useMemo(() => {
     const residences = allPlaces.filter((place) => place.polygon !== null);
     const others = allPlaces.filter((place) => place.polygon === null).slice(0, 30);
@@ -76,7 +72,6 @@ export function useSimulatorViewModel(): SimulatorViewModel {
       : buildApproachRoute(selected, options);
   }, [selected, routeKind, accuracy]);
 
-  // Stop the loop if the screen goes away mid-run.
   useEffect(() => () => {
     cancelled.current = true;
   }, []);
@@ -93,9 +88,6 @@ export function useSimulatorViewModel(): SimulatorViewModel {
         for (let index = 0; index < route.length; index += 1) {
           if (cancelled.current) break;
 
-          // Awaited one at a time: each fix has to finish committing before the
-          // next is evaluated, otherwise the state machine would see them out
-          // of order and the transitions would be nonsense.
           await submitSimulatedFix(route[index]);
           setProgress(index + 1);
 

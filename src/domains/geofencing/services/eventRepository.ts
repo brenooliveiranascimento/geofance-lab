@@ -37,16 +37,6 @@ const toEvent = (row: EventRow): GeofenceEvent => ({
   notified: row.notified === 1,
 });
 
-/**
- * Commits an evaluation: the new states and the events they produced, together.
- *
- * Returns only the events that were genuinely new. `INSERT OR IGNORE` against
- * the UNIQUE index on `idempotency_key` is the last line of defence against
- * duplicates — the state machine already refuses to emit a transition twice, but
- * this survives what the state machine cannot: the process being killed between
- * writing the event and posting its notification, and iOS replaying the initial
- * state of every region each time the app launches.
- */
 export function commitEvaluation(
   states: readonly TargetState[],
   events: readonly GeofenceEvent[],
@@ -79,7 +69,6 @@ export function commitEvaluation(
         ],
       );
 
-      // changes === 0 means the key was already there: a replay, not a new event.
       if (result.changes > 0) persisted.push({ ...event, id: result.lastInsertRowId });
     }
     return persisted;
@@ -135,7 +124,6 @@ export function clearEvents(): void {
   getDatabase().runSync('DELETE FROM geofence_events;');
 }
 
-/** Newline-delimited JSON, for the "export log" action in the event screen. */
 export function exportEventsAsJsonl(limit = 5000): string {
   return listEvents({ limit })
     .map((event) => JSON.stringify(event))

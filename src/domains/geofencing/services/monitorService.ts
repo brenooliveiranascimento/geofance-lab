@@ -29,14 +29,6 @@ const TRANSITION_CONFIG = {
   minimumDwellMs: MONITOR_CONFIG.minimumDwellMs,
 };
 
-// ---------------------------------------------------------------------------
-// Persisted monitor state
-//
-// Stored in SQLite rather than in memory because the background task may run in
-// a process that was just launched to service a single region event — there is
-// no surviving module state to read.
-// ---------------------------------------------------------------------------
-
 const readRunning = (): boolean => readJson<boolean>(MONITOR_KEYS.running) ?? false;
 const readOrigin = (): LatLng | null => readJson<LatLng>(MONITOR_KEYS.origin);
 const readRegions = (): NativeRegion[] => readJson<NativeRegion[]>(MONITOR_KEYS.regions) ?? [];
@@ -60,10 +52,6 @@ export function readSnapshot(): MonitorSnapshot {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Position helpers
-// ---------------------------------------------------------------------------
-
 const toFix = (position: Location.LocationObject): Fix => ({
   latitude: position.coords.latitude,
   longitude: position.coords.longitude,
@@ -71,13 +59,6 @@ const toFix = (position: Location.LocationObject): Fix => ({
   timestamp: position.timestamp,
 });
 
-/**
- * Best position available right now.
- *
- * Tries for a fresh balanced-accuracy fix and falls back to the cached one. The
- * fallback matters on a cold start in a building, where waiting for the GPS
- * would block the whole start sequence for a minute or more.
- */
 export async function getCurrentFix(): Promise<Fix | null> {
   try {
     const position = await Location.getCurrentPositionAsync({
@@ -97,18 +78,6 @@ export async function getCurrentFix(): Promise<Fix | null> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Tier 1 — native region monitoring
-// ---------------------------------------------------------------------------
-
-/**
- * Recomputes the nearest-place window and hands it to the platform.
- *
- * Called on start and whenever the guard region is left. Skips the native call
- * when the resulting set is identical: re-registering is not free, and on iOS it
- * re-reports the initial state of every region, which would put the whole
- * deduplication chain to work for nothing.
- */
 export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
   const places = listEnabledPlaces();
 
@@ -158,10 +127,6 @@ async function stopGeofencing(): Promise<void> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Tier 2 — precise updates, only while inside a place
-// ---------------------------------------------------------------------------
-
 async function isLocationTaskRunning(): Promise<boolean> {
   try {
     return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK);
@@ -170,17 +135,6 @@ async function isLocationTaskRunning(): Promise<boolean> {
   }
 }
 
-/**
- * Turns continuous fixes on.
- *
- * This is the only expensive thing the app does, so it runs exclusively while
- * the user is inside some place's `activeRadius` — the rest of the time tier 1
- * costs nothing, because the platform's own region monitoring does the waiting.
- *
- * On Android the foreground service is not optional: without it, Android 8+
- * throttles background location to a few fixes an hour, which is useless for
- * resolving which room someone is standing in.
- */
 async function startPreciseUpdates(): Promise<void> {
   if (await isLocationTaskRunning()) return;
 
@@ -188,8 +142,6 @@ async function startPreciseUpdates(): Promise<void> {
     accuracy: Location.Accuracy.High,
     distanceInterval: MONITOR_CONFIG.preciseUpdates.distanceIntervalMeters,
     timeInterval: MONITOR_CONFIG.preciseUpdates.timeIntervalMs,
-    // iOS pauses updates on its own when it thinks the user stopped moving;
-    // that is exactly when we still need to know which room they are in.
     pausesUpdatesAutomatically: false,
     activityType: Location.ActivityType.Other,
     showsBackgroundLocationIndicator: true,
@@ -214,7 +166,6 @@ async function stopPreciseUpdates(): Promise<void> {
   }
 }
 
-/** Brings the precise tier in line with the set of places we are inside. */
 async function syncTier(activePlaceIds: readonly string[]): Promise<void> {
   writeJson(MONITOR_KEYS.activePlaces, [...activePlaceIds]);
 
@@ -222,18 +173,6 @@ async function syncTier(activePlaceIds: readonly string[]): Promise<void> {
   else await stopPreciseUpdates();
 }
 
-// ---------------------------------------------------------------------------
-// Evaluation
-// ---------------------------------------------------------------------------
-
-/**
- * Places whose state could change given this fix.
- *
- * Two sources, and both are needed. The spatial index answers "what is close
- * enough to enter", while the occupied set answers "what am I still inside" —
- * without the latter, walking far away from a place would never produce its
- * exit, because the index would have stopped returning it.
- */
 function candidatePlacesFor(fix: Fix): Place[] {
   const index = getPlaceIndex();
   const searchRadius = getMaxActiveRadius();
@@ -252,12 +191,6 @@ function candidatePlacesFor(fix: Fix): Place[] {
   return nearby;
 }
 
-/**
- * Runs one fix through the engine and commits whatever it produces.
- *
- * Returns the place ids we are inside afterwards, so the caller can adjust the
- * monitoring tier.
- */
 export async function evaluateAndCommit(fix: Fix, source: EventSource): Promise<string[]> {
   const places = candidatePlacesFor(fix);
 
@@ -304,19 +237,12 @@ export async function evaluateAndCommit(fix: Fix, source: EventSource): Promise<
   return loadOccupiedPlaceIds();
 }
 
-// ---------------------------------------------------------------------------
-// Task entry points
-// ---------------------------------------------------------------------------
-
-/** Called by the geofencing task for every native region transition. */
 export async function handleRegionEvent(
   eventType: Location.GeofencingEventType,
   region: Location.LocationRegion,
 ): Promise<void> {
   if (!readRunning()) return;
 
-  // `identifier` is optional in the platform payload. Every region this app
-  // registers carries one, so a missing value means the event is not ours.
   const identifier = region.identifier;
   if (!identifier) {
     logger.warn(TAG, 'region event without an identifier, ignoring');
@@ -341,10 +267,6 @@ export async function handleRegionEvent(
     type: isExit ? 'exit' : 'enter',
   });
 
-  // The native circle is a doorbell, not a verdict: it is clamped to the
-  // platform's 100 m floor and may be much wider than the real thresholds. What
-  // it does is tell us to look — the actual enter/exit decision is the engine's,
-  // made from a real fix below.
   const active = new Set(readActivePlaces());
   if (isExit) active.delete(identifier);
   else active.add(identifier);
@@ -354,18 +276,10 @@ export async function handleRegionEvent(
   const fix = await getCurrentFix();
   if (fix) {
     const occupied = await evaluateAndCommit(fix, 'native_region');
-    // Reconcile the tier against what the engine actually concluded, so a
-    // spurious native enter does not leave the GPS running.
     await syncTier(mergeActive(active, occupied, isExit ? identifier : null));
   }
 }
 
-/**
- * The precise tier stays on while either the platform thinks we are inside a
- * region or the engine has us inside a place. Dropping to just one of the two
- * would either strand the GPS on after a false enter, or switch it off while we
- * are still resolving rooms.
- */
 function mergeActive(
   fromRegions: ReadonlySet<string>,
   occupiedPlaceIds: readonly string[],
@@ -377,16 +291,12 @@ function mergeActive(
   return [...merged];
 }
 
-/** Called by the location task for each batch of fixes. */
 export async function handleFixes(
   positions: readonly Location.LocationObject[],
   source: EventSource = 'location_update',
 ): Promise<void> {
   if (!readRunning() || positions.length === 0) return;
 
-  // A deferred batch can carry a whole trajectory. Replaying it in order lets
-  // the engine see every crossing instead of teleporting from the first point
-  // to the last and missing what happened between them.
   const fixes = positions.map(toFix).sort((a, b) => a.timestamp - b.timestamp);
 
   let occupied: string[] = readActivePlaces();
@@ -397,15 +307,10 @@ export async function handleFixes(
   await syncTier(occupied);
 }
 
-/** Feeds a synthetic fix through the exact same pipeline. Used by the simulator. */
 export async function submitSimulatedFix(fix: Fix): Promise<void> {
   const occupied = await evaluateAndCommit(fix, 'simulator');
   if (readRunning()) await syncTier(occupied);
 }
-
-// ---------------------------------------------------------------------------
-// Lifecycle
-// ---------------------------------------------------------------------------
 
 export type StartFailure = 'permissions' | 'no_places' | 'no_position';
 
@@ -433,9 +338,6 @@ export async function startMonitoring(): Promise<StartResult> {
 
   const regions = await rebuildRegions(fix);
 
-  // Classify where we are right now instead of waiting for the first crossing.
-  // Without this, starting the app while already at home would report nothing
-  // until the user walked out and back in.
   const occupied = await evaluateAndCommit(fix, 'initial_sync');
   await syncTier(occupied);
 
@@ -452,14 +354,11 @@ export async function stopMonitoring(): Promise<void> {
   writeJson(MONITOR_KEYS.regions, []);
   writeJson(MONITOR_KEYS.activePlaces, []);
 
-  // Presence is released so the next start sees a clean slate; the sequence
-  // counters stay, so no future event can reuse a key that was already emitted.
   releaseAllPresence();
 
   logger.info(TAG, 'monitoring stopped');
 }
 
-/** Re-applies the current dataset without a full stop/start cycle. */
 export async function refreshMonitoring(): Promise<void> {
   if (!readRunning()) return;
   const fix = (await getCurrentFix()) ?? readJson<Fix>(MONITOR_KEYS.lastFix);

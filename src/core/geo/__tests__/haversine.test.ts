@@ -13,7 +13,6 @@ describe('distanceMeters', () => {
   });
 
   it('matches a known long-haul distance', () => {
-    // São Paulo (GRU) → Lisbon (LIS): ~7940 km by great circle.
     const saoPaulo = { latitude: -23.4356, longitude: -46.4731 };
     const lisbon = { latitude: 38.7742, longitude: -9.1342 };
     const km = distanceMeters(saoPaulo, lisbon) / 1000;
@@ -22,7 +21,6 @@ describe('distanceMeters', () => {
   });
 
   it('resolves room-scale distances precisely', () => {
-    // One ten-thousandth of a degree of latitude is ~11.13 m everywhere.
     const a = { latitude: -23.55, longitude: -46.63 };
     const b = { latitude: -23.5501, longitude: -46.63 };
     expect(distanceMeters(a, b)).toBeCloseTo(11.13, 1);
@@ -37,7 +35,6 @@ describe('distanceMeters', () => {
   it('takes the short way across the antimeridian', () => {
     const west = { latitude: 0, longitude: 179.99 };
     const east = { latitude: 0, longitude: -179.99 };
-    // 0.02° of longitude at the equator is ~2.2 km, not most of the planet.
     expect(distanceMeters(west, east)).toBeLessThan(2500);
   });
 

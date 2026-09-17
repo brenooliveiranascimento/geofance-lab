@@ -28,13 +28,11 @@ const toState = (row: StateRow): TargetState => ({
   updatedAt: row.updated_at,
 });
 
-/** Every persisted state, keyed by target id. */
 export function loadAllStates(): Map<string, TargetState> {
   const rows = getDatabase().getAllSync<StateRow>('SELECT * FROM monitor_state;');
   return new Map(rows.map((row) => [row.target_id, toState(row)]));
 }
 
-/** States for a subset of targets — what the fix evaluation path needs. */
 export function loadStatesFor(targetIds: readonly string[]): Map<string, TargetState> {
   if (targetIds.length === 0) return new Map();
 
@@ -45,7 +43,6 @@ export function loadStatesFor(targetIds: readonly string[]): Map<string, TargetS
   return new Map(rows.map((row) => [row.target_id, toState(row)]));
 }
 
-/** Ids of everything currently marked as occupied. */
 export function loadOccupiedTargetIds(): string[] {
   return getDatabase()
     .getAllSync<{ target_id: string }>(
@@ -62,11 +59,6 @@ export function loadOccupiedPlaceIds(): string[] {
     .map((row) => row.place_id);
 }
 
-/**
- * Writes state rows. Always called inside the same transaction as the matching
- * event inserts: a crash between the two would either replay an event that was
- * already delivered or swallow one that was not.
- */
 export function saveStates(
   states: readonly TargetState[],
   db = getDatabase(),
@@ -103,13 +95,6 @@ export function saveStates(
   }
 }
 
-/**
- * Clears presence without touching the sequence counters.
- *
- * Used when monitoring stops: leaving stale "inside" rows behind would make the
- * next start miss a genuine entry. The counters survive so that resuming can
- * never mint an idempotency key that was already used.
- */
 export function releaseAllPresence(): void {
   getDatabase().runSync(
     `UPDATE monitor_state

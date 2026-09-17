@@ -10,11 +10,9 @@ export interface MonitoringPermissions {
   foregroundLocation: PermissionState;
   backgroundLocation: PermissionState;
   notifications: PermissionState;
-  /** Whether the device's location services are switched on at all. */
   locationServicesEnabled: boolean;
 }
 
-/** Everything the monitor needs before it can start. */
 export function isMonitoringAllowed(permissions: MonitoringPermissions): boolean {
   return (
     permissions.locationServicesEnabled &&
@@ -45,16 +43,6 @@ export async function readPermissions(): Promise<MonitoringPermissions> {
   };
 }
 
-/**
- * Requests the permissions in the only order the platforms accept.
- *
- * Both iOS and Android refuse to even show the background prompt until
- * foreground access has been granted, so a request that skips the first step
- * silently returns "denied". On Android 11+ the background grant is not a
- * dialog at all — the system sends the user to a settings page where they must
- * pick "Allow all the time" — which is why the onboarding explains what is
- * about to happen before this runs.
- */
 export async function requestMonitoringPermissions(): Promise<MonitoringPermissions> {
   const foreground = await Location.requestForegroundPermissionsAsync();
 
@@ -71,7 +59,6 @@ export async function requestMonitoringPermissions(): Promise<MonitoringPermissi
   return readPermissions();
 }
 
-/** Android 13+ requires an explicit grant; older versions return granted. */
 export async function requestNotificationPermission(): Promise<PermissionState> {
   const current = await Notifications.getPermissionsAsync();
   if (current.granted) return 'granted';
@@ -82,10 +69,4 @@ export async function requestNotificationPermission(): Promise<PermissionState> 
   return toState(requested.status);
 }
 
-/**
- * Android only. OEM battery managers (Xiaomi, Huawei, Samsung and friends) put
- * apps to sleep aggressively enough to kill the foreground service, and no
- * amount of correct code survives that — the user has to exempt the app. This
- * reports whether we are on a platform where that matters.
- */
 export const needsBatteryOptimizationOptOut = Platform.OS === 'android';

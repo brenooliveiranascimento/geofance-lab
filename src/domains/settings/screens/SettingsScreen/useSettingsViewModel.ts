@@ -80,12 +80,6 @@ export function useSettingsViewModel(): SettingsViewModel {
     invalidatePermissions();
   }, []);
 
-  /**
-   * Android only, and the single most useful thing a user can do for
-   * reliability. Manufacturer battery managers suspend the foreground service
-   * regardless of how correct the code is; this is the only way out of it, and
-   * the page it opens differs per manufacturer.
-   */
   const openBatterySettings = useCallback(async () => {
     if (Platform.OS !== 'android') return;
     try {
@@ -93,8 +87,6 @@ export function useSettingsViewModel(): SettingsViewModel {
         IntentLauncher.ActivityAction.IGNORE_BATTERY_OPTIMIZATION_SETTINGS,
       );
     } catch {
-      // Some manufacturers do not expose that screen; the app's own settings
-      // page is the next best landing spot.
       void Linking.openSettings();
     }
   }, []);
@@ -128,8 +120,6 @@ export function useSettingsViewModel(): SettingsViewModel {
           void (async () => {
             setBusy(true);
             try {
-              // Monitoring has to stop before the tables go, or a task could
-              // wake up against a database that no longer has its places.
               await stopMonitoring();
               resetDatabase();
               reseed();

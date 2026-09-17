@@ -39,13 +39,6 @@ export interface DiagnosticsViewModel {
   goBack: () => void;
 }
 
-/**
- * The window into what happened while nobody was watching.
- *
- * Background tasks run in a process with no console anyone can read, so the log
- * is written to SQLite and shown here. This screen is also how the platform
- * behaviour described in the README was actually observed rather than guessed.
- */
 export function useDiagnosticsViewModel(): DiagnosticsViewModel {
   const { t } = useTranslation();
   const router = useRouter();
@@ -68,8 +61,6 @@ export function useDiagnosticsViewModel(): DiagnosticsViewModel {
         })),
       );
 
-      // `hasStartedGeofencingAsync` is the platform's own answer, which can
-      // disagree with our persisted flag if the OS dropped the registration.
       const geofencingLive = await Location.hasStartedGeofencingAsync(GEOFENCING_TASK).catch(
         () => false,
       );

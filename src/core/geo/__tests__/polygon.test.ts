@@ -8,19 +8,13 @@ import {
 } from '../polygon';
 import type { Ring } from '../types';
 
-/** Shape helper: shapes are written as (x = longitude, y = latitude) pairs. */
 const ring = (...points: [number, number][]): Ring =>
   points.map(([longitude, latitude]) => ({ latitude, longitude }));
 
 const at = (longitude: number, latitude: number) => ({ latitude, longitude });
 
-/**
- * A "U" opening upwards. Base spans y 0→1 across the full width; the notch
- * (x 1→2, y 1→3) is outside despite sitting inside the bounding box.
- */
 const uShape = ring([0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3]);
 
-/** A ~11 x 10 m room near Avenida Paulista, in real coordinates. */
 const roomRing = ring(
   [-46.63, -23.55],
   [-46.6299, -23.55],
@@ -60,9 +54,6 @@ describe('isPointInRing — concave shapes', () => {
   });
 
   it('counts correctly when the ray grazes two vertices', () => {
-    // y = 1 is exactly the height of the notch's bottom vertices, so the ray
-    // leaves through the vertex pair. The half-open span rule must not
-    // double-count them.
     expect(isPointInRing(at(0.5, 1), uShape)).toBe(true);
     expect(isPointInRing(at(1.5, 1.0001), uShape)).toBe(false);
   });
@@ -140,7 +131,6 @@ describe('ring helpers', () => {
   });
 
   it('measures the room perimeter in meters', () => {
-    // ~11.1 m tall by ~10.2 m wide → roughly 42.7 m around.
     expect(ringPerimeterMeters(roomRing)).toBeGreaterThan(40);
     expect(ringPerimeterMeters(roomRing)).toBeLessThan(46);
   });

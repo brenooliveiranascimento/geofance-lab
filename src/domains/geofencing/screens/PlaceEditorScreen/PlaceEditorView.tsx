@@ -43,8 +43,6 @@ export function PlaceEditorView({ viewModel }: PlaceEditorViewProps): React.JSX.
     <ScreenTemplate>
       <ScrollView
         contentContainerStyle={styles.content}
-        // Taps land on the map while drawing; without this the keyboard swallows
-        // the first one after editing a field.
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.titleRow}>
@@ -63,7 +61,6 @@ export function PlaceEditorView({ viewModel }: PlaceEditorViewProps): React.JSX.
               places={[place]}
               rooms={rooms}
               states={viewModel.states}
-              // Room scale: a house footprint is tens of meters across.
               spanMeters={drawing ? 60 : 260}
               onPressMap={drawing ? viewModel.addVertex : undefined}
               extraPolygon={drawing ? { coordinates: draft, color: colors.primary } : null}

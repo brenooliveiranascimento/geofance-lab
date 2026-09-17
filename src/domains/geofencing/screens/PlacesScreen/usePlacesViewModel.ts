@@ -52,8 +52,6 @@ export function usePlacesViewModel(): PlacesViewModel {
 
   const origin = snapshot?.lastFix ?? snapshot?.origin ?? null;
 
-  // Typing filters 520 rows on every keystroke; deferring keeps the input
-  // responsive by letting React drop intermediate results.
   const deferredSearch = useDeferredValue(search);
 
   const rows = useMemo<PlaceRow[]>(() => {
@@ -80,7 +78,6 @@ export function usePlacesViewModel(): PlacesViewModel {
       distanceMeters: origin ? distanceMeters(origin, place) : null,
     }));
 
-    // Nearest first when we know where we are; alphabetical otherwise.
     return origin
       ? mapped.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0))
       : mapped;

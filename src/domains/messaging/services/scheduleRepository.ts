@@ -45,14 +45,6 @@ export function getScheduleEntry(
   return row ? toScheduled(row) : null;
 }
 
-/**
- * Records a queued notification.
- *
- * The primary key is (sequence, position), so a second attempt to schedule the
- * same slot overwrites rather than duplicates. That constraint is the reason a
- * crash between the OS call and this write cannot produce two rows for one
- * message — the reconciler simply finds the slot already taken.
- */
 export function markScheduled(
   sequence: SequenceId,
   position: number,
@@ -77,13 +69,6 @@ export function markScheduled(
   );
 }
 
-/**
- * Flags a slot as delivered.
- *
- * Only ever moves a row out of `scheduled`, so a notification that is observed
- * twice — once by the in-app listener, once by the reconciler noticing its time
- * has passed — still produces exactly one delivery and one receipt.
- */
 export function markDelivered(
   sequence: SequenceId,
   position: number,
@@ -155,13 +140,8 @@ export function clearSchedule(): void {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Enrolment — the single input the whole plan derives from.
-// ---------------------------------------------------------------------------
-
 export const readEnrolledAt = (): number | null => readJson<number>(MESSAGING_KEYS.enrolledAt);
 
-/** Idempotent: re-registering keeps the original instant and the original plan. */
 export function enrol(at: number = Date.now()): number {
   const existing = readEnrolledAt();
   if (existing !== null) return existing;

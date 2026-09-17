@@ -5,7 +5,6 @@ import type { TargetState } from '../types';
 
 export const PLACE_STATES_KEY = ['place-states'] as const;
 
-/** Presence of every target, keyed by id for cheap lookups in list rows. */
 export function usePlaceStates() {
   return useQuery<Map<string, TargetState>>({
     queryKey: PLACE_STATES_KEY,

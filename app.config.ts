@@ -1,16 +1,8 @@
 import type { ExpoConfig } from 'expo/config';
 
-/**
- * Dynamic config so the Google Maps key can come from the environment instead of
- * being committed. Everything else is static — see README "Configuração".
- */
-
 const PRIMARY = '#2563EB';
 const BACKGROUND = '#0D0D0D';
 
-// Android renders react-native-maps through the Google Maps SDK, which needs a
-// key. Without it the map surface stays blank, so MonitorScreen falls back to
-// list mode (see useMapAvailability) instead of showing an empty grey square.
 const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
 const LOCATION_RATIONALE =
@@ -35,9 +27,6 @@ const config: ExpoConfig = {
       NSLocationWhenInUseUsageDescription: LOCATION_RATIONALE,
       NSLocationAlwaysAndWhenInUseUsageDescription: LOCATION_RATIONALE,
       NSLocationAlwaysUsageDescription: LOCATION_RATIONALE,
-      // `location` keeps region monitoring and the deferred location updates
-      // alive; `fetch`/`processing` back the expo-background-task reconciler
-      // that tops up the notification window and drains the receipt queue.
       UIBackgroundModes: ['location', 'fetch', 'processing'],
     },
   },
@@ -87,9 +76,6 @@ const config: ExpoConfig = {
       {
         locationAlwaysAndWhenInUsePermission: LOCATION_RATIONALE,
         locationWhenInUsePermission: LOCATION_RATIONALE,
-        // Adds ACCESS_BACKGROUND_LOCATION and the foreground-service plumbing.
-        // Android 8+ throttles background location to a handful of fixes per
-        // hour without a foreground service, which would make tier 2 useless.
         isAndroidBackgroundLocationEnabled: true,
         isAndroidForegroundServiceEnabled: true,
       },
@@ -105,8 +91,6 @@ const config: ExpoConfig = {
       'expo-build-properties',
       {
         android: {
-          // react-native-maps pulls play-services-maps; keep the consent SDK
-          // classes around so release builds don't strip them.
           extraProguardRules: '-keep class com.google.android.gms.** { *; }',
         },
       },

@@ -11,21 +11,11 @@ export interface LogEntry {
   createdAt: number;
 }
 
-/** Keeps the table from growing without bound on a long-running device. */
 const MAX_ENTRIES = 2000;
 const TRIM_EVERY = 200;
 
 let writesSinceTrim = 0;
 
-/**
- * Structured log persisted to SQLite.
- *
- * Background tasks are the hardest part of this app to observe: by the time the
- * UI is open, whatever the headless context printed to the console is long
- * gone. Writing the log to the database means the Diagnostics screen can show
- * exactly what the task did while the app was closed — which is also how the
- * platform behaviour documented in the README was actually measured.
- */
 function write(level: LogLevel, tag: string, message: string, data?: unknown): void {
   if (__DEV__) {
     const line = `[${tag}] ${message}`;
@@ -56,7 +46,6 @@ function write(level: LogLevel, tag: string, message: string, data?: unknown): v
       );
     }
   } catch {
-    // Logging must never be the thing that breaks a geofence event.
   }
 }
 
@@ -103,6 +92,5 @@ export function clearLog(): void {
   try {
     getDatabase().runSync('DELETE FROM app_log;');
   } catch {
-    // Nothing to do — the log is best-effort by design.
   }
 }

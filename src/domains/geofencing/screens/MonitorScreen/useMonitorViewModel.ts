@@ -18,7 +18,6 @@ import { getPlaceIndex, getRoomsByPlace } from '../../services/placeRepository';
 import { startMonitoring, stopMonitoring } from '../../services/monitorService';
 import type { GeofenceEvent, MonitorSnapshot, Place, Room, TargetState } from '../../types';
 
-/** Rendering 520 circles would stall the map; the nearest few tell the story. */
 const MAP_PLACE_LIMIT = 40;
 
 export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy';
@@ -58,8 +57,6 @@ export function useMonitorViewModel(): MonitorViewModel {
 
   const center = snapshot?.lastFix ?? snapshot?.origin ?? null;
 
-  // Recomputed from the map centre rather than from the full list, so the map
-  // stays responsive with the full 520-place dataset loaded.
   const mapPlaces = useMemo(() => {
     if (!center || places.length === 0) return [];
     return queryNearest(getPlaceIndex(), center, MAP_PLACE_LIMIT).map((result) => result.item);

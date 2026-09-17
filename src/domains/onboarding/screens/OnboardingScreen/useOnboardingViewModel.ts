@@ -24,15 +24,6 @@ export interface OnboardingViewModel {
   skip: () => void;
 }
 
-/**
- * Permission priming.
- *
- * Both platforms only let you ask once — a denial is permanent until the user
- * goes to Settings — and Android 11+ does not even show a dialog for background
- * location, it opens a settings page with three options. Explaining what is
- * about to be asked, and why, before the prompt appears is the difference
- * between the app working and the app being unable to do anything at all.
- */
 export function useOnboardingViewModel(): OnboardingViewModel {
   const { t } = useTranslation();
   const setOnboardingCompleted = useStore((s) => s.setOnboardingCompleted);

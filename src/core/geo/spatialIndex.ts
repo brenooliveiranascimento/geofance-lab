@@ -1,24 +1,8 @@
 import { METERS_PER_DEGREE_LATITUDE, distanceMeters, metersPerDegreeLongitude } from './haversine';
 import type { LatLng } from './types';
 
-/**
- * Uniform grid index over a set of geo-referenced items.
- *
- * The requirement is 500+ places, and the monitor re-selects the nearest handful
- * every time the guard region is crossed. Scanning all 500 on each pass is
- * survivable but wasteful, and it degrades linearly as the dataset grows. A grid
- * bucket keyed on truncated degrees answers the same question by visiting only
- * the cells around the query point.
- *
- * A uniform grid (rather than a k-d tree or an R-tree) is the right shape here:
- * the data is static after seeding, queries are always "nearest k to a point",
- * and the whole thing is ~120 lines with no balancing to get wrong.
- */
-
-/** ~0.01° of latitude ≈ 1.1 km. One cell comfortably holds a neighbourhood. */
 export const DEFAULT_CELL_SIZE_DEGREES = 0.01;
 
-/** Inclusive cell-coordinate extent of the populated area. */
 interface CellBounds {
   minRow: number;
   maxRow: number;
@@ -31,7 +15,6 @@ export interface GridIndex<T> {
   cells: Map<string, T[]>;
   getPoint: (item: T) => LatLng;
   size: number;
-  /** Null when the index is empty. */
   bounds: CellBounds | null;
 }
 
@@ -80,16 +63,6 @@ export function buildGridIndex<T>(
   return { cellSizeDegrees, cells, getPoint, size: items.length, bounds };
 }
 
-/**
- * Lower bound on the distance from a point to anything in a cell `ring` steps
- * away (Chebyshev distance in cell units).
- *
- * The query point sits somewhere inside its own cell, so between it and a cell
- * `ring` steps away there are at least `ring - 1` whole cells. Converting that
- * gap to meters uses whichever axis yields the *smaller* number — longitude
- * degrees shrink towards the poles — so the bound stays conservative and the
- * search never stops early.
- */
 function minDistanceAtRing(ring: number, cellSizeDegrees: number, latitude: number): number {
   if (ring <= 1) return 0;
   const metersPerDegree = Math.min(
@@ -99,14 +72,6 @@ function minDistanceAtRing(ring: number, cellSizeDegrees: number, latitude: numb
   return (ring - 1) * cellSizeDegrees * metersPerDegree;
 }
 
-/**
- * Cells exactly `ring` steps from the centre, clipped to the populated extent.
- *
- * Clipping is what keeps a query whose origin sits far from the data cheap: the
- * ring at distance 3000 would otherwise enumerate 24000 cell keys that cannot
- * exist. Bounded this way, a whole query costs at most one pass over the
- * populated extent no matter where the origin is.
- */
 function* cellsAtRing(
   centerRow: number,
   centerColumn: number,
@@ -121,7 +86,6 @@ function* cellsAtRing(
   const firstColumn = Math.max(leftColumn, bounds.minColumn);
   const lastColumn = Math.min(rightColumn, bounds.maxColumn);
 
-  // Horizontal edges, corners included.
   const rows = ring === 0 ? [topRow] : [topRow, bottomRow];
   for (const row of rows) {
     if (row < bounds.minRow || row > bounds.maxRow) continue;
@@ -132,7 +96,6 @@ function* cellsAtRing(
 
   if (ring === 0) return;
 
-  // Vertical edges, corners excluded (already emitted above).
   const firstRow = Math.max(topRow + 1, bounds.minRow);
   const lastRow = Math.min(bottomRow - 1, bounds.maxRow);
   for (const column of [leftColumn, rightColumn]) {
@@ -143,10 +106,6 @@ function* cellsAtRing(
   }
 }
 
-/**
- * Ring range worth visiting: anything closer than `start` or beyond `end` falls
- * entirely outside the populated extent and cannot hold an item.
- */
 function ringRange(
   centerRow: number,
   centerColumn: number,
@@ -166,14 +125,6 @@ function ringRange(
   };
 }
 
-/**
- * The `k` items closest to `center`, nearest first.
- *
- * Expands ring by ring and stops as soon as the k-th best distance found is no
- * greater than the best possible distance in the next ring — at which point no
- * unvisited cell can improve the answer. A `k` larger than the dataset simply
- * returns everything.
- */
 export function queryNearest<T>(
   index: GridIndex<T>,
   center: LatLng,
@@ -200,7 +151,6 @@ export function queryNearest<T>(
       }
     }
 
-    // Every item is accounted for — no further ring can add anything.
     if (visitedItems >= index.size) break;
 
     if (found.length >= k) {
@@ -215,7 +165,6 @@ export function queryNearest<T>(
   return found.slice(0, k);
 }
 
-/** Every item within `radiusMeters` of `center`, nearest first. */
 export function queryWithinRadius<T>(
   index: GridIndex<T>,
   center: LatLng,
@@ -231,8 +180,6 @@ export function queryWithinRadius<T>(
   const results: NeighborResult<T>[] = [];
 
   for (let ring = start; ring <= end; ring += 1) {
-    // Once the closest possible point in this ring is out of range, every
-    // further ring is too.
     if (minDistanceAtRing(ring, cellSizeDegrees, center.latitude) > radiusMeters) break;
 
     for (const key of cellsAtRing(centerRow, centerColumn, ring, bounds)) {

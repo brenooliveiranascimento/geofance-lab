@@ -11,16 +11,6 @@ import type {
   TargetState,
 } from '../types';
 
-/**
- * The transition engine.
- *
- * Pure by design: it takes a fix, the candidate places, the rooms inside them
- * and the last persisted state, and returns the events to emit plus the states
- * to write. No database, no notifications, no platform calls — which is what
- * makes the hysteresis, the debounce and the deduplication testable without a
- * device.
- */
-
 export interface TransitionConfig {
   maxAccuracyMeters: number;
   maxAccuracyMarginRatio: number;
@@ -30,11 +20,8 @@ export interface TransitionConfig {
 
 export interface EvaluateInput {
   fix: Fix;
-  /** Places near the fix — normally the output of the spatial index. */
   places: readonly Place[];
-  /** Rooms keyed by place id. A place with no rooms may be omitted. */
   roomsByPlace: ReadonlyMap<string, readonly Room[]>;
-  /** Last persisted state, keyed by target id. Missing means "never seen". */
   states: ReadonlyMap<string, TargetState>;
   config: TransitionConfig;
   source: EventSource;
@@ -46,17 +33,12 @@ export interface EvaluateResult {
   accepted: boolean;
   rejectionReason?: RejectionReason;
   events: GeofenceEvent[];
-  /** Only the states that actually changed. */
   changedStates: TargetState[];
 }
 
 const OUTSIDE: PresenceState = 'outside';
 const INSIDE: PresenceState = 'inside';
 
-/**
- * Derived room geometry, cached because every fix inside a place re-tests every
- * room in it. Invalidated by the repository whenever a polygon is edited.
- */
 interface RoomGeometry {
   box: BoundingBox | null;
   centroid: LatLng | null;
@@ -76,21 +58,11 @@ function roomGeometry(room: Room): RoomGeometry {
   return geometry;
 }
 
-/** Drops cached geometry for a room whose polygon was edited. */
 export function invalidateRoomGeometry(roomId?: string): void {
   if (roomId) geometryCache.delete(roomId);
   else geometryCache.clear();
 }
 
-/**
- * The single room a fix places the user in, or null.
- *
- * Rooms that share a wall both contain a point standing exactly on it — the
- * boundary rule makes that deterministic rather than arbitrary, but a person is
- * still only ever in one room. Resolving to the nearest centroid, with the id as
- * a tie-break, keeps occupancy exclusive without needing the polygons to be
- * drawn with gaps between them.
- */
 function resolveOccupiedRoom(fix: Fix, rooms: readonly Room[]): string | null {
   let bestId: string | null = null;
   let bestDistance = Infinity;
@@ -124,10 +96,6 @@ function initialState(
     targetKind,
     placeId,
     state: OUTSIDE,
-    // Zero marks a target that has never transitioned. The dwell guard keys off
-    // this rather than off `since`, so the very first classification is not
-    // delayed — the guard exists to stop an established state from flapping, and
-    // a target we have never observed has nothing to protect.
     transitionSeq: 0,
     since: 0,
     lastDistance: null,
@@ -137,13 +105,6 @@ function initialState(
   };
 }
 
-/**
- * Confidence margin derived from the fix's reported accuracy.
- *
- * Capped at a fraction of the threshold: without the cap, a 40 m accuracy would
- * make a 50 m geofence impossible to enter, since the error circle can never fit
- * inside it.
- */
 function confidenceMargin(
   accuracy: number | null,
   threshold: number,
@@ -153,15 +114,6 @@ function confidenceMargin(
   return Math.min(accuracy, threshold * ratio);
 }
 
-/**
- * The hysteresis rule, and the whole of requirements "detect entry into radius"
- * and "detect exit from activeRadius".
- *
- * From outside, entry needs the fix (plus its error margin) to be within
- * `radius`. From inside, exit needs it to be clear of `activeRadius` by the same
- * margin. Between the two thresholds nothing changes — that band is what stops
- * a user loitering on the boundary from generating a stream of events.
- */
 function desiredPlaceState(
   current: PresenceState,
   distance: number,
@@ -184,14 +136,6 @@ interface Commit {
   committed: boolean;
 }
 
-/**
- * Applies one observation to one target's state machine.
- *
- * A flip is proposed, not applied: it only commits once `confirmations`
- * consecutive fixes agree, and never before the current state has been held for
- * `minimumDwellMs`. GPS noise and a brief pass along a boundary both look like a
- * flip for one reading; neither should reach the user.
- */
 function applyObservation(
   previous: TargetState,
   desired: PresenceState,
@@ -200,7 +144,6 @@ function applyObservation(
   config: TransitionConfig,
 ): Commit {
   if (desired === previous.state) {
-    // Back in agreement — abandon any candidate flip.
     if (previous.pendingState === null && previous.lastDistance === distance) {
       return { state: previous, changed: false, committed: false };
     }
@@ -263,9 +206,6 @@ function makeEvent(
   source: EventSource,
 ): GeofenceEvent {
   return {
-    // The sequence number is what makes this unique. Re-running the same fix,
-    // or replaying it after a crash, produces the same key and the insert is
-    // ignored by the UNIQUE constraint.
     idempotencyKey: `${state.targetId}:${state.transitionSeq}:${kind}`,
     kind,
     placeId: place.id,
@@ -285,8 +225,6 @@ function makeEvent(
 export function evaluateFix(input: EvaluateInput): EvaluateResult {
   const { fix, places, roomsByPlace, states, config, source } = input;
 
-  // A reading we do not trust is worse than no reading: acting on it produces a
-  // false event that the dedup layer will happily persist forever.
   if (fix.accuracy !== null && fix.accuracy > config.maxAccuracyMeters) {
     return { accepted: false, rejectionReason: 'inaccurate', events: [], changedStates: [] };
   }
@@ -328,10 +266,6 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
 
     const insidePlace = result.state.state === INSIDE;
 
-    // Rooms only exist within their place. Leaving the place resolves to no
-    // room at all, so a user who walks out of the house never leaves a room
-    // marked as occupied — the gap that would otherwise suppress the next
-    // genuine room_enter.
     const occupiedRoomId = insidePlace ? resolveOccupiedRoom(fix, rooms) : null;
 
     for (const room of rooms) {
@@ -345,8 +279,6 @@ export function evaluateFix(input: EvaluateInput): EvaluateResult {
         roomDesired,
         null,
         fix.timestamp,
-        // Leaving a place must evict its rooms immediately; waiting out the
-        // dwell timer would let a stale "inside" survive the exit.
         insidePlace ? config : { ...config, confirmations: 1, minimumDwellMs: 0 },
       );
 

@@ -13,7 +13,6 @@ const IOS: SelectRegionsOptions = {
   guardIdentifier: '__guard__',
 };
 
-/** A place `meters` due north of the origin. */
 function placeAt(
   id: string,
   meters: number,
@@ -33,7 +32,6 @@ function placeAt(
   };
 }
 
-/** 520 places spread outwards at 250 m intervals. */
 const manyPlaces = (count = 520): Place[] =>
   Array.from({ length: count }, (_, i) => placeAt(`p${String(i).padStart(3, '0')}`, (i + 1) * 250));
 
@@ -84,8 +82,6 @@ describe('which places win a slot', () => {
 
   it('ranks by distance to the boundary, not to the centre', () => {
     const near = placeAt('narrow', 900, { radius: 20, activeRadius: 30 });
-    // Further away by centre, but wide enough that the origin already sits
-    // inside its boundary.
     const wide = placeAt('wide', 1500, { radius: 1400, activeRadius: 1600 });
 
     const result = selectRegions([near, wide], ORIGIN, { ...IOS, limit: 2 });
@@ -115,7 +111,6 @@ describe('registered radii', () => {
   });
 
   it('clamps up to the platform minimum', () => {
-    // A 12 m room-sized circle would simply never fire on iOS.
     const tiny = placeAt('tiny', 300, { radius: 8, activeRadius: 12 });
     const result = selectRegions([tiny], ORIGIN, IOS);
     expect(result.regions[0].radius).toBe(100);
@@ -139,8 +134,6 @@ describe('the guard region', () => {
   });
 
   it('is small enough that the window cannot change before it fires', () => {
-    // Moving by the guard radius can shift every edge distance by that much, so
-    // it must stay under half the gap between the last kept and first dropped.
     const lastKept = result.selected[result.selected.length - 1].edgeDistanceMeters;
     const firstDropped =
       distanceMeters(ORIGIN, manyPlaces()[19]) - manyPlaces()[19].activeRadius;
@@ -150,15 +143,12 @@ describe('the guard region', () => {
   });
 
   it('never drops below the reliable platform minimum', () => {
-    // 520 places packed 5 m apart: half the gap is ~2.5 m, far too small to
-    // monitor. The floor keeps it registrable.
     const dense = Array.from({ length: 520 }, (_, i) => placeAt(`d${i}`, (i + 1) * 5));
     const tight = selectRegions(dense, ORIGIN, IOS);
     expect(tight.guard!.radius).toBeGreaterThanOrEqual(IOS.minRegionRadiusMeters);
   });
 
   it('grows when the next place is far away', () => {
-    // 21 places, so 19 win slots and the 20th — 50 km out — sets the gap.
     const sparse = [
       ...Array.from({ length: 19 }, (_, i) => placeAt(`near${i}`, 100 + i * 10)),
       placeAt('faraway1', 50_000),

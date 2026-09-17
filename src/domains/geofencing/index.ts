@@ -1,5 +1,3 @@
-// Importing this module registers the background tasks. Keep it as the first
-// geofencing import in the root layout.
 import './tasks';
 
 export * from './types';

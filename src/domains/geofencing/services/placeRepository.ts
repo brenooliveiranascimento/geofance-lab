@@ -55,15 +55,6 @@ const toRoom = (row: RoomRow): Room => ({
   createdAt: row.created_at,
 });
 
-// ---------------------------------------------------------------------------
-// Spatial index cache
-//
-// Rebuilt lazily after any write. The index serves the hot path — every
-// location fix asks "which places could contain me?" — while the region
-// reconciler deliberately does an exact scan instead, because it runs only on a
-// guard crossing and correctness there is worth more than microseconds.
-// ---------------------------------------------------------------------------
-
 let indexCache: GridIndex<Place> | null = null;
 let maxActiveRadiusCache: number | null = null;
 
@@ -101,7 +92,6 @@ export function getPlaceIndex(): GridIndex<Place> {
   return indexCache;
 }
 
-/** Widest `activeRadius` in the dataset — the search radius for candidates. */
 export function getMaxActiveRadius(): number {
   if (maxActiveRadiusCache === null) {
     const row = getDatabase().getFirstSync<{ value: number | null }>(
@@ -146,18 +136,12 @@ export function setPlaceEnabled(id: string, enabled: boolean): void {
 
 export function deletePlace(id: string): void {
   transaction((db) => {
-    // monitor_state has no FK (targets are both places and rooms), so its rows
-    // are cleared explicitly; rooms cascade.
     db.runSync('DELETE FROM monitor_state WHERE place_id = ?;', id);
     db.runSync('DELETE FROM places WHERE id = ?;', id);
   });
   invalidateCaches();
   invalidateRoomGeometry();
 }
-
-// ---------------------------------------------------------------------------
-// Rooms
-// ---------------------------------------------------------------------------
 
 export function listRooms(placeId: string): Room[] {
   return getDatabase()
@@ -169,7 +153,6 @@ export function listAllRooms(): Room[] {
   return getDatabase().getAllSync<RoomRow>('SELECT * FROM rooms ORDER BY name;').map(toRoom);
 }
 
-/** Rooms grouped by place, in the shape the transition engine expects. */
 export function getRoomsByPlace(placeIds?: readonly string[]): Map<string, Room[]> {
   const rooms =
     placeIds && placeIds.length > 0
@@ -211,10 +194,6 @@ export function deleteRoom(id: string): void {
   invalidateRoomGeometry(id);
 }
 
-// ---------------------------------------------------------------------------
-// Seeding
-// ---------------------------------------------------------------------------
-
 export interface SeedPayload {
   places: {
     id: string;
@@ -228,11 +207,6 @@ export interface SeedPayload {
   }[];
 }
 
-/**
- * Loads the bundled dataset. One transaction for all 500+ rows: row-by-row
- * inserts would each take their own implicit transaction and turn a sub-second
- * import into tens of seconds of fsyncs.
- */
 export function seedPlaces(payload: SeedPayload, { replace = true } = {}): number {
   const now = Date.now();
 

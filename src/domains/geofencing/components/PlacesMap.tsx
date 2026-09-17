@@ -13,7 +13,6 @@ export interface PlacesMapProps {
   places: readonly Place[];
   rooms: readonly Room[];
   states: ReadonlyMap<string, TargetState>;
-  /** Metres across the viewport. Small values zoom into room scale. */
   spanMeters?: number;
   onPressMap?: (point: LatLng) => void;
   extraPolygon?: { coordinates: LatLng[]; color: string } | null;
@@ -29,19 +28,10 @@ function regionFor(center: LatLng, spanMeters: number): Region {
     latitude: center.latitude,
     longitude: center.longitude,
     latitudeDelta,
-    // Longitude degrees are shorter away from the equator, so the same distance
-    // needs a wider delta — otherwise the viewport is squashed horizontally.
     longitudeDelta: latitudeDelta / Math.max(Math.cos((center.latitude * Math.PI) / 180), 0.1),
   };
 }
 
-/**
- * Shared map surface.
- *
- * Android renders through the Google provider (the only one available there);
- * iOS uses MapKit, which needs no API key. Callers are responsible for checking
- * `isMapAvailable` before mounting this.
- */
 export function PlacesMap({
   center,
   places,
@@ -79,7 +69,6 @@ export function PlacesMap({
         const accent = inside ? colors.success : colors.primary;
         return (
           <React.Fragment key={place.id}>
-            {/* Entry threshold. */}
             <Circle
               center={place}
               radius={place.radius}
@@ -87,7 +76,6 @@ export function PlacesMap({
               strokeWidth={2}
               fillColor={`${accent}26`}
             />
-            {/* Exit threshold — the dead band is the gap between the two. */}
             <Circle
               center={place}
               radius={place.activeRadius}

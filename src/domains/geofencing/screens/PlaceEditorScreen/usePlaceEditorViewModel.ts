@@ -20,7 +20,6 @@ import {
 } from '../../services/placeRepository';
 import type { Place, Room, TargetState } from '../../types';
 
-/** A room needs at least a triangle to enclose any area. */
 const MIN_ROOM_VERTICES = 3;
 
 export interface PlaceEditorViewModel {
@@ -38,7 +37,6 @@ export interface PlaceEditorViewModel {
   rooms: Room[];
   states: Map<string, TargetState>;
   mapAvailable: boolean;
-  /** Vertices collected so far while drawing. */
   draft: Ring;
   drawing: boolean;
   canFinishDraft: boolean;
@@ -98,8 +96,6 @@ export function usePlaceEditorViewModel(): PlaceEditorViewModel {
 
     async function load() {
       if (isNew) {
-        // A new place is anchored where the user is standing — it is the only
-        // position we can be sure they meant.
         const fix = await getCurrentFix();
         if (cancelled) return;
         setPlace(
@@ -134,11 +130,6 @@ export function usePlaceEditorViewModel(): PlaceEditorViewModel {
   const parsedRadius = Number(radius.replace(',', '.'));
   const parsedActiveRadius = Number(activeRadius.replace(',', '.'));
 
-  /**
-   * The one rule the data model cannot express: `activeRadius` must be at least
-   * `radius`, otherwise the exit threshold sits inside the entry threshold and
-   * the hysteresis band inverts into a permanent flip-flop.
-   */
   const validationError = useMemo(() => {
     if (!name.trim()) return t('editor.errors.name');
     if (!Number.isFinite(parsedRadius) || parsedRadius <= 0) return t('editor.errors.radius');

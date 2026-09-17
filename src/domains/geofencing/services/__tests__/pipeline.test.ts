@@ -20,14 +20,6 @@ const seed = require('../../../../../assets/seed/places.json') as {
   }[];
 };
 
-/**
- * End-to-end over the dataset the app actually ships with.
- *
- * The unit suites prove each piece in isolation; this one proves they compose:
- * a synthetic walk through a seeded residence has to produce exactly the events
- * a real walk would, in order, once each.
- */
-
 const CONFIG: TransitionConfig = {
   maxAccuracyMeters: MONITOR_CONFIG.maxAccuracyMeters,
   maxAccuracyMarginRatio: MONITOR_CONFIG.maxAccuracyMarginRatio,
@@ -69,7 +61,6 @@ const MAX_ACTIVE_RADIUS = Math.max(...ALL_PLACES.map((place) => place.activeRadi
 
 const RESIDENCE = ALL_PLACES.find((place) => place.id === 'casa-01')!;
 
-/** Mirrors what `monitorService.evaluateAndCommit` does, minus the database. */
 function walk(route: Fix[], states = new Map<string, TargetState>()) {
   const events: GeofenceEvent[] = [];
 
@@ -142,8 +133,6 @@ describe('walking through a residence', () => {
   const forPlace = events.filter((e) => e.placeId === RESIDENCE.id);
 
   it('enters the place, crosses two rooms, and leaves — in that order', () => {
-    // The walk runs north through the house, so it passes through the two rooms
-    // on the eastern half before coming out the other side.
     expect(forPlace.map((e) => e.kind)).toEqual([
       'place_enter',
       'room_enter',
@@ -180,8 +169,6 @@ describe('walking through a residence', () => {
     const later = new Date(2026, 8, 16, 13, 0, 0).getTime();
     const second = walk(routeThrough(RESIDENCE, later), first.states);
 
-    // The second pass is a genuine second visit, so it enters and leaves again —
-    // but with fresh sequence numbers, never a repeat of the first pass's keys.
     const firstKeys = new Set(first.events.map((e) => e.idempotencyKey));
     for (const event of second.events) {
       expect(firstKeys.has(event.idempotencyKey)).toBe(false);
@@ -222,8 +209,6 @@ describe('the region window over the full dataset', () => {
   it('evaluates a full route over 520 places quickly', () => {
     const started = Date.now();
     walk(routeThrough(RESIDENCE));
-    // Each fix runs a spatial query plus the state machine; the whole 41-fix
-    // route should stay far under the budget a background wake-up gets.
     expect(Date.now() - started).toBeLessThan(1_000);
   });
 });

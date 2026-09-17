@@ -13,14 +13,6 @@ export interface BackoffConfig {
   maxDelayMs: number;
 }
 
-/**
- * Delay before attempt number `attempts + 1`.
- *
- * Doubles each time and saturates at the ceiling, so a server that is down for
- * hours is retried a handful of times rather than hammered, while a transient
- * failure recovers in seconds. Returns null once the attempts are spent, which
- * is what moves the receipt to `exhausted` instead of retrying forever.
- */
 export function computeBackoffMs(attempts: number, config: BackoffConfig): number | null {
   if (attempts >= config.maxAttempts) return null;
   const delay = config.baseDelayMs * 2 ** attempts;
@@ -64,16 +56,6 @@ export interface ReceiptPayload {
   deliveredAt: number;
 }
 
-/**
- * Queues a delivery confirmation.
- *
- * The queue is the state, not the request: the confirmation is durable the
- * instant the message is delivered, and sending it is a separate concern that
- * may fail and retry for hours. Working offline therefore needs no special case
- * — it is simply a send that has not succeeded yet.
- *
- * `idempotency_key` is UNIQUE, so a message observed twice enqueues once.
- */
 export function enqueueReceipt(payload: ReceiptPayload, db = getDatabase()): void {
   const now = Date.now();
   db.runSync(
@@ -120,8 +102,6 @@ async function post(receipt: DeliveryReceipt): Promise<void> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Lets the receiving end deduplicate too, since a response we never
-        // saw is indistinguishable from one that never happened.
         'Idempotency-Key': receipt.idempotencyKey,
       },
       body: receipt.payload,
@@ -143,13 +123,6 @@ export interface DrainResult {
   exhausted: number;
 }
 
-/**
- * Sends whatever confirmations are due.
- *
- * Called on foreground, when connectivity returns, and from the periodic
- * background task — three independent triggers, because none of them is
- * guaranteed to happen and the queue must drain eventually regardless.
- */
 export async function drainReceipts(limit = 20): Promise<DrainResult> {
   const result: DrainResult = { attempted: 0, confirmed: 0, retried: 0, exhausted: 0 };
 
@@ -199,7 +172,6 @@ export async function drainReceipts(limit = 20): Promise<DrainResult> {
   return result;
 }
 
-/** Puts exhausted receipts back in the queue. Wired to a button in the UI. */
 export function retryExhaustedReceipts(): number {
   const result = getDatabase().runSync(
     `UPDATE delivery_receipts

@@ -1,15 +1,4 @@
 #!/usr/bin/env node
-/**
- * Generates assets/seed/places.json — the dataset the app imports on first run.
- *
- * The brief asks for at least 500 points, which is the whole reason the native
- * region window exists. The output is deterministic (fixed PRNG seed) so a run
- * that misbehaves can be reproduced exactly, and it is committed to the repo so
- * the app has data without this script ever having to run on a device.
- *
- *   node scripts/gen-seed.mjs [--count 520] [--out assets/seed/places.json]
- */
-
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
@@ -17,7 +6,6 @@ const METERS_PER_DEGREE_LATITUDE = 111194.93;
 const metersPerDegreeLongitude = (lat) =>
   METERS_PER_DEGREE_LATITUDE * Math.cos((lat * Math.PI) / 180);
 
-/** mulberry32 — small, fast, and reproducible. */
 function makeRandom(seed) {
   let state = seed >>> 0;
   return () => {
@@ -28,7 +16,6 @@ function makeRandom(seed) {
   };
 }
 
-/** Metropolitan areas to scatter the generic points across. */
 const REGIONS = [
   { name: 'São Paulo', latitude: -23.5505, longitude: -46.6333, spreadKm: 22 },
   { name: 'Rio de Janeiro', latitude: -22.9068, longitude: -43.1729, spreadKm: 18 },
@@ -58,7 +45,6 @@ const NEIGHBOURHOODS = [
 
 const ROOM_NAMES = ['Sala', 'Cozinha', 'Quarto', 'Escritório'];
 
-/** Offsets a coordinate by a distance in meters. */
 const offset = (lat, lon, northMeters, eastMeters) => ({
   latitude: lat + northMeters / METERS_PER_DEGREE_LATITUDE,
   longitude: lon + eastMeters / metersPerDegreeLongitude(lat),
@@ -66,13 +52,6 @@ const offset = (lat, lon, northMeters, eastMeters) => ({
 
 const round = (value, places = 7) => Number(value.toFixed(places));
 
-/**
- * A residence: a rectangular footprint split into a 2x2 grid of rooms.
- *
- * Room-sized geofences are exactly what native region monitoring cannot do —
- * CLCircularRegion needs roughly 100 m to be reliable — so these exist to
- * exercise the polygon tier.
- */
 function makeResidence(id, name, latitude, longitude, halfWidthM, halfHeightM) {
   const corner = (north, east) => {
     const point = offset(latitude, longitude, north, east);
@@ -112,10 +91,6 @@ function makeResidence(id, name, latitude, longitude, halfWidthM, halfHeightM) {
     name,
     latitude: round(latitude),
     longitude: round(longitude),
-    // Tight enough that neighbouring houses do not overlap, which keeps a walk
-    // through one of them from also registering the ones next door. The native
-    // region registered for this place is clamped up to the platform's ~100 m
-    // floor anyway — these thresholds are resolved in JS from real fixes.
     radius: 25,
     activeRadius: 45,
     polygon: footprint,
@@ -127,9 +102,6 @@ function build(count) {
   const random = makeRandom(20260916);
   const places = [];
 
-  // Eight houses on a 4x2 grid, 250 m apart, in Pinheiros. Close enough that
-  // they compete for the same region slots, far enough apart that a walk
-  // through one does not clip its neighbours.
   const blockLat = -23.5615;
   const blockLon = -46.7021;
   for (let i = 0; i < 8; i += 1) {
@@ -152,8 +124,6 @@ function build(count) {
     const kind = KINDS[Math.floor(random() * KINDS.length)];
     const neighbourhood = NEIGHBOURHOODS[Math.floor(random() * NEIGHBOURHOODS.length)];
 
-    // Uniform over a disc, not a square: sqrt() keeps the density even instead
-    // of piling points up in the middle.
     const angle = random() * 2 * Math.PI;
     const distance = Math.sqrt(random()) * region.spreadKm * 1000;
     const point = offset(

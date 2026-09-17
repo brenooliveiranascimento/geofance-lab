@@ -6,19 +6,6 @@ export const DATABASE_NAME = 'geofence-lab.db';
 
 let database: SQLiteDatabase | null = null;
 
-/**
- * The single database handle, opened on first use.
- *
- * Everything that a background task touches lives here rather than in MMKV.
- * The TaskManager headless context is the most fragile place this app runs, and
- * SQLite gives us transactions there — a location fix that produces a
- * transition must write the new state and the event together or not at all,
- * otherwise a kill mid-write would let the event fire twice.
- *
- * WAL mode matters for the same reason: the foreground UI reads the event log
- * while the background task appends to it, and WAL lets those proceed without
- * blocking each other.
- */
 export function getDatabase(): SQLiteDatabase {
   if (database) return database;
 
@@ -37,12 +24,10 @@ function migrate(handle: SQLiteDatabase): void {
 
   for (let version = current; version < MIGRATIONS.length; version += 1) {
     handle.execSync(MIGRATIONS[version]);
-    // PRAGMA does not accept bound parameters; the value is a loop counter.
     handle.execSync(`PRAGMA user_version = ${version + 1};`);
   }
 }
 
-/** Runs `work` inside a transaction, rolling back if it throws. */
 export function transaction<T>(work: (db: SQLiteDatabase) => T): T {
   const db = getDatabase();
   let result: T;
@@ -51,10 +36,6 @@ export function transaction<T>(work: (db: SQLiteDatabase) => T): T {
   });
   return result!;
 }
-
-// ---------------------------------------------------------------------------
-// Key/value helpers — for the handful of scalars the background tasks need.
-// ---------------------------------------------------------------------------
 
 export function readValue(key: string): string | null {
   const row = getDatabase().getFirstSync<{ value: string }>(
@@ -78,8 +59,6 @@ export function readJson<T>(key: string): T | null {
   try {
     return JSON.parse(raw) as T;
   } catch {
-    // A corrupt value is not worth crashing a background task over; the caller
-    // treats null as "no prior state" and rebuilds it.
     return null;
   }
 }
@@ -92,7 +71,6 @@ export function deleteValue(key: string): void {
   getDatabase().runSync('DELETE FROM kv WHERE key = ?;', key);
 }
 
-/** Drops every row but keeps the schema. Used by the "reset" action in Settings. */
 export function resetDatabase(): void {
   const db = getDatabase();
   db.withTransactionSync(() => {

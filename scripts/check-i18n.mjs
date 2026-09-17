@@ -1,15 +1,4 @@
 #!/usr/bin/env node
-/**
- * Verifies that every translation key the code asks for exists in both locales,
- * and that the two locales have exactly the same shape.
- *
- * A missing key is invisible at runtime — i18next renders the key itself, which
- * looks like a label until someone reads it — so this runs in CI rather than
- * relying on anyone noticing.
- *
- *   node scripts/check-i18n.mjs
- */
-
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
@@ -17,10 +6,6 @@ const ROOT = process.cwd();
 const LOCALES = ['pt-BR', 'en'];
 const SOURCE_DIRS = ['src', 'app'];
 
-/**
- * Keys built at runtime from a variable. Each entry lists the concrete suffixes
- * the code can produce, since a static scan cannot see them.
- */
 const DYNAMIC_KEYS = {
   'events.kind': ['place_enter', 'place_exit', 'room_enter', 'room_exit'],
   'events.scope': ['all', 'places', 'rooms'],
@@ -33,7 +18,6 @@ const DYNAMIC_KEYS = {
   'settings.languages': LOCALES,
 };
 
-/** Dynamic families where the variable sits in the middle of the key. */
 const DYNAMIC_TEMPLATES = [
   { prefix: 'monitor.status', values: ['idle', 'regions', 'precise', 'blocked', 'busy'], suffixes: ['title', 'message'] },
   { prefix: 'simulator.kind', values: ['crossing', 'approach'], suffixes: ['label', 'hint'] },
@@ -61,7 +45,6 @@ function collectUsedKeys() {
     for (const file of walk(resolve(ROOT, dir))) {
       const source = readFileSync(file, 'utf8');
       for (const match of source.matchAll(/\bt\(\s*'([a-zA-Z0-9_.-]+)'/g)) {
-        // Only dotted keys; bare identifiers are test fixtures, not translations.
         if (match[1].includes('.')) keys.add(match[1]);
       }
     }
@@ -113,7 +96,6 @@ function main() {
     }
   }
 
-  // The locales must mirror each other, or switching language reveals holes.
   const [first, ...rest] = LOCALES;
   const baseline = new Set(flatten(bundles[first]));
   for (const locale of rest) {

@@ -26,7 +26,6 @@ const CONTENT: PlannerContent = {
   })),
 };
 
-/** 2026-03-10, 14:32 local. */
 const ENROLLED_AT = new Date(2026, 2, 10, 14, 32, 0, 0).getTime();
 
 const MINUTE = 60_000;
@@ -97,8 +96,6 @@ describe('buildPlan — daily', () => {
     const times = daily().map((m) => m.scheduledFor);
     for (let i = 1; i < times.length; i += 1) {
       const gap = times[i] - times[i - 1];
-      // 24 h normally; 23 or 25 across a DST boundary, which is the point of
-      // computing wall-clock time rather than adding milliseconds.
       expect(gap).toBeGreaterThanOrEqual(23 * 60 * MINUTE);
       expect(gap).toBeLessThanOrEqual(25 * 60 * MINUTE);
     }
@@ -187,7 +184,6 @@ describe('diffSchedule', () => {
   });
 
   it('tops the window up after a long gap without duplicating anything', () => {
-    // App not opened for a week: three onboarding plus seven daily are past due.
     const rows = plan().slice(0, 10).map((m) => asRow(m));
     const later = plan()[9].scheduledFor + MINUTE;
 
@@ -227,7 +223,6 @@ describe('diffSchedule', () => {
   it('re-schedules when the OS lost the notification', () => {
     const window = selectWindow(plan(), now, 3);
     const rows = window.map((m) => asRow(m));
-    // The OS only still knows about the first one.
     const live = new Set([rows[0].notificationId!]);
 
     const diff = diffSchedule(plan(), rows, { now, horizon: 3, liveNotificationIds: live });

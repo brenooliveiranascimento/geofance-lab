@@ -48,13 +48,6 @@ export function useEventLogViewModel(): EventLogViewModel {
     toast.show({ message: t('events.cleared') });
   }, [t, toast]);
 
-  /**
-   * Newline-delimited JSON on the clipboard.
-   *
-   * Deliberately not a file share: the point is to get the log off the device
-   * during a field test, and pasting into a note works on any phone without a
-   * share sheet, a provider or a storage permission.
-   */
   const copyToClipboard = useCallback(async () => {
     const payload = exportEventsAsJsonl();
     if (!payload) {

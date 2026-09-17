@@ -15,7 +15,6 @@ describe('computeBackoffMs', () => {
   });
 
   it('saturates at the ceiling instead of growing without bound', () => {
-    // 30 s doubled seven times is 64 min, past the one-hour cap.
     expect(computeBackoffMs(6, CONFIG)).toBe(32 * 60_000);
     expect(computeBackoffMs(7, CONFIG)).toBe(CONFIG.maxDelayMs);
     expect(computeBackoffMs(9, CONFIG)).toBe(CONFIG.maxDelayMs);
@@ -37,7 +36,6 @@ describe('computeBackoffMs', () => {
     const total = Array.from({ length: CONFIG.maxAttempts }, (_, i) =>
       computeBackoffMs(i, CONFIG)!,
     ).reduce((sum, delay) => sum + delay, 0);
-    // Enough to survive a night offline without retrying indefinitely.
     expect(total).toBeGreaterThan(3 * 60 * 60 * 1_000);
     expect(total).toBeLessThan(6 * 60 * 60 * 1_000);
   });

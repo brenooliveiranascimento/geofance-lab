@@ -40,12 +40,6 @@ export function useMessagesViewModel(): MessagesViewModel {
   const { data: plan = [] } = useMessagePlan();
   const { data: receipts = [] } = useReceipts();
 
-  /**
-   * Stands in for "the user finished signing up".
-   *
-   * The whole schedule is derived from this single instant, so the app only
-   * needs to record it once — everything after is reconciliation.
-   */
   const signUp = useCallback(async () => {
     setBusy(true);
     try {

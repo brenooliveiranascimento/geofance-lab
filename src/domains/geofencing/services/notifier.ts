@@ -10,7 +10,6 @@ export const GEOFENCE_CHANNEL_ID = 'geofence-events';
 
 let channelReady = false;
 
-/** Android 8+ drops notifications posted to a channel that does not exist yet. */
 export async function ensureNotificationChannel(): Promise<void> {
   if (Platform.OS !== 'android' || channelReady) return;
 
@@ -46,14 +45,6 @@ function describe(event: GeofenceEvent): { title: string; body: string } {
   };
 }
 
-/**
- * Posts one local notification per event.
- *
- * Runs inside the background task, where the OS gives us very little time, so
- * each notification is fired with a null trigger (deliver now) and failures are
- * swallowed per-event: one rejected notification must not abort the rest, and it
- * must never abort the caller, which has already committed the events.
- */
 export async function notifyEvents(events: readonly GeofenceEvent[]): Promise<void> {
   if (events.length === 0) return;
 
@@ -87,9 +78,6 @@ export async function notifyEvents(events: readonly GeofenceEvent[]): Promise<vo
   }
 
   if (delivered.length > 0) {
-    // Recording delivery separately from the event insert is deliberate: if the
-    // process dies here the event survives as "not notified" and can be shown
-    // in the log, rather than silently disappearing.
     markNotified(delivered);
   }
 }

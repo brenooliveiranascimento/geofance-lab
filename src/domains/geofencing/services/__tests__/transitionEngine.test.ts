@@ -23,7 +23,6 @@ const HOME: Place = {
   createdAt: 0,
 };
 
-/** A fix `meters` due north of the place, so the distance is exact. */
 function fixAt(meters: number, timestamp: number, accuracy: number | null = 5): Fix {
   return {
     latitude: HOME.latitude + meters / METERS_PER_DEGREE_LATITUDE,
@@ -39,7 +38,6 @@ interface RunResult {
   rejected: number;
 }
 
-/** Feeds a sequence of fixes through the engine, threading state as the DB would. */
 function run(
   fixes: Fix[],
   options: {
@@ -74,7 +72,6 @@ function run(
   return { events, states, rejected };
 }
 
-/** Fixes at a fixed distance, spaced far enough apart to clear the dwell guard. */
 const hold = (meters: number, count: number, startAt = 0, step = 6_000, accuracy = 5): Fix[] =>
   Array.from({ length: count }, (_, i) => fixAt(meters, startAt + i * step, accuracy));
 
@@ -104,7 +101,6 @@ describe('entry uses radius, exit uses activeRadius', () => {
   });
 
   it('does not enter while only inside the activeRadius', () => {
-    // 80 m: beyond `radius` (60) but within `activeRadius` (100).
     const { events, states } = run(hold(80, 6));
     expect(events).toHaveLength(0);
     expect(states.get('home')?.state).toBe('outside');
@@ -114,19 +110,15 @@ describe('entry uses radius, exit uses activeRadius', () => {
     const enter = run(hold(20, 3));
     expect(enter.events.map((e) => e.kind)).toEqual(['place_enter']);
 
-    // Drift out to 80 m — inside the dead band, so nothing happens.
     const band = run(hold(80, 4, 30_000), { states: enter.states });
     expect(band.events).toHaveLength(0);
     expect(band.states.get('home')?.state).toBe('inside');
 
-    // Past 100 m the exit fires.
     const out = run(hold(140, 3, 80_000), { states: band.states });
     expect(out.events.map((e) => e.kind)).toEqual(['place_exit']);
   });
 
   it('produces no events for a user loitering on the boundary', () => {
-    // Oscillating across `radius` but never past `activeRadius`: the dead band
-    // is exactly what this requirement is for.
     const enter = run(hold(20, 3));
     const fixes: Fix[] = [];
     for (let i = 0; i < 40; i += 1) {
@@ -156,7 +148,6 @@ describe('debounce and dwell', () => {
     const enter = run(hold(20, 3));
     const enteredAt = enter.states.get('home')!.since;
 
-    // Two agreeing "outside" fixes, but only 2 s after entering.
     const tooSoon = run(
       [fixAt(300, enteredAt + 1_000), fixAt(300, enteredAt + 2_000)],
       { states: enter.states },
@@ -164,14 +155,11 @@ describe('debounce and dwell', () => {
     expect(tooSoon.events).toHaveLength(0);
     expect(tooSoon.states.get('home')?.state).toBe('inside');
 
-    // Past the dwell window the same evidence commits.
     const later = run([fixAt(300, enteredAt + 11_000)], { states: tooSoon.states });
     expect(later.events.map((e) => e.kind)).toEqual(['place_exit']);
   });
 
   it('classifies a never-seen target without waiting out the dwell', () => {
-    // A fresh install that boots up already inside a place should not need
-    // 10 s of dwell before it knows where it is.
     const { events } = run([fixAt(10, 1_000), fixAt(10, 2_000)]);
     expect(events.map((e) => e.kind)).toEqual(['place_enter']);
   });
@@ -179,7 +167,6 @@ describe('debounce and dwell', () => {
 
 describe('confidence margin', () => {
   it('refuses to claim entry while the error circle straddles the radius', () => {
-    // 45 m away with 30 m accuracy: the circle reaches 75 m, past the 60 m radius.
     const { events } = run(hold(45, 4, 0, 6_000, 30));
     expect(events).toHaveLength(0);
   });
@@ -191,8 +178,6 @@ describe('confidence margin', () => {
 
   it('caps the margin so a small geofence stays reachable', () => {
     const tight: Place = { ...HOME, id: 'tight', radius: 40, activeRadius: 60 };
-    // 90 m accuracy would exceed the radius outright; the cap holds it to 20 m,
-    // so standing 15 m away still registers as entry.
     const { events } = run(hold(15, 3, 0, 6_000, 90), { places: [tight] });
     expect(events.map((e) => e.kind)).toEqual(['place_enter']);
   });
@@ -237,12 +222,6 @@ describe('disabled and distant places', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Rooms — the multi-polygon extension. A place's circle is the coarse trigger;
-// the rooms inside it are resolved by point-in-polygon on precise fixes.
-// ---------------------------------------------------------------------------
-
-/** ~10 x 10 m square centred on the place, so `fixAt(0)` lands inside it. */
 const LIVING_ROOM: Room = {
   id: 'living',
   placeId: 'home',
@@ -256,7 +235,6 @@ const LIVING_ROOM: Room = {
   createdAt: 0,
 };
 
-/** A second square 20 m north, so the two never overlap. */
 const BEDROOM: Room = {
   id: 'bedroom',
   placeId: 'home',
@@ -298,7 +276,6 @@ describe('rooms', () => {
   });
 
   it('stays in the place when standing in none of its rooms', () => {
-    // 40 m north: inside the 60 m radius, outside both room polygons.
     const { events, states } = run(hold(40, 3), { rooms });
     expect(events.map((e) => e.kind)).toEqual(['place_enter']);
     expect(states.get('living')?.state ?? 'outside').toBe('outside');
@@ -321,7 +298,6 @@ describe('rooms', () => {
     const back = run(hold(0, 3, 120_000), { rooms, states: away.states });
 
     expect(back.events.map((e) => e.kind).sort()).toEqual(['place_enter', 'room_enter']);
-    // The sequence counter keeps every key distinct across the whole round trip.
     const keys = [...first.events, ...away.events, ...back.events].map((e) => e.idempotencyKey);
     expect(new Set(keys).size).toBe(keys.length);
   });
@@ -337,7 +313,6 @@ describe('rooms', () => {
 });
 
 describe('overlapping rooms', () => {
-  /** Two rooms that share a wall — the common case in any floor plan. */
   const WEST: Room = {
     id: 'a-west',
     placeId: 'home',
@@ -362,8 +337,6 @@ describe('overlapping rooms', () => {
   };
 
   it('picks exactly one room for a fix standing on the shared wall', () => {
-    // The wall runs along HOME's longitude, so `fixAt` lands exactly on it —
-    // both polygons contain the point by the boundary rule.
     const { states } = run(hold(0, 3), { rooms: [WEST, EAST] });
     const occupied = [...states.values()].filter(
       (state) => state.targetKind === 'room' && state.state === 'inside',

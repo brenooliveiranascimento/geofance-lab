@@ -91,8 +91,6 @@ export function PlacesView({ viewModel }: PlacesViewProps): React.JSX.Element {
         keyExtractor={(item) => item.place.id}
         renderItem={renderRow}
         contentContainerStyle={styles.list}
-        // The dataset is 500+ rows; a fixed row height lets FlatList skip
-        // measuring and scroll without blank frames.
         getItemLayout={(_, index) => ({ length: ROW_HEIGHT, offset: ROW_HEIGHT * index, index })}
         initialNumToRender={14}
         windowSize={9}
