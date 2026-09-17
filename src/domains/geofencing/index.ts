@@ -7,6 +7,7 @@ export {
   getCurrentFix,
   readSnapshot,
   refreshMonitoring,
+  resumeMonitoringIfNeeded,
   startMonitoring,
   stopMonitoring,
   submitSimulatedFix,

@@ -616,6 +616,41 @@ logo em seguida sem esperar nada.
 4. **Monitor → Iniciar monitoramento**.
 5. Saia, afaste-se do perímetro, volte. As notificações chegam com o app fechado.
 
+### O que foi medido, e em quê
+
+Background não é coisa para afirmar sem medir. O que segue foi observado no **simulador de iOS
+18.6 (iPhone 16 Pro)**, movendo a posição com `xcrun simctl location` e lendo os eventos direto do
+banco, sem abrir o app:
+
+| Situação | Resultado |
+|---|---|
+| App em primeiro plano | entra e sai da empresa e dos cômodos |
+| **App em segundo plano** (Safari à frente) | `company_enter` pela região nativa, depois `room_enter` pelo GPS contínuo — a escalada de camada aconteceu sozinha |
+| **App encerrado** (`simctl terminate`, processo confirmado morto) | o iOS **relançou o app por conta própria** ao cruzar a região, e os dois eventos foram gravados e notificados |
+| Saída | `company_exit` e `room_exit` ao se afastar |
+
+A sequência registrada no encerramento foi exatamente a projetada: evento de região nativa →
+`precise updates started` → `company_enter` → `room_enter`.
+
+**O que não foi medido:** nada disso foi verificado em **aparelho físico** nem no **Android**. O
+simulador exercita o caminho real do CoreLocation, mas não reproduz orçamento de execução em
+background, estado de bateria nem os gerenciadores de fabricante. E o Android é documentadamente
+diferente: um app finalizado **não** é relançado por evento de geofence, o que é justamente o que
+o serviço em primeiro plano existe para mitigar. A tabela de limitações abaixo continua valendo
+como o que se espera, não como o que se mediu.
+
+### Recuperação ao subir
+
+Havia uma lacuna aqui: nada re-armava o monitoramento quando o app iniciava. No iOS as regiões
+sobrevivem ao encerramento — é por isso que o caso acima funciona —, mas se a plataforma as
+descartasse (reinstalação, reboot no Android, despejo pelo sistema), o app continuaria dizendo
+"monitorando" com nada registrado.
+
+Agora, ao subir e a cada volta ao primeiro plano, `resumeMonitoringIfNeeded` compara a própria
+flag com `hasStartedGeofencingAsync` — a resposta da plataforma, não a nossa — e re-registra a
+janela quando elas divergem. Se a permissão tiver sido revogada nesse meio-tempo, ele desarma em
+vez de fingir que está ativo.
+
 ### Com o app fechado
 
 Minimize, aguarde, e depois arraste o app para fora dos recentes. No Android o serviço em

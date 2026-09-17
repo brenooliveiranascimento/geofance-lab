@@ -78,7 +78,7 @@ export async function getCurrentFix(): Promise<Fix | null> {
   }
 }
 
-export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
+export async function rebuildRegions(origin: LatLng, force = false): Promise<NativeRegion[]> {
   const companies = listEnabledCompanies();
 
   const { regions, selected, guard, omittedCount } = selectRegions(companies, origin, {
@@ -96,7 +96,7 @@ export async function rebuildRegions(origin: LatLng): Promise<NativeRegion[]> {
     return [];
   }
 
-  if (regionsEqual(regions, readRegions())) {
+  if (!force && regionsEqual(regions, readRegions())) {
     logger.debug(TAG, 'region window unchanged, skipping re-registration');
     writeJson(MONITOR_KEYS.origin, origin);
     return regions;
@@ -368,6 +368,45 @@ export async function stopMonitoring(): Promise<void> {
   releaseAllPresence();
 
   logger.info(TAG, 'monitoring stopped');
+}
+
+export async function isGeofencingLive(): Promise<boolean> {
+  try {
+    return await Location.hasStartedGeofencingAsync(GEOFENCING_TASK);
+  } catch {
+    return false;
+  }
+}
+
+export async function resumeMonitoringIfNeeded(): Promise<void> {
+  if (!readRunning()) return;
+
+  const permissions = await readPermissions();
+  if (!isMonitoringAllowed(permissions)) {
+    logger.warn(TAG, 'monitoring was on but the permission is gone, standing down', permissions);
+    await stopMonitoring();
+    return;
+  }
+
+  if (await isGeofencingLive()) {
+    logger.debug(TAG, 'platform still holds the region window');
+    return;
+  }
+
+  // The platform dropped the registrations — a reinstall, a reboot, or the OS
+  // evicting them. Our own flag still says "running", so without this the app
+  // would show itself as monitoring while nothing was armed.
+  logger.warn(TAG, 're-arming the region window after relaunch');
+
+  const fix = (await getCurrentFix()) ?? readJson<Fix>(MONITOR_KEYS.lastFix);
+  if (!fix) {
+    logger.warn(TAG, 'cannot re-arm without a position');
+    return;
+  }
+
+  await rebuildRegions(fix, true);
+  const occupied = await evaluateAndCommit(fix, 'initial_sync');
+  await syncTier(occupied);
 }
 
 export async function refreshMonitoring(): Promise<void> {

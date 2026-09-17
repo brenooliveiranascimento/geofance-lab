@@ -1,5 +1,5 @@
 import '@src/i18n';
-import '@src/domains/geofencing';
+import { resumeMonitoringIfNeeded } from '@src/domains/geofencing';
 import { registerMessagingTask } from '@src/domains/messaging';
 
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
@@ -37,6 +37,12 @@ Notifications.setNotificationHandler({
 });
 
 async function catchUp(): Promise<void> {
+  try {
+    await resumeMonitoringIfNeeded();
+  } catch (error) {
+    logger.error('bootstrap', 'could not resume monitoring', { error: String(error) });
+  }
+
   try {
     await reconcileSchedule();
     await drainReceipts();
