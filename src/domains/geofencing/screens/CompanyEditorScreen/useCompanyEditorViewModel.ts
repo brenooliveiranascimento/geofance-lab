@@ -6,8 +6,11 @@ import { Alert } from 'react-native';
 import {
   circumscribedRadiusMeters,
   isRingInsideRing,
+  isSimpleRing,
+  nearestVertexDistanceMeters,
   ringAreaSquareMeters,
   ringCentroid,
+  untangleRing,
   type LatLng,
   type Ring,
 } from '@src/core/geo';
@@ -47,10 +50,12 @@ export interface CompanyEditorViewModel {
   draftAreaSquareMeters: number;
   error: string | null;
   canCommitDraft: boolean;
+  tangled: boolean;
 
   onCenterMove: (center: LatLng) => void;
   addPoint: () => void;
   undoPoint: () => void;
+  untangle: () => void;
 
   startOutlineRedraw: () => void;
   startRoom: () => void;
@@ -108,12 +113,25 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
 
   const addPoint = useCallback(() => {
     const center = centerRef.current;
-    if (center) setDraft((ring) => [...ring, center]);
-  }, []);
+    if (!center) return;
+
+    if (nearestVertexDistanceMeters(center, draft) < COMPANY_SHAPE.minVertexSpacingMeters) {
+      toast.show({ message: t('wizard.errors.tooClose') });
+      return;
+    }
+    setDraft((ring) => [...ring, center]);
+  }, [draft, t, toast]);
 
   const draftAreaSquareMeters = useMemo(
     () => (draft.length >= 3 ? ringAreaSquareMeters(draft) : 0),
     [draft],
+  );
+
+  const drawing = mode === 'outlineDraw' || mode === 'roomDraw';
+
+  const tangled = useMemo(
+    () => drawing && draft.length >= 4 && !isSimpleRing(draft),
+    [drawing, draft],
   );
 
   const error = useMemo(() => {
@@ -125,6 +143,7 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     if (draft.length < COMPANY_SHAPE.minVertices) {
       return t('wizard.errors.vertices', { total: COMPANY_SHAPE.minVertices });
     }
+    if (tangled) return t('wizard.errors.selfIntersecting');
     const minArea =
       mode === 'outlineDraw'
         ? COMPANY_SHAPE.minCompanyAreaSquareMeters
@@ -139,7 +158,7 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
       return t('editor.errors.outlineExcludesRooms');
     }
     return null;
-  }, [mode, roomName, draft, draftAreaSquareMeters, company, rooms, t]);
+  }, [mode, roomName, draft, tangled, draftAreaSquareMeters, company, rooms, t]);
 
   const persistCompany = useCallback(
     (next: Company) => {
@@ -244,9 +263,11 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     draftAreaSquareMeters,
     error,
     canCommitDraft: error === null,
+    tangled,
     onCenterMove,
     addPoint,
     undoPoint: () => setDraft((ring) => ring.slice(0, -1)),
+    untangle: () => setDraft((ring) => untangleRing(ring)),
     startOutlineRedraw: () => {
       setDraft([]);
       setMode('outlineDraw');

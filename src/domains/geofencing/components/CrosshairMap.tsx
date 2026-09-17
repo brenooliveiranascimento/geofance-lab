@@ -26,6 +26,8 @@ export interface CrosshairMapProps {
   siblings?: readonly { id: string; name: string; polygon: Ring }[];
   onCenterMove: (center: LatLng) => void;
   readoutLabel: string;
+  /** Paints the draft as invalid — used when its edges cross each other. */
+  invalid?: boolean;
 }
 
 export function CrosshairMap({
@@ -36,6 +38,7 @@ export function CrosshairMap({
   siblings = [],
   onCenterMove,
   readoutLabel,
+  invalid = false,
 }: CrosshairMapProps): React.JSX.Element {
   const [readout, setReadout] = useState<LatLng>(initialCenter);
   const initialRegion = useRef(regionFor(initialCenter, spanMeters)).current;
@@ -52,6 +55,7 @@ export function CrosshairMap({
   }, []);
 
   const closedDraft = draft.length >= 3 ? [...draft, draft[0]] : draft;
+  const draftColor = invalid ? colors.error : colors.warning;
 
   return (
     <View style={styles.container}>
@@ -87,14 +91,14 @@ export function CrosshairMap({
         {draft.length >= 3 ? (
           <Polygon
             coordinates={draft}
-            strokeColor={colors.warning}
+            strokeColor={draftColor}
             strokeWidth={2}
-            fillColor={`${colors.warning}40`}
+            fillColor={`${draftColor}40`}
           />
         ) : null}
 
         {draft.length === 2 ? (
-          <Polyline coordinates={closedDraft} strokeColor={colors.warning} strokeWidth={2} />
+          <Polyline coordinates={closedDraft} strokeColor={draftColor} strokeWidth={2} />
         ) : null}
 
         {draft.map((vertex, index) => (
@@ -104,7 +108,7 @@ export function CrosshairMap({
             anchor={{ x: 0.5, y: 0.5 }}
             tracksViewChanges={false}
           >
-            <View style={styles.vertex}>
+            <View style={[styles.vertex, { backgroundColor: draftColor }]}>
               <Text style={styles.vertexLabel}>{index + 1}</Text>
             </View>
           </Marker>

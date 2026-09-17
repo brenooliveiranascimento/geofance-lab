@@ -193,7 +193,15 @@
       "vertices": "Marque pelo menos {{total}} pontos",
       "area": "A área ficou pequena demais (mínimo de {{total}} m²)",
       "outsideCompany": "O cômodo precisa ficar dentro do perímetro da empresa",
-      "roomName": "Informe um nome com pelo menos 2 letras"
+      "roomName": "Informe um nome com pelo menos 2 letras",
+      "selfIntersecting": "As linhas do desenho estão se cruzando. Toque em \"Desembaraçar\" ou desfaça os últimos pontos.",
+      "tooClose": "Esse ponto está em cima de outro. Arraste o mapa antes de adicionar."
+    },
+    "tangled": {
+      "title": "O contorno está cruzado",
+      "body": "Os cantos foram marcados fora de ordem, então as linhas se cruzam. Assim não dá: a regra de dentro/fora passa a tratar parte da área desenhada como externa, e a metragem sai errada.",
+      "action": "Reordenar pontos",
+      "hint": "Reordenar é uma sugestão — o app encontra um contorno sem cruzamentos, mas com a mesma marcação existe mais de uma forma possível. Confira no mapa; se não for o que você quis, desfaça os pontos e remarque."
     }
   },
   "simulator": {

@@ -32,6 +32,7 @@ export const COMPANY_SHAPE = {
   minVertices: 3,
   minCompanyAreaSquareMeters: 20,
   minRoomAreaSquareMeters: 2,
+  minVertexSpacingMeters: 0.5,
 } as const;
 
 export const MONITOR_KEYS = {

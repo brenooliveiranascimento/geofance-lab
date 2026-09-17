@@ -5,8 +5,11 @@ import { useTranslation } from 'react-i18next';
 import {
   circumscribedRadiusMeters,
   isRingInsideRing,
+  isSimpleRing,
+  nearestVertexDistanceMeters,
   ringAreaSquareMeters,
   ringCentroid,
+  untangleRing,
   type LatLng,
   type Ring,
 } from '@src/core/geo';
@@ -53,12 +56,14 @@ export interface CompanyWizardViewModel {
 
   error: string | null;
   canAdvance: boolean;
+  tangled: boolean;
   draftAreaSquareMeters: number;
 
   onCenterMove: (center: LatLng) => void;
   addPoint: () => void;
   undoPoint: () => void;
   clearDraft: () => void;
+  untangle: () => void;
 
   advance: () => void;
   back: () => void;
@@ -122,9 +127,16 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
   const addPoint = useCallback(() => {
     const center = centerRef.current;
     if (!center) return;
+
+    const existing = step === 'outline' ? outline : draft;
+    if (nearestVertexDistanceMeters(center, existing) < COMPANY_SHAPE.minVertexSpacingMeters) {
+      toast.show({ message: t('wizard.errors.tooClose') });
+      return;
+    }
+
     if (step === 'outline') setOutline((ring) => [...ring, center]);
     else setDraft((ring) => [...ring, center]);
-  }, [step]);
+  }, [step, outline, draft, t, toast]);
 
   const undoPoint = useCallback(() => {
     if (step === 'outline') setOutline((ring) => ring.slice(0, -1));
@@ -141,6 +153,11 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     [currentRing],
   );
 
+  const tangled = useMemo(
+    () => isDrawing && currentRing.length >= 4 && !isSimpleRing(currentRing),
+    [isDrawing, currentRing],
+  );
+
   /**
    * The rule the data model cannot express: a room has to sit inside the
    * company it belongs to. Catching it here, while the shape is still a draft,
@@ -153,6 +170,10 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
       if (currentRing.length < COMPANY_SHAPE.minVertices) {
         return t('wizard.errors.vertices', { total: COMPANY_SHAPE.minVertices });
       }
+      // A ring whose edges cross itself breaks point-in-polygon: the even-odd
+      // rule turns part of the drawn area into "outside", and the shoelace area
+      // cancels the reversed lobe away. It has to be refused, not warned about.
+      if (tangled) return t('wizard.errors.selfIntersecting');
       const minArea =
         step === 'outline'
           ? COMPANY_SHAPE.minCompanyAreaSquareMeters
@@ -167,7 +188,7 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     if (step === 'roomName' && roomName.trim().length < 2) return t('wizard.errors.roomName');
 
     return null;
-  }, [step, name, isDrawing, currentRing, draftAreaSquareMeters, outline, roomName, t]);
+  }, [step, name, isDrawing, currentRing, tangled, draftAreaSquareMeters, outline, roomName, t]);
 
   const advance = useCallback(() => {
     if (error) return;
@@ -278,11 +299,16 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     setRoomName,
     error,
     canAdvance: error === null,
+    tangled,
     draftAreaSquareMeters,
     onCenterMove,
     addPoint,
     undoPoint,
     clearDraft,
+    untangle: () => {
+      if (step === 'outline') setOutline((ring) => untangleRing(ring));
+      else setDraft((ring) => untangleRing(ring));
+    },
     advance,
     back,
     startRoom: () => {

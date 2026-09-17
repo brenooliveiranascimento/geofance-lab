@@ -174,6 +174,7 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
             siblings={drawingOutline ? [] : viewModel.rooms}
             onCenterMove={viewModel.onCenterMove}
             readoutLabel={t('wizard.crosshair')}
+            invalid={viewModel.tangled}
           />
         ) : (
           <View style={styles.mapFallback}>
@@ -205,7 +206,18 @@ export function CompanyWizardView({ viewModel }: CompanyWizardViewProps): React.
           />
         </View>
 
-        {viewModel.error && ring.length > 0 ? (
+        {viewModel.tangled ? (
+          <StatusBanner
+            tone="error"
+            title={t('wizard.tangled.title')}
+            message={t('wizard.tangled.body')}
+            actionLabel={t('wizard.tangled.action')}
+            onAction={viewModel.untangle}
+          />
+        ) : null}
+        {viewModel.tangled ? (
+          <Text style={styles.hintText}>{t('wizard.tangled.hint')}</Text>
+        ) : viewModel.error && ring.length > 0 ? (
           <Text style={styles.error}>{viewModel.error}</Text>
         ) : null}
 
@@ -260,6 +272,7 @@ const styles = StyleSheet.create({
   counter: { color: colors.textMuted, fontSize: fontSize.xs, fontVariant: ['tabular-nums'] },
   drawActions: { flexDirection: 'row', gap: spacing.sm },
   grow: { flex: 1 },
+  hintText: { color: colors.textMuted, fontSize: fontSize.xs, lineHeight: 16 },
   error: { color: colors.warning, fontSize: fontSize.xs, lineHeight: 16 },
   roomRow: {
     flexDirection: 'row',

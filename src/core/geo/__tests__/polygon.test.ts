@@ -2,6 +2,10 @@ import {
   boundingBoxOfRing,
   circumscribedRadiusMeters,
   distanceToRingMeters,
+  findSelfIntersection,
+  isSimpleRing,
+  nearestVertexDistanceMeters,
+  sortRingByAngle,
   isRingInsideRing,
   ringAreaSquareMeters,
   isPointInPolygon,
@@ -9,6 +13,7 @@ import {
   isPointOnRingBoundary,
   ringCentroid,
   ringPerimeterMeters,
+  untangleRing,
 } from '../polygon';
 import type { Ring } from '../types';
 
@@ -234,5 +239,187 @@ describe('ringAreaSquareMeters', () => {
   it('is zero for shapes that enclose nothing', () => {
     expect(ringAreaSquareMeters([])).toBe(0);
     expect(ringAreaSquareMeters(ring([0, 0], [1, 1]))).toBe(0);
+  });
+});
+
+describe('findSelfIntersection', () => {
+  it('accepts a simple square', () => {
+    expect(findSelfIntersection(ring([0, 0], [2, 0], [2, 2], [0, 2]))).toBeNull();
+    expect(isSimpleRing(ring([0, 0], [2, 0], [2, 2], [0, 2]))).toBe(true);
+  });
+
+  it('accepts a concave shape', () => {
+    expect(isSimpleRing(uShape)).toBe(true);
+  });
+
+  it('catches the bowtie', () => {
+    // The corners of a square visited in the wrong order: 1 → 3 → 2 → 4.
+    const bowtie = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    const crossing = findSelfIntersection(bowtie);
+
+    expect(crossing).not.toBeNull();
+    expect(isSimpleRing(bowtie)).toBe(false);
+  });
+
+  it('cannot be self-intersecting with three points or fewer', () => {
+    expect(findSelfIntersection(ring([0, 0], [2, 0], [1, 2]))).toBeNull();
+    expect(findSelfIntersection(ring([0, 0], [1, 1]))).toBeNull();
+    expect(findSelfIntersection([])).toBeNull();
+  });
+
+  it('catches a tangle that only appears late in the ring', () => {
+    // Five points where only the closing edge crosses an earlier one.
+    const tangled = ring([0, 0], [4, 0], [4, 3], [1, 3], [2, -1]);
+    expect(isSimpleRing(tangled)).toBe(false);
+  });
+
+  it('catches an edge that doubles back over its neighbour', () => {
+    expect(isSimpleRing(ring([0, 0], [4, 0], [2, 0], [2, 3]))).toBe(false);
+  });
+
+  it('reports the pair of edges that cross', () => {
+    const crossing = findSelfIntersection(ring([0, 0], [2, 2], [2, 0], [0, 2]))!;
+    expect(crossing.first).toBeGreaterThanOrEqual(0);
+    expect(crossing.second).toBeGreaterThan(crossing.first + 1);
+  });
+
+  it('is why the area of a tangled ring cannot be trusted', () => {
+    // Both lobes of this bowtie have the same area and opposite winding, so the
+    // shoelace sum cancels to nearly nothing — which is exactly why the shape
+    // has to be rejected before its area is shown to anyone.
+    const bowtie = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    const square = ring([0, 0], [2, 0], [2, 2], [0, 2]);
+
+    expect(ringAreaSquareMeters(bowtie)).toBeLessThan(ringAreaSquareMeters(square) / 10);
+  });
+});
+
+describe('sortRingByAngle', () => {
+  it('untangles corners marked out of order', () => {
+    const scrambled = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    expect(isSimpleRing(scrambled)).toBe(false);
+
+    const fixed = sortRingByAngle(scrambled);
+    expect(isSimpleRing(fixed)).toBe(true);
+  });
+
+  it('keeps every point', () => {
+    const scrambled = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    const fixed = sortRingByAngle(scrambled);
+
+    expect(fixed).toHaveLength(scrambled.length);
+    for (const vertex of scrambled) {
+      expect(fixed).toContainEqual(vertex);
+    }
+  });
+
+  it('recovers the full area of a tangled square', () => {
+    const scrambled = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    const square = ring([0, 0], [2, 0], [2, 2], [0, 2]);
+
+    expect(ringAreaSquareMeters(sortRingByAngle(scrambled))).toBeCloseTo(
+      ringAreaSquareMeters(square),
+      -1,
+    );
+  });
+
+  it('leaves an already simple convex ring simple', () => {
+    const square = ring([0, 0], [2, 0], [2, 2], [0, 2]);
+    expect(isSimpleRing(sortRingByAngle(square))).toBe(true);
+  });
+
+  it('untangles a nine-point sketch', () => {
+    // Nine corners added in an arbitrary order, the way a hurried sketch on the
+    // map produces them.
+    const messy = ring([0, 0], [3, 4], [1, 3], [4, 1], [0, 2], [2, 0], [4, 4], [1, 1], [3, 2]);
+    expect(isSimpleRing(messy)).toBe(false);
+    expect(isSimpleRing(sortRingByAngle(messy))).toBe(true);
+  });
+
+  it('passes short rings through untouched', () => {
+    expect(sortRingByAngle(ring([0, 0], [1, 1]))).toHaveLength(2);
+  });
+});
+
+describe('nearestVertexDistanceMeters', () => {
+  it('finds the closest corner', () => {
+    expect(nearestVertexDistanceMeters(roomRing[0], roomRing)).toBeCloseTo(0, 5);
+  });
+
+  it('is infinite for an empty ring', () => {
+    expect(nearestVertexDistanceMeters(at(0, 0), [])).toBe(Infinity);
+  });
+
+  it('detects a point dropped on top of an existing one', () => {
+    const almostDuplicate = {
+      latitude: roomRing[1].latitude + 0.000001,
+      longitude: roomRing[1].longitude,
+    };
+    expect(nearestVertexDistanceMeters(almostDuplicate, roomRing)).toBeLessThan(1);
+  });
+});
+
+describe('untangleRing', () => {
+  /** An L-shaped footprint: the kind angular sorting alone cannot recover. */
+  const lShape = ring([0, 0], [3, 0], [3, 1], [1, 1], [1, 3], [0, 3]);
+
+  const scramble = <T,>(items: readonly T[], order: number[]): T[] =>
+    order.map((index) => items[index]);
+
+  it('untangles a scrambled square', () => {
+    const scrambled = ring([0, 0], [2, 2], [2, 0], [0, 2]);
+    const fixed = untangleRing(scrambled);
+
+    expect(isSimpleRing(fixed)).toBe(true);
+    expect(ringAreaSquareMeters(fixed)).toBeCloseTo(
+      ringAreaSquareMeters(ring([0, 0], [2, 0], [2, 2], [0, 2])),
+      -1,
+    );
+  });
+
+  it('always produces a simple ring, even from a concave point set', () => {
+    // Guaranteed, not incidental: if two edges of a tour cross, the 2-opt move
+    // that uncrosses them is strictly shorter by the triangle inequality — so a
+    // 2-opt local optimum has no crossings left.
+    const scrambled = scramble(lShape, [3, 0, 5, 1, 4, 2]);
+    expect(isSimpleRing(scrambled)).toBe(false);
+    expect(isSimpleRing(untangleRing(scrambled))).toBe(true);
+  });
+
+  it('cannot recover which concave shape was meant', () => {
+    // Six corners admit more than one simple polygon, and the shortest tour is
+    // not the L: going A-B-C-E-F-D-A measures 11.48 against the L's 12. No
+    // ordering algorithm can know which the user had in mind, which is why this
+    // is offered as a suggestion to eyeball rather than applied silently.
+    const scrambled = scramble(lShape, [3, 0, 5, 1, 4, 2]);
+    const recovered = ringAreaSquareMeters(untangleRing(scrambled));
+    const intended = ringAreaSquareMeters(lShape);
+
+    expect(isSimpleRing(untangleRing(scrambled))).toBe(true);
+    expect(recovered).not.toBeCloseTo(intended, -1);
+  });
+
+  it('keeps every point exactly once', () => {
+    const scrambled = scramble(lShape, [3, 0, 5, 1, 4, 2]);
+    const fixed = untangleRing(scrambled);
+
+    expect(fixed).toHaveLength(lShape.length);
+    for (const vertex of lShape) expect(fixed).toContainEqual(vertex);
+  });
+
+  it('leaves an already simple ring alone', () => {
+    const square = ring([0, 0], [2, 0], [2, 2], [0, 2]);
+    const fixed = untangleRing(square);
+    expect(isSimpleRing(fixed)).toBe(true);
+    expect(ringAreaSquareMeters(fixed)).toBeCloseTo(ringAreaSquareMeters(square), -1);
+  });
+
+  it('untangles the nine-point sketch', () => {
+    const messy = ring([0, 0], [3, 4], [1, 3], [4, 1], [0, 2], [2, 0], [4, 4], [1, 1], [3, 2]);
+    expect(isSimpleRing(untangleRing(messy))).toBe(true);
+  });
+
+  it('passes short rings through untouched', () => {
+    expect(untangleRing(ring([0, 0], [1, 0], [0, 1]))).toHaveLength(3);
   });
 });

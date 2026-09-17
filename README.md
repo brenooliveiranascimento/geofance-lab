@@ -131,6 +131,30 @@ acordar o app a tempo. A decisão de entrada continua sendo do polígono.
   é rascunho, que é o único momento em que o usuário consegue corrigir.
 - Redesenhar o perímetro não pode deixar de fora um cômodo já cadastrado.
 - Área mínima, para recusar um polígono degenerado de três pontos quase colineares.
+- Um ponto novo não pode cair em cima de outro (toque duplo sem arrastar o mapa).
+- **O contorno não pode cruzar a si mesmo.**
+
+### O contorno cruzado
+
+Marcar os cantos fora de ordem produz um contorno em laço, e isso não é só feio:
+
+- **Ray casting deixa de valer.** A regra par-ímpar passa a tratar parte da área desenhada como
+  externa, então o app não detectaria a entrada em metade do terreno.
+- **A metragem mente.** A fórmula do cadarço soma áreas com sinal; num laço as duas metades têm
+  sentidos opostos e se cancelam. Um contorno em gravata-borboleta chega a acusar área quase zero.
+
+Por isso o cruzamento é **recusado**, não avisado: `findSelfIntersection` testa cada par de arestas
+não adjacentes e bloqueia o botão de concluir enquanto houver cruzamento. O desenho fica vermelho
+no mapa para o erro ser visível antes de o usuário tentar avançar.
+
+O app oferece **"Reordenar pontos"**, que é 2-opt sobre o percurso fechado dos vértices. A garantia
+é exata: se duas arestas de um percurso se cruzam, a troca 2-opt que as descruza é estritamente
+mais curta pela desigualdade triangular — logo, um ótimo local de 2-opt não tem cruzamento nenhum.
+
+O que ele **não** garante é acertar a forma pretendida, e isso está dito na interface. Um conjunto
+de pontos admite mais de um polígono simples, e o de menor perímetro nem sempre é o desejado: num
+prédio em L de seis cantos, o percurso mais curto mede 11,48 contra 12 do próprio L. Os testes
+afirmam as duas coisas — que o resultado nunca cruza, e que ele pode não ser a forma original.
 
 > `src/domains/geofencing/screens/CompanyWizardScreen/` · `components/CrosshairMap.tsx`
 
