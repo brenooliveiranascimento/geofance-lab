@@ -1,14 +1,22 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Button, Text } from '@src/components/atoms';
-import { StatCard, StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
 import { CompaniesMap } from '../../components/CompaniesMap';
 import type { MonitorViewModel } from './useMonitorViewModel';
+
+const DOT_COLOR: Record<string, string> = {
+  idle: colors.textMuted,
+  empty: colors.textMuted,
+  blocked: colors.warning,
+  busy: colors.textMuted,
+  regions: colors.primary,
+  precise: colors.success,
+};
 
 export interface MonitorViewProps {
   viewModel: MonitorViewModel;
@@ -16,174 +24,135 @@ export interface MonitorViewProps {
 
 export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element {
   const { t } = useTranslation();
-  const {
-    snapshot,
-    status,
-    statusTitle,
-    statusMessage,
-    totalCompanies,
-    insideNames,
-    center,
-    mapCompanies,
-    mapRooms,
-    states,
-    recentEvents,
-    mapAvailable,
-    busy,
-    needsPermission,
-  } = viewModel;
-
-  const running = snapshot?.running ?? false;
+  const { status, lastEvent, running } = viewModel;
 
   return (
     <ScreenTemplate>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>{t('monitor.title')}</Text>
-
-        <StatusBanner
-          tone={status === 'blocked' ? 'warning' : running ? 'success' : 'info'}
-          title={statusTitle}
-          message={statusMessage}
-          actionLabel={needsPermission ? t('monitor.grant') : undefined}
-          onAction={needsPermission ? () => void viewModel.grantPermissions() : undefined}
-        />
-
-        <View style={styles.mapFrame}>
-          {mapAvailable ? (
-            <CompaniesMap
-              center={center}
-              companies={mapCompanies}
-              rooms={mapRooms}
-              states={states}
-              emptyLabel={t('monitor.noPosition')}
-            />
-          ) : (
-            <View style={styles.mapFallback}>
-              <Text style={styles.fallbackTitle}>{t('monitor.mapUnavailable.title')}</Text>
-              <Text style={styles.fallbackBody}>{t('monitor.mapUnavailable.body')}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.stats}>
-          <StatCard
-            label={t('monitor.stats.companies')}
-            value={String(totalCompanies)}
-            hint={t('monitor.stats.companiesHint')}
+      <View style={styles.map}>
+        {viewModel.mapAvailable && viewModel.center ? (
+          <CompaniesMap
+            center={viewModel.center}
+            companies={viewModel.mapCompanies}
+            rooms={viewModel.mapRooms}
+            states={viewModel.states}
+            spanMeters={600}
+            emptyLabel=""
           />
-          <StatCard
-            label={t('monitor.stats.regions')}
-            value={String(snapshot?.regionCount ?? 0)}
-            hint={t('monitor.stats.regionsHint')}
-            tone={running ? 'active' : 'neutral'}
-          />
-          <StatCard
-            label={t('monitor.stats.inside')}
-            value={String(insideNames.length)}
-            hint={insideNames[0] ?? t('monitor.stats.insideNone')}
-            tone={insideNames.length > 0 ? 'active' : 'neutral'}
-          />
-        </View>
-
-        {snapshot?.lastFix ? (
-          <View style={styles.fixBox}>
-            <Text style={styles.fixLabel}>{t('monitor.lastFix')}</Text>
-            <Text style={styles.fixValue}>
-              {snapshot.lastFix.latitude.toFixed(5)}, {snapshot.lastFix.longitude.toFixed(5)}
-              {snapshot.lastFix.accuracy !== null
-                ? ` · ±${Math.round(snapshot.lastFix.accuracy)} m`
-                : ''}
-            </Text>
-            <Text style={styles.fixHint}>
-              {new Date(snapshot.lastFix.timestamp).toLocaleTimeString('pt-BR')}
+        ) : (
+          <View style={styles.mapFallback}>
+            <Text style={styles.fallbackText}>
+              {viewModel.mapAvailable ? t('monitor.noPosition') : t('monitor.mapUnavailable.body')}
             </Text>
           </View>
-        ) : null}
+        )}
 
-        {recentEvents.length > 0 ? (
-          <View style={styles.recent}>
-            <Text style={styles.sectionTitle}>{t('monitor.recent')}</Text>
-            {recentEvents.map((event) => (
-              <View key={event.idempotencyKey} style={styles.eventRow}>
-                <Text style={styles.eventKind}>{t(`events.kind.${event.kind}`)}</Text>
-                <Text style={styles.eventName} numberOfLines={1}>
-                  {event.roomName ? `${event.companyName} · ${event.roomName}` : event.companyName}
-                </Text>
-                <Text style={styles.eventTime}>
-                  {new Date(event.occurredAt).toLocaleTimeString('pt-BR')}
-                </Text>
-              </View>
-            ))}
+        <View style={styles.statusPill} pointerEvents="none">
+          <View style={[styles.dot, { backgroundColor: DOT_COLOR[status] ?? colors.textMuted }]} />
+          <View style={styles.statusText}>
+            <Text style={styles.statusLabel}>{viewModel.statusLabel}</Text>
+            {viewModel.statusDetail ? (
+              <Text style={styles.statusDetail} numberOfLines={1}>
+                {viewModel.statusDetail}
+              </Text>
+            ) : null}
           </View>
-        ) : null}
+        </View>
 
-        <View style={styles.actions}>
+        {lastEvent ? (
+          <TouchableOpacity style={styles.eventPill} onPress={viewModel.openHistory} activeOpacity={0.8}>
+            <Text style={styles.eventKind}>{t(`events.kind.${lastEvent.kind}`)}</Text>
+            <Text style={styles.eventName} numberOfLines={1}>
+              {lastEvent.roomName ?? lastEvent.companyName}
+            </Text>
+            <Text style={styles.eventTime}>
+              {new Date(lastEvent.occurredAt).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <View style={styles.actions}>
+        {status === 'blocked' ? (
+          <Button label={t('monitor.grant')} onPress={() => void viewModel.grantPermissions()} />
+        ) : status === 'empty' ? (
+          <Button label={t('monitor.addCompany')} onPress={viewModel.openCompanies} />
+        ) : (
           <Button
             label={running ? t('monitor.stop') : t('monitor.start')}
             variant={running ? 'destructive' : 'primary'}
-            loading={busy}
-            disabled={busy}
+            loading={viewModel.busy}
+            disabled={viewModel.busy}
             onPress={() => void viewModel.toggleMonitoring()}
           />
-          <Button
-            label={t('monitor.simulator')}
-            variant="secondary"
-            onPress={viewModel.openSimulator}
-          />
+        )}
+
+        <View style={styles.links}>
+          <TouchableOpacity onPress={viewModel.openHistory} hitSlop={10}>
+            <Text style={styles.link}>{t('monitor.history')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.linkDivider}>·</Text>
+          <TouchableOpacity onPress={viewModel.openSimulator} hitSlop={10}>
+            <Text style={styles.link}>{t('monitor.simulator')}</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </ScreenTemplate>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xxl },
-  heading: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
-  mapFrame: {
-    height: 280,
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
+  map: { flex: 1, overflow: 'hidden' },
   mapFallback: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
-    padding: spacing.lg,
-    gap: spacing.sm,
+    padding: spacing.xl,
   },
-  fallbackTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: '600' },
-  fallbackBody: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
+  fallbackText: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 20,
   },
-  stats: { flexDirection: 'row', gap: spacing.sm },
-  fixBox: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  fixLabel: { color: colors.textMuted, fontSize: fontSize.xs, textTransform: 'uppercase' },
-  fixValue: { color: colors.text, fontSize: fontSize.sm, fontVariant: ['tabular-nums'] },
-  fixHint: { color: colors.textSecondary, fontSize: fontSize.xs },
-  recent: { gap: spacing.sm },
-  sectionTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: '600' },
-  eventRow: {
+  statusPill: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    paddingVertical: spacing.sm,
+    backgroundColor: colors.overlayStrong,
+    borderRadius: radius.md,
+    paddingVertical: 10,
     paddingHorizontal: spacing.md,
   },
-  eventKind: { color: colors.primary, fontSize: fontSize.xs, fontWeight: '700', width: 92 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { flex: 1 },
+  statusLabel: { color: colors.text, fontSize: fontSize.sm, fontWeight: '600' },
+  statusDetail: { color: colors.text, opacity: 0.7, fontSize: fontSize.xs, marginTop: 1 },
+  eventPill: {
+    position: 'absolute',
+    bottom: 34,
+    left: spacing.md,
+    right: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.overlayStrong,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+  },
+  eventKind: { color: colors.success, fontSize: fontSize.xs, fontWeight: '700' },
   eventName: { color: colors.text, fontSize: fontSize.sm, flex: 1 },
   eventTime: { color: colors.textMuted, fontSize: fontSize.xs, fontVariant: ['tabular-nums'] },
-  actions: { gap: spacing.sm, marginTop: spacing.sm },
+  actions: { padding: spacing.md, gap: spacing.md },
+  links: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
+  link: { color: colors.textSecondary, fontSize: fontSize.sm },
+  linkDivider: { color: colors.textMuted, fontSize: fontSize.sm },
 });

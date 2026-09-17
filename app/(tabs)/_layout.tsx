@@ -15,12 +15,10 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarShowLabel: true,
         tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarItemStyle: styles.tabBarItem,
+        tabBarLabelStyle: styles.label,
       }}
     >
       <Tabs.Screen
@@ -34,14 +32,7 @@ export default function TabLayout() {
         name="companies"
         options={{
           title: t('tabs.companies'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="mappin.circle.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          title: t('tabs.events'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={22} name="building.2.fill" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -68,10 +59,8 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     elevation: 0,
-    height: 78,
+    height: 76,
     paddingTop: 8,
-    paddingBottom: 6,
   },
-  tabBarItem: { paddingVertical: 2 },
-  tabBarLabel: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+  label: { fontSize: 11, fontWeight: '500' },
 });

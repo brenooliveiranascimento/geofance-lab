@@ -591,7 +591,7 @@ keystore própria — mas não é o caso aqui.
 
 ### Sem sair do lugar — o simulador
 
-**Monitor → Abrir simulador**, ou **Ajustes → Simulador de rota**.
+**Monitor → Simulador**, ou **Ajustes → Simulador de rota**.
 
 Ele injeta uma rota sintética no mesmo pipeline que o GPS alimenta: mesma máquina de estados,
 mesma deduplicação, mesmas notificações. Não é um mock do resultado — é o caminho real, com uma
@@ -599,7 +599,7 @@ fonte de posições diferente.
 
 1. Escolha a empresa que você cadastrou.
 2. Escolha "Atravessar" e toque em *Executar rota*.
-3. Acompanhe a aba **Eventos**: devem aparecer, em ordem, entrada na empresa, entrada num cômodo,
+3. Abra **Monitor → Histórico**: devem aparecer, em ordem, entrada na empresa, entrada num cômodo,
    saída do cômodo, entrada no seguinte, saída dele e saída da empresa.
 
 Experimente também mudar a acurácia simulada para ±120 m: as leituras passam a ser descartadas e
@@ -655,7 +655,7 @@ vez de fingir que está ativo.
 
 Minimize, aguarde, e depois arraste o app para fora dos recentes. No Android o serviço em
 primeiro plano continua na maioria dos aparelhos; no iOS o sistema relança o app ao cruzar uma
-região. **Ajustes → Diagnóstico** mostra o log gravado durante o período — é assim que o
+região. **Histórico → Sistema** mostra o log gravado durante o período — é assim que o
 comportamento descrito acima foi observado, e não suposto.
 
 ---
@@ -712,7 +712,7 @@ src/
         notifier.ts                   notificação por transição
       components/CrosshairMap.tsx     mapa com pino fixo, usado no desenho
       tasks/                          TaskManager.defineTask
-      screens/                        Monitor · Empresas · Wizard · Editor · Eventos · Simulador
+      screens/                        Monitor · Empresas · Wizard · Editor · Histórico · Simulador
     messaging/
       services/
         sequencePlanner.ts            ← plano e diff                 [puro]

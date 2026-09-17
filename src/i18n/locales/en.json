@@ -25,54 +25,35 @@
     }
   },
   "monitor": {
-    "title": "Monitor",
     "start": "Start monitoring",
-    "stop": "Stop monitoring",
-    "started": "Monitoring {{regions}} regions",
-    "stopped": "Monitoring stopped",
-    "grant": "Grant",
-    "simulator": "Open simulator",
-    "recent": "Recent events",
-    "lastFix": "Last position",
-    "noPosition": "No position yet",
-    "status": {
-      "idle": {
-        "title": "Stopped",
-        "message": "No regions registered. Start monitoring to detect entries and exits."
-      },
-      "regions": {
-        "title": "Waiting",
-        "message": "{{total}} regions registered with the system. Continuous GPS is off — the device itself is doing the waiting."
-      },
-      "precise": {
-        "title": "High precision",
-        "message": "Inside {{total}} company(ies). Continuous GPS is on to resolve rooms."
-      },
-      "blocked": {
-        "title": "Permission needed",
-        "message": "Without \"always\" location access, monitoring cannot work while the app is closed."
-      },
-      "busy": {
-        "title": "One moment",
-        "message": "Applying changes."
-      }
-    },
+    "stop": "Stop",
+    "grant": "Grant access",
+    "simulator": "Simulator",
+    "noPosition": "Getting position",
     "startFailed": {
       "permissions": "Grant background location access to start",
       "no_companies": "Register a company before starting",
       "no_position": "Could not obtain a position"
     },
-    "stats": {
-      "companies": "Companies",
-      "companiesHint": "Registered",
-      "regions": "Regions",
-      "regionsHint": "Active window",
-      "inside": "Inside",
-      "insideNone": "None right now"
-    },
     "mapUnavailable": {
-      "title": "Map unavailable",
-      "body": "The Maps SDK for Android key is missing. Set EXPO_PUBLIC_GOOGLE_MAPS_API_KEY in .env and rebuild the APK. Monitoring works fine without it."
+      "body": "Map unavailable: the Google Maps key is missing from .env."
+    },
+    "addCompany": "Register a company",
+    "history": "History",
+    "label": {
+      "idle": "Stopped",
+      "empty": "No companies",
+      "regions": "Monitoring",
+      "precise": "You are inside",
+      "blocked": "Permission needed",
+      "busy": "Applying"
+    },
+    "detail": {
+      "idle": "{{total}} company(ies) registered",
+      "empty": "Register the first one to begin",
+      "regions": "{{total}} regions with the system · GPS idle",
+      "precise": "GPS active",
+      "blocked": "Needs \"always\" location access"
     }
   },
   "companies": {
@@ -86,21 +67,11 @@
     "create": "Register a company",
     "empty": {
       "title": "No companies yet",
-      "body": "Register a company, draw its perimeter on the map and mark out the rooms inside it. The app notifies you whenever you walk into any of them."
+      "body": "Draw the perimeter on the map and mark out the rooms."
     }
   },
   "events": {
-    "title": "Events",
-    "summary": "{{total}} records · {{entries}} entries · {{exits}} exits",
-    "clear": "Clear log",
     "cleared": "Log cleared",
-    "copy": "Copy as JSONL",
-    "copied": "Log copied",
-    "nothingToExport": "Nothing to export",
-    "empty": {
-      "title": "No events yet",
-      "body": "Start monitoring and walk into one of the companies, or use the simulator to play a route."
-    },
     "scope": {
       "all": "All",
       "companies": "Companies",
@@ -127,9 +98,9 @@
     "deleteCompany": "Delete company",
     "deleteTitle": "Delete company",
     "deleteBody": "Delete \"{{name}}\" and all of its rooms? Events already recorded stay in the log.",
-    "derivedHint": "Radius and active radius are derived from the perimeter: the circle is the trigger that wakes the app, and entry itself is decided by the polygon.",
+    "derivedHint": "Derived from the perimeter. The circle wakes the app; the polygon decides entry.",
     "outlineRedraw": "Redraw perimeter",
-    "outlineRedrawHint": "Mark the corners again. Rooms already registered must remain inside the new perimeter.",
+    "outlineRedrawHint": "The rooms must remain inside the new perimeter.",
     "fields": {
       "name": "Name",
       "radius": "Derived radius",
@@ -141,7 +112,7 @@
     },
     "rooms": {
       "title": "Rooms ({{total}})",
-      "explainer": "Rooms are polygons inside the company. Native circles do not work at this scale — below roughly 100 m iOS stops firing reliably — so they are resolved by point-in-polygon instead.",
+      "explainer": "Native circles do not work at this scale, so rooms are polygons.",
       "draw": "Add a room",
       "vertices": "{{total}} vertices"
     }
@@ -157,36 +128,36 @@
     "roomDefaultName": "Room {{index}}",
     "name": {
       "title": "Which company?",
-      "body": "The name appears in the entry and exit notifications.",
+      "body": "Shows up in the notifications.",
       "placeholder": "e.g. São Paulo HQ"
     },
     "outline": {
       "title": "Company perimeter",
-      "body": "Drag the map until the pin sits over a corner of the site and tap \"Add point\". Repeat for each corner — this way your finger never covers the target.",
+      "body": "Drag the map until the pin sits on a corner and tap \"Add point\".",
       "done": "Perimeter done"
     },
     "rooms": {
       "title": "Rooms",
-      "body": "Now mark out the internal areas. Each becomes its own named polygon and produces a notification when you walk into it.",
+      "body": "Each internal area becomes a named polygon.",
       "add": "Add a room",
       "emptyTitle": "No rooms yet",
-      "emptyBody": "You can finish without any: the company already notifies on entering and leaving the perimeter. Rooms can be added later.",
+      "emptyBody": "You can finish without any and add them later.",
       "vertices": "{{total}} vertices"
     },
     "roomDraw": {
       "title": "Room perimeter",
-      "body": "Same idea: put the pin on each corner of the room. The blue outline is the company perimeter, and the room has to fit inside it.",
+      "body": "The blue outline is the company. The room has to fit inside it.",
       "done": "Room done"
     },
     "roomName": {
       "title": "Room name",
-      "body": "This is the name the notification shows.",
+      "body": "Shows up in the notification.",
       "placeholder": "e.g. Reception",
       "save": "Save room"
     },
     "noPosition": {
       "title": "No position",
-      "body": "Could not obtain your location. Check the permission and that location services are on."
+      "body": "Check the permission and that location services are on."
     },
     "errors": {
       "name": "Enter a name with at least 2 characters",
@@ -199,24 +170,24 @@
     },
     "tangled": {
       "title": "The outline crosses itself",
-      "body": "The corners were marked out of order, so the edges cross. That will not do: the inside/outside rule starts treating part of the drawn area as external, and the area comes out wrong.",
+      "body": "The corners came out of order. A crossed outline makes the area and the detection wrong.",
       "action": "Reorder points",
-      "hint": "Reordering is a suggestion — the app finds an outline without crossings, but the same marks admit more than one shape. Check it on the map; if it is not what you meant, undo the points and mark them again."
+      "hint": "Check it on the map: the same points admit more than one shape."
     },
     "savedButNotMonitoring": "Company saved, but monitoring did not start. Check the permissions in Settings."
   },
   "simulator": {
     "title": "Simulator",
-    "intro": "Feeds a synthetic route through the same pipeline the GPS feeds: same state machine, same deduplication, same notifications. Lets you verify detection without leaving your desk.",
+    "intro": "Plays a synthetic route through the same pipeline the GPS feeds. Verifies detection from your desk.",
     "pickCompany": "Company",
     "routeKind": "Route",
     "accuracy": "Simulated accuracy",
-    "accuracyHint": "Readings worse than 100 m are discarded. Company entry is decided by the polygon, so a poor reading delays detection rather than faking it.",
+    "accuracyHint": "Above 100 m the reading is discarded.",
     "progress": "{{current}} of {{total}} positions",
     "start": "Play route",
     "stop": "Stop",
     "finished": "Route finished",
-    "footnote": "Positions are dated backwards from now, so real monitoring can resume straight afterwards without waiting.",
+    "footnote": "Positions are dated backwards, so real monitoring can carry on right after.",
     "kind": {
       "crossing": {
         "label": "Walk through",
@@ -229,7 +200,7 @@
     },
     "monitoringWarning": {
       "title": "Real monitoring is running",
-      "body": "Simulated positions will interleave with GPS ones. Stop monitoring on the Monitor tab for a clean test."
+      "body": "Stop monitoring on the Monitor tab for a clean test."
     }
   },
   "onboarding": {
@@ -238,34 +209,34 @@
     "finish": "Get started",
     "welcome": {
       "title": "Geofence Lab",
-      "body": "Register a company, draw its perimeter and the rooms inside it. The app tells you every time you enter or leave any of them — with the app open, backgrounded or closed."
+      "body": "Draw your company's perimeter and the rooms inside it. The app tells you when you enter and leave each one."
     },
     "how": {
       "title": "How it works",
-      "body": "Two tiers, so the battery is not spent waiting.",
-      "bullet1": "The operating system watches the nearest companies and wakes the app when you cross one.",
-      "bullet2": "Only then does continuous GPS start, to resolve which room you are in.",
-      "bullet3": "On the way out it stops again — at rest the app requests no position at all."
+      "body": "Two tiers, to spare the battery.",
+      "bullet1": "The system watches nearby companies and wakes the app.",
+      "bullet2": "Only then does the GPS start, to tell which room you are in.",
+      "bullet3": "On the way out it stops. At rest, no position is requested."
     },
     "location": {
       "title": "Always-on location",
-      "body": "To work while the app is closed, the system requires \"always\" access. The ordinary prompt comes first, then the background one — on Android that opens a settings page where you must pick \"Allow all the time\".",
+      "body": "The system asks for ordinary access first, then background. On Android the second opens a settings page — pick \"Allow all the time\".",
       "action": "Grant access",
       "resultForeground": "Foreground: {{status}}",
       "resultBackground": "Background: {{status}}",
-      "resultHint": "Without background access, detection only works while the app is open. You can grant it later in Settings."
+      "resultHint": "Without it, detection only works while the app is open. You can grant it later."
     },
     "notifications": {
       "title": "Notifications",
-      "body": "Every entry and exit becomes a local notification — that is how events surface when the app is not on screen. It all works offline.",
+      "body": "Every entry and exit becomes a local notification. Works offline.",
       "action": "Allow notifications"
     },
     "company": {
       "title": "Register your company",
-      "body": "Now the main part: marking on the map where the company is.",
-      "bullet1": "A pin fixed at the centre of the screen marks each corner of the perimeter.",
-      "bullet2": "Inside it, you mark out the rooms and name each one.",
-      "bullet3": "It takes under a minute and can be adjusted later.",
+      "body": "Mark on the map where it is.",
+      "bullet1": "A fixed pin marks each corner.",
+      "bullet2": "Then the rooms inside it.",
+      "bullet3": "Under a minute.",
       "action": "Register company"
     }
   },
@@ -278,7 +249,6 @@
     },
     "permissions": {
       "title": "Permissions",
-      "services": "Location services",
       "foreground": "Location (foreground)",
       "background": "Location (background)",
       "notifications": "Notifications",
@@ -287,27 +257,26 @@
       "openSettings": "Open settings",
       "backgroundMissing": {
         "title": "No background access",
-        "body": "The system only asks once. After a denial the only way through is to grant it manually in the device settings."
+        "body": "The system only asks once. After that, only through the device settings."
       }
     },
     "battery": {
       "title": "Battery optimisation",
-      "body": "Battery managers from some manufacturers kill the foreground service even when everything is configured correctly. Exempting the app is what keeps monitoring alive with the screen off.",
+      "body": "Some manufacturers kill the service with the screen off. Exempting the app avoids that.",
       "action": "Open battery settings"
     },
     "tools": {
       "title": "Tools",
       "simulator": "Route simulator",
-      "diagnostics": "Diagnostics"
+      "history": "History and log"
     },
     "data": {
       "title": "Data",
-      "clearEvents": "Clear events and log",
       "reset": "Erase everything and start over"
     },
     "reset": {
       "title": "Erase everything",
-      "body": "This stops monitoring and erases companies, rooms, state, events and the message sequence.",
+      "body": "Erases companies, rooms, events and the message sequence.",
       "confirm": "Erase",
       "done": "Everything erased"
     },
@@ -319,26 +288,9 @@
       "endpointEmpty": "not configured"
     }
   },
-  "diagnostics": {
-    "title": "Diagnostics",
-    "monitoring": "Monitoring",
-    "regions": "Registered regions",
-    "activeCompanies": "Active companies",
-    "companies": "Companies in database",
-    "events": "Recorded events",
-    "tasks": "Background tasks",
-    "registered": "registered",
-    "notRegistered": "not registered",
-    "log": "Log",
-    "logHint": "Background tasks run in a process with no console anyone can read. The log is written to the database so you can see what happened while the app was closed.",
-    "empty": "Log is empty",
-    "copy": "Copy log",
-    "copied": "Log copied",
-    "clear": "Clear log"
-  },
   "messages": {
     "title": "Messages",
-    "intro": "Two local notification sequences: onboarding, minutes after signup, and a daily one at a fixed hour. All offline, without duplicates, with delivery confirmations queued for retry.",
+    "intro": "Onboarding minutes after signup, then one message a day at a fixed hour. Offline, with retry.",
     "signUp": "Simulate signup",
     "sync": "Reconcile now",
     "synced": "{{scheduled}} scheduled · {{confirmed}} confirmations sent",
@@ -350,7 +302,7 @@
     "next": "Next message",
     "notEnrolled": {
       "title": "Not enrolled",
-      "body": "The whole plan derives from a single instant: the signup. Tap below to record it and schedule the sequence."
+      "body": "The whole plan derives from the signup instant."
     },
     "stats": {
       "scheduled": "Scheduled",
@@ -367,7 +319,7 @@
     "receipts": {
       "title": "Delivery confirmations",
       "endpoint": "Sending to {{endpoint}}",
-      "noEndpoint": "No endpoint configured. Set EXPO_PUBLIC_DELIVERY_ENDPOINT in .env to send confirmations; the queue is recorded locally regardless.",
+      "noEndpoint": "No endpoint in .env. The queue is still recorded.",
       "pending": "Queued",
       "confirmed": "Confirmed",
       "exhausted": "Exhausted",
@@ -393,6 +345,25 @@
     "body": {
       "perimeter": "Monitored perimeter",
       "distance": "{{meters}} m from the centre"
+    }
+  },
+  "history": {
+    "tab": {
+      "events": "Events",
+      "system": "System"
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "clear": "Clear",
+    "cleared": "Cleared",
+    "nothingToCopy": "Nothing to copy",
+    "monitoring": "Monitoring",
+    "regions": "Regions",
+    "registered": "active",
+    "notRegistered": "inactive",
+    "empty": {
+      "events": "No events yet",
+      "log": "Log is empty"
     }
   }
 }

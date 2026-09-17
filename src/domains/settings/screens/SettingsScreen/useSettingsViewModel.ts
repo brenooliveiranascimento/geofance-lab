@@ -43,7 +43,7 @@ export interface SettingsViewModel {
   busy: boolean;
   clearEventLog: () => void;
   resetEverything: () => void;
-  openDiagnostics: () => void;
+  openHistory: () => void;
   openSimulator: () => void;
 }
 
@@ -135,7 +135,7 @@ export function useSettingsViewModel(): SettingsViewModel {
     busy,
     clearEventLog,
     resetEverything,
-    openDiagnostics: () => router.push('/diagnostics'),
+    openHistory: () => router.push('/history'),
     openSimulator: () => router.push('/simulator'),
   };
 }

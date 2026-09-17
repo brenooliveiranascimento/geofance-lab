@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   field: { gap: spacing.xs },
-  label: { color: colors.textSecondary, fontSize: fontSize.xs, textTransform: 'uppercase' },
+  label: { color: colors.textSecondary, fontSize: fontSize.xs },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

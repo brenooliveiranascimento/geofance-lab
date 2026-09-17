@@ -17,6 +17,7 @@ export const colors = {
   error: '#EF4444',
 
   overlay: 'rgba(0, 0, 0, 0.6)',
+  overlayStrong: 'rgba(13, 13, 13, 0.85)',
 } as const;
 
 export const spacing = {

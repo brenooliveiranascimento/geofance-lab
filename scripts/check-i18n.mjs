@@ -9,6 +9,8 @@ const SOURCE_DIRS = ['src', 'app'];
 const DYNAMIC_KEYS = {
   'events.kind': ['company_enter', 'company_exit', 'room_enter', 'room_exit'],
   'events.scope': ['all', 'companies', 'rooms'],
+  'history.tab': ['events', 'system'],
+  'monitor.label': ['idle', 'empty', 'regions', 'precise', 'blocked', 'busy'],
   'events.source': ['native_region', 'location_update', 'simulator', 'initial_sync'],
   'messages.state': ['pending', 'scheduled', 'delivered', 'cancelled', 'failed'],
   'messages.receipts.state': ['pending', 'confirmed', 'exhausted'],
@@ -21,7 +23,6 @@ const DYNAMIC_KEYS = {
 };
 
 const DYNAMIC_TEMPLATES = [
-  { prefix: 'monitor.status', values: ['idle', 'regions', 'precise', 'blocked', 'busy'], suffixes: ['title', 'message'] },
   { prefix: 'simulator.kind', values: ['crossing', 'approach'], suffixes: ['label', 'hint'] },
   { prefix: 'onboarding', values: ['location', 'notifications', 'company'], suffixes: ['action'] },
 ];

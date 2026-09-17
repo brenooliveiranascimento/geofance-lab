@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
   active: { borderColor: colors.primary },
   warning: { borderColor: colors.warning },
-  label: { color: colors.textMuted, fontSize: fontSize.xs, textTransform: 'uppercase' },
+  label: { color: colors.textMuted, fontSize: fontSize.xs },
   value: { color: colors.text, fontSize: fontSize.lg, fontWeight: '700' },
   hint: { color: colors.textSecondary, fontSize: fontSize.xs },
 });

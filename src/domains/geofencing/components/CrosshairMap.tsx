@@ -63,6 +63,7 @@ export function CrosshairMap({
         style={StyleSheet.absoluteFill}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         initialRegion={initialRegion}
+        userInterfaceStyle="dark"
         showsUserLocation
         showsMyLocationButton={false}
         toolbarEnabled={false}
@@ -184,6 +185,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
   },
-  readoutLabel: { color: colors.textMuted, fontSize: 10, textTransform: 'uppercase' },
+  readoutLabel: { color: colors.textMuted, fontSize: 10 },
   readoutValue: { color: colors.text, fontSize: fontSize.xs, fontVariant: ['tabular-nums'] },
 });

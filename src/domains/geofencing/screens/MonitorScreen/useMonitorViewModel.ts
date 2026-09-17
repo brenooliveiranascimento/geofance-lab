@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Platform } from 'react-native';
+import { Linking } from 'react-native';
 
 import { queryNearest, type LatLng } from '@src/core/geo';
 import { requestMonitoringPermissions } from '@src/core/permissions';
@@ -9,38 +9,41 @@ import { useToast } from '@src/lib/toast';
 
 import { isMapAvailable } from '../../mapAvailability';
 import { invalidateGeofencingData, invalidatePermissions } from '../../queries/invalidate';
+import { useCompanies } from '../../queries/useCompanies';
+import { useCompanyStates } from '../../queries/useCompanyStates';
 import { useEvents } from '../../queries/useEvents';
 import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
 import { usePermissions } from '../../queries/usePermissions';
-import { useCompanyStates } from '../../queries/useCompanyStates';
-import { useCompanies } from '../../queries/useCompanies';
 import { getCompanyIndex, getRoomsByCompany } from '../../services/companyRepository';
 import { startMonitoring, stopMonitoring } from '../../services/monitorService';
-import type { GeofenceEvent, MonitorSnapshot, Company, Room, TargetState } from '../../types';
+import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '../../types';
 
-const MAP_COMPANY_LIMIT = 40;
+const MAP_COMPANY_LIMIT = 24;
 
-export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy';
+export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy' | 'empty';
 
 export interface MonitorViewModel {
   status: MonitorStatus;
-  statusTitle: string;
-  statusMessage: string;
+  statusLabel: string;
+  statusDetail: string;
   snapshot: MonitorSnapshot | undefined;
   totalCompanies: number;
-  insideNames: string[];
+  insideName: string | null;
   center: LatLng | null;
   mapCompanies: Company[];
   mapRooms: Room[];
   states: Map<string, TargetState>;
-  recentEvents: GeofenceEvent[];
+  lastEvent: GeofenceEvent | null;
   mapAvailable: boolean;
   busy: boolean;
   needsPermission: boolean;
+  running: boolean;
   toggleMonitoring: () => Promise<void>;
   grantPermissions: () => Promise<void>;
-  openSystemSettings: () => void;
+  openSettings: () => void;
   openSimulator: () => void;
+  openHistory: () => void;
+  openCompanies: () => void;
 }
 
 export function useMonitorViewModel(): MonitorViewModel {
@@ -53,31 +56,35 @@ export function useMonitorViewModel(): MonitorViewModel {
   const { data: permissions } = usePermissions();
   const { data: companies = [] } = useCompanies();
   const { data: states = new Map<string, TargetState>() } = useCompanyStates();
-  const { data: recentEvents = [] } = useEvents({ limit: 5 });
+  const { data: recent = [] } = useEvents({ limit: 1 });
 
-  const center = snapshot?.lastFix ?? snapshot?.origin ?? null;
+  const center = snapshot?.lastFix ?? snapshot?.origin ?? companies[0] ?? null;
 
   const mapCompanies = useMemo(() => {
     if (!center || companies.length === 0) return [];
-    return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((result) => result.item);
+    return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((r) => r.item);
   }, [center, companies.length]);
 
   const mapRooms = useMemo(() => {
     if (mapCompanies.length === 0) return [];
-    const grouped = getRoomsByCompany(mapCompanies.map((company) => company.id));
-    return [...grouped.values()].flat();
+    return [...getRoomsByCompany(mapCompanies.map((c) => c.id)).values()].flat();
   }, [mapCompanies]);
 
-  const insideNames = useMemo(() => {
-    const names: string[] = [];
+  const insideName = useMemo(() => {
     for (const state of states.values()) {
       if (state.state !== 'inside') continue;
-      if (state.targetKind === 'company') {
-        names.push(companies.find((company) => company.id === state.targetId)?.name ?? state.targetId);
+      if (state.targetKind === 'room') {
+        const room = mapRooms.find((r) => r.id === state.targetId);
+        if (room) return room.name;
       }
     }
-    return names;
-  }, [states, companies]);
+    for (const state of states.values()) {
+      if (state.state === 'inside' && state.targetKind === 'company') {
+        return companies.find((c) => c.id === state.targetId)?.name ?? null;
+      }
+    }
+    return null;
+  }, [states, companies, mapRooms]);
 
   const needsPermission = permissions
     ? permissions.foregroundLocation !== 'granted' ||
@@ -85,24 +92,25 @@ export function useMonitorViewModel(): MonitorViewModel {
       !permissions.locationServicesEnabled
     : false;
 
+  const running = snapshot?.running ?? false;
+
   const status: MonitorStatus = busy
     ? 'busy'
-    : needsPermission && !snapshot?.running
-      ? 'blocked'
-      : (snapshot?.tier ?? 'idle');
+    : companies.length === 0
+      ? 'empty'
+      : needsPermission && !running
+        ? 'blocked'
+        : (snapshot?.tier ?? 'idle');
 
   const toggleMonitoring = useCallback(async () => {
     setBusy(true);
     try {
-      if (snapshot?.running) {
+      if (running) {
         await stopMonitoring();
-        toast.show({ message: t('monitor.stopped') });
       } else {
         const result = await startMonitoring();
         if (!result.started) {
           toast.show({ message: t(`monitor.startFailed.${result.reason ?? 'permissions'}`) });
-        } else {
-          toast.show({ message: t('monitor.started', { regions: result.regionCount ?? 0 }) });
         }
       }
     } finally {
@@ -110,40 +118,49 @@ export function useMonitorViewModel(): MonitorViewModel {
       invalidateGeofencingData();
       invalidatePermissions();
     }
-  }, [snapshot?.running, t, toast]);
+  }, [running, t, toast]);
 
-  const grantPermissions = useCallback(async () => {
-    await requestMonitoringPermissions();
-    invalidatePermissions();
-  }, []);
-
-  const openSystemSettings = useCallback(() => {
-    void Linking.openSettings();
-  }, []);
+  const detail = useMemo(() => {
+    switch (status) {
+      case 'empty':
+        return t('monitor.detail.empty');
+      case 'blocked':
+        return t('monitor.detail.blocked');
+      case 'busy':
+        return '';
+      case 'precise':
+        return insideName ?? t('monitor.detail.precise');
+      case 'regions':
+        return t('monitor.detail.regions', { total: snapshot?.regionCount ?? 0 });
+      default:
+        return t('monitor.detail.idle', { total: companies.length });
+    }
+  }, [status, insideName, snapshot?.regionCount, companies.length, t]);
 
   return {
     status,
-    statusTitle: t(`monitor.status.${status}.title`),
-    statusMessage:
-      status === 'precise'
-        ? t('monitor.status.precise.message', { total: snapshot?.activeCompanyIds.length ?? 0 })
-        : status === 'regions'
-          ? t('monitor.status.regions.message', { total: snapshot?.regionCount ?? 0 })
-          : t(`monitor.status.${status}.message`),
+    statusLabel: t(`monitor.label.${status}`),
+    statusDetail: detail,
     snapshot,
     totalCompanies: companies.length,
-    insideNames,
+    insideName,
     center,
     mapCompanies,
     mapRooms,
     states,
-    recentEvents,
+    lastEvent: recent[0] ?? null,
     mapAvailable: isMapAvailable,
     busy,
     needsPermission,
+    running,
     toggleMonitoring,
-    grantPermissions,
-    openSystemSettings: Platform.OS === 'web' ? () => {} : openSystemSettings,
+    grantPermissions: async () => {
+      await requestMonitoringPermissions();
+      invalidatePermissions();
+    },
+    openSettings: () => void Linking.openSettings(),
     openSimulator: () => router.push('/simulator'),
+    openHistory: () => router.push('/history'),
+    openCompanies: () => router.push('/(tabs)/companies'),
   };
 }

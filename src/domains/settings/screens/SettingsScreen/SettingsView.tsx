@@ -2,8 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { Button, Text } from '@src/components/atoms';
-import { StatusBanner } from '@src/components/organisms';
+import { Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
 import { APP_CONFIG } from '@src/config/app';
 import type { PermissionState } from '@src/core/permissions';
@@ -21,13 +20,39 @@ interface RowProps {
   label: string;
   value: string;
   tone?: string;
+  onPress?: () => void;
 }
 
-function Row({ label, value, tone }: RowProps): React.JSX.Element {
-  return (
+function Row({ label, value, tone, onPress }: RowProps): React.JSX.Element {
+  const content = (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, tone ? { color: tone } : null]}>{value}</Text>
+      <Text style={[styles.rowValue, tone ? { color: tone } : null]} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+
+  return onPress ? (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.6}>
+      {content}
+    </TouchableOpacity>
+  ) : (
+    content
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.card}>{children}</View>
     </View>
   );
 }
@@ -47,157 +72,120 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>{t('settings.title')}</Text>
 
-        <Text style={styles.sectionTitle}>{t('settings.permissions.title')}</Text>
-        {permissions ? (
-          <View style={styles.card}>
-            <Row
-              label={t('settings.permissions.services')}
-              value={t(permissions.locationServicesEnabled ? 'common.on' : 'common.off')}
-              tone={permissions.locationServicesEnabled ? colors.success : colors.error}
-            />
-            <Row
-              label={t('settings.permissions.foreground')}
-              value={t(`permissions.state.${permissions.foregroundLocation}`)}
-              tone={STATE_COLOR[permissions.foregroundLocation]}
-            />
-            <Row
-              label={t('settings.permissions.background')}
-              value={t(`permissions.state.${permissions.backgroundLocation}`)}
-              tone={STATE_COLOR[permissions.backgroundLocation]}
-            />
-            <Row
-              label={t('settings.permissions.notifications')}
-              value={t(`permissions.state.${permissions.notifications}`)}
-              tone={STATE_COLOR[permissions.notifications]}
-            />
+        <Section title={t('settings.permissions.title')}>
+          {permissions ? (
+            <>
+              <Row
+                label={t('settings.permissions.foreground')}
+                value={t(`permissions.state.${permissions.foregroundLocation}`)}
+                tone={STATE_COLOR[permissions.foregroundLocation]}
+              />
+              <Row
+                label={t('settings.permissions.background')}
+                value={t(`permissions.state.${permissions.backgroundLocation}`)}
+                tone={STATE_COLOR[permissions.backgroundLocation]}
+              />
+              <Row
+                label={t('settings.permissions.notifications')}
+                value={t(`permissions.state.${permissions.notifications}`)}
+                tone={STATE_COLOR[permissions.notifications]}
+              />
+            </>
+          ) : null}
+
+          <TouchableOpacity
+            onPress={() =>
+              backgroundMissing
+                ? viewModel.openSystemSettings()
+                : void viewModel.requestPermissions()
+            }
+          >
+            <Text style={styles.action}>
+              {backgroundMissing
+                ? t('settings.permissions.openSettings')
+                : t('settings.permissions.requestLocation')}
+            </Text>
+          </TouchableOpacity>
+          {permissions?.notifications !== 'granted' ? (
+            <TouchableOpacity onPress={() => void viewModel.requestNotifications()}>
+              <Text style={styles.action}>{t('settings.permissions.requestNotifications')}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </Section>
+
+        <Section title={t('settings.language')}>
+          <View style={styles.chips}>
+            {viewModel.languages.map((code) => {
+              const active = viewModel.language === code;
+              return (
+                <TouchableOpacity key={code} onPress={() => viewModel.setLanguage(code)} hitSlop={8}>
+                  <Text style={[styles.chip, active && styles.chipActive]}>
+                    {t(`settings.languages.${code}`)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        ) : null}
+        </Section>
 
-        {backgroundMissing ? (
-          <StatusBanner
-            tone="warning"
-            title={t('settings.permissions.backgroundMissing.title')}
-            message={t('settings.permissions.backgroundMissing.body')}
-            actionLabel={t('settings.permissions.openSettings')}
-            onAction={viewModel.openSystemSettings}
-          />
-        ) : null}
-
-        <View style={styles.buttonRow}>
-          <Button
-            label={t('settings.permissions.requestLocation')}
-            variant="secondary"
-            onPress={() => void viewModel.requestPermissions()}
-            style={styles.grow}
-          />
-          <Button
-            label={t('settings.permissions.requestNotifications')}
-            variant="secondary"
-            onPress={() => void viewModel.requestNotifications()}
-            style={styles.grow}
-          />
-        </View>
-
-        {viewModel.showBatteryOptOut ? (
-          <>
-            <Text style={styles.sectionTitle}>{t('settings.battery.title')}</Text>
-            <Text style={styles.hint}>{t('settings.battery.body')}</Text>
-            <Button
-              label={t('settings.battery.action')}
-              variant="secondary"
-              onPress={() => void viewModel.openBatterySettings()}
-            />
-          </>
-        ) : null}
-
-        <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
-        <View style={styles.chips}>
-          {viewModel.languages.map((code) => {
-            const active = viewModel.language === code;
-            return (
-              <TouchableOpacity
-                key={code}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => viewModel.setLanguage(code)}
-              >
-                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {t(`settings.languages.${code}`)}
-                </Text>
+        <Section title={t('settings.tools.title')}>
+          <TouchableOpacity onPress={viewModel.openSimulator}>
+            <Text style={styles.action}>{t('settings.tools.simulator')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={viewModel.openHistory}>
+            <Text style={styles.action}>{t('settings.tools.history')}</Text>
+          </TouchableOpacity>
+          {viewModel.showBatteryOptOut ? (
+            <>
+              <TouchableOpacity onPress={() => void viewModel.openBatterySettings()}>
+                <Text style={styles.action}>{t('settings.battery.action')}</Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
+              <Text style={styles.note}>{t('settings.battery.body')}</Text>
+            </>
+          ) : null}
+        </Section>
 
-        <Text style={styles.sectionTitle}>{t('settings.tools.title')}</Text>
-        <Button
-          label={t('settings.tools.simulator')}
-          variant="secondary"
-          onPress={viewModel.openSimulator}
-        />
-        <Button
-          label={t('settings.tools.diagnostics')}
-          variant="secondary"
-          onPress={viewModel.openDiagnostics}
-        />
-
-        <Text style={styles.sectionTitle}>{t('settings.data.title')}</Text>
-        <Button
-          label={t('settings.data.clearEvents')}
-          variant="ghost"
-          onPress={viewModel.clearEventLog}
-        />
-        <Button
-          label={t('settings.data.reset')}
-          variant="destructive"
-          disabled={viewModel.busy}
-          onPress={viewModel.resetEverything}
-        />
-
-        <Text style={styles.sectionTitle}>{t('settings.about.title')}</Text>
-        <View style={styles.card}>
-          <Row label={t('settings.about.app')} value={APP_CONFIG.appName} />
+        <Section title={t('settings.about.title')}>
           <Row label={t('settings.about.version')} value={viewModel.appVersion} />
           <Row
             label={t('settings.about.endpoint')}
             value={viewModel.deliveryEndpoint || t('settings.about.endpointEmpty')}
           />
-        </View>
+          <TouchableOpacity onPress={viewModel.resetEverything} disabled={viewModel.busy}>
+            <Text style={[styles.action, styles.danger]}>{t('settings.data.reset')}</Text>
+          </TouchableOpacity>
+        </Section>
+
+        <Text style={styles.footer}>{APP_CONFIG.appName}</Text>
       </ScrollView>
     </ScreenTemplate>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xxl },
-  heading: { color: colors.text, fontSize: fontSize.xl, fontWeight: '700' },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    marginTop: spacing.lg,
+  content: { padding: spacing.md, paddingBottom: spacing.xxl },
+  heading: { color: colors.text, fontSize: fontSize.xxl, fontWeight: '700', marginBottom: spacing.lg },
+  section: { marginBottom: spacing.lg, gap: spacing.sm },
+  sectionTitle: { color: colors.textMuted, fontSize: fontSize.xs, fontWeight: '600' },
+  card: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    paddingVertical: 12,
   },
-  hint: { color: colors.textMuted, fontSize: fontSize.xs, lineHeight: 17 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md },
   rowLabel: { color: colors.textSecondary, fontSize: fontSize.sm, flex: 1 },
-  rowValue: { color: colors.text, fontSize: fontSize.sm, fontWeight: '600', flexShrink: 1 },
-  buttonRow: { flexDirection: 'row', gap: spacing.sm },
-  grow: { flex: 1 },
-  chips: { flexDirection: 'row', gap: spacing.xs },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+  rowValue: { color: colors.text, fontSize: fontSize.sm, fontWeight: '500', flexShrink: 1 },
+  action: { color: colors.primary, fontSize: fontSize.sm, paddingVertical: 12 },
+  danger: { color: colors.error },
+  note: { color: colors.textMuted, fontSize: fontSize.xs, lineHeight: 16, paddingBottom: 12 },
+  chips: { flexDirection: 'row', gap: spacing.lg, paddingVertical: 12 },
+  chip: { color: colors.textMuted, fontSize: fontSize.sm },
+  chipActive: { color: colors.text, fontWeight: '600' },
+  footer: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
-  chipActive: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
-  chipLabel: { color: colors.textSecondary, fontSize: fontSize.sm },
-  chipLabelActive: { color: colors.text, fontWeight: '600' },
 });

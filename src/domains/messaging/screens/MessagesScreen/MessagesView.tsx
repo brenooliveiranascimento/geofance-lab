@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  nextLabel: { color: colors.textMuted, fontSize: fontSize.xs, textTransform: 'uppercase' },
+  nextLabel: { color: colors.textMuted, fontSize: fontSize.xs },
   nextValue: { color: colors.text, fontSize: fontSize.sm, fontVariant: ['tabular-nums'] },
   actions: { gap: spacing.sm, marginTop: spacing.sm },
   sectionTitle: {
