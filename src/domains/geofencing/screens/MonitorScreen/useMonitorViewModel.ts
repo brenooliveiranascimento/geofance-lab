@@ -9,6 +9,7 @@ import { useToast } from '@src/lib/toast';
 
 import { isMapAvailable } from '../../mapAvailability';
 import { invalidateGeofencingData, invalidatePermissions } from '../../queries/invalidate';
+import { MAP_CONFIG } from '../../config';
 import { useCompanies } from '../../queries/useCompanies';
 import { useCompanyStates } from '../../queries/useCompanyStates';
 import { useEvents } from '../../queries/useEvents';
@@ -22,9 +23,6 @@ import {
 } from '../../services/monitorService';
 import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '../../types';
 
-const MAP_COMPANY_LIMIT = 24;
-const MAP_SPAN_MIN_METERS = 150;
-const MAP_SPAN_MAX_METERS = 1200;
 
 export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy' | 'empty';
 
@@ -90,16 +88,21 @@ export function useMonitorViewModel(): MonitorViewModel {
 
   const mapCompanies = useMemo(() => {
     if (!center || companies.length === 0) return [];
-    return queryNearest(getCompanyIndex(), center, MAP_COMPANY_LIMIT).map((r) => r.item);
+    return queryNearest(
+      getCompanyIndex(),
+      center,
+      MAP_CONFIG.companyLimit,
+      MAP_CONFIG.nearestSearchRadiusMeters,
+    ).map((r) => r.item);
   }, [center, companies.length]);
 
   const mapFocus = mapCompanies[0] ?? center;
 
   const mapSpanMeters = useMemo(() => {
     const nearest = mapCompanies[0];
-    if (!nearest) return MAP_SPAN_MAX_METERS;
+    if (!nearest) return MAP_CONFIG.spanMaxMeters;
     const span = nearest.activeRadius * 5;
-    return Math.min(Math.max(span, MAP_SPAN_MIN_METERS), MAP_SPAN_MAX_METERS);
+    return Math.min(Math.max(span, MAP_CONFIG.spanMinMeters), MAP_CONFIG.spanMaxMeters);
   }, [mapCompanies]);
 
   const mapRooms = useMemo(() => {

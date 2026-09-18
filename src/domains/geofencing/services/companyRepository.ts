@@ -58,7 +58,7 @@ const toRoom = (row: RoomRow): Room => ({
 let indexCache: GridIndex<Company> | null = null;
 let maxActiveRadiusCache: number | null = null;
 
-function invalidateCaches(): void {
+export function invalidateCompanyCaches(): void {
   indexCache = null;
   maxActiveRadiusCache = null;
 }
@@ -134,13 +134,13 @@ export function upsertCompany(company: Company): void {
       company.createdAt,
     ],
   );
-  invalidateCaches();
+  invalidateCompanyCaches();
   invalidateGeometry(company.id);
 }
 
 export function setCompanyEnabled(id: string, enabled: boolean): void {
   getDatabase().runSync('UPDATE companies SET enabled = ? WHERE id = ?;', enabled ? 1 : 0, id);
-  invalidateCaches();
+  invalidateCompanyCaches();
 }
 
 export function deleteCompany(id: string): void {
@@ -148,7 +148,7 @@ export function deleteCompany(id: string): void {
     db.runSync('DELETE FROM monitor_state WHERE company_id = ?;', id);
     db.runSync('DELETE FROM companies WHERE id = ?;', id);
   });
-  invalidateCaches();
+  invalidateCompanyCaches();
   invalidateGeometry();
 }
 
@@ -274,7 +274,7 @@ export function seedCompanies(payload: SeedPayload, { replace = true } = {}): nu
     return count;
   });
 
-  invalidateCaches();
+  invalidateCompanyCaches();
   invalidateGeometry();
   logger.info('companies', 'seeded dataset', { companies: inserted });
   return inserted;

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Platform } from 'react-native';
 
 import { resetDatabase } from '@src/core/db';
-import { clearLog } from '@src/core/logger';
+import { clearLog, logger } from '@src/core/logger';
 import {
   needsBatteryOptimizationOptOut,
   requestMonitoringPermissions,
@@ -19,9 +19,10 @@ import {
   invalidatePermissions,
 } from '@src/domains/geofencing/queries/invalidate';
 import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
+import { loadDemoDataset, removeDemoDataset } from '@src/domains/geofencing/services/demoDataset';
 import { clearEvents } from '@src/domains/geofencing/services/eventRepository';
 import { refreshNotificationChannel } from '@src/domains/geofencing/services/notifier';
-import { stopMonitoring } from '@src/domains/geofencing/services/monitorService';
+import { refreshMonitoring, stopMonitoring } from '@src/domains/geofencing/services/monitorService';
 import {
   cancelAllMessages,
   drainReceipts,
@@ -48,6 +49,8 @@ export interface SettingsViewModel {
   showBatteryOptOut: boolean;
   openBatterySettings: () => Promise<void>;
   appVersion: string;
+  loadDemoDataset: () => Promise<void>;
+  removeDemoDataset: () => Promise<void>;
   deliveryEndpoint: string;
   deliveryDraft: string;
   setDeliveryDraft: (value: string) => void;
@@ -122,6 +125,36 @@ export function useSettingsViewModel(): SettingsViewModel {
     toast.show({ message: t('events.cleared') });
   }, [t, toast]);
 
+  const loadDemo = useCallback(async () => {
+    setBusy(true);
+    try {
+      const total = loadDemoDataset();
+      invalidateGeofencingData();
+      await refreshMonitoring();
+      toast.show({ message: t('settings.tools.demoLoaded', { total }), type: 'success' });
+    } catch (error) {
+      logger.error('settings', 'could not load the demo dataset', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  }, [t, toast]);
+
+  const removeDemo = useCallback(async () => {
+    setBusy(true);
+    try {
+      const total = removeDemoDataset();
+      invalidateGeofencingData();
+      await refreshMonitoring();
+      toast.show({ message: t('settings.tools.demoRemoved', { total }), type: 'success' });
+    } catch (error) {
+      logger.error('settings', 'could not remove the demo dataset', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  }, [t, toast]);
+
   const resetEverything = useCallback(() => {
     Alert.alert(t('settings.reset.title'), t('settings.reset.body'), [
       { text: t('common.cancel'), style: 'cancel' },
@@ -191,6 +224,8 @@ export function useSettingsViewModel(): SettingsViewModel {
     showBatteryOptOut: needsBatteryOptimizationOptOut,
     openBatterySettings,
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
+    loadDemoDataset: loadDemo,
+    removeDemoDataset: removeDemo,
     deliveryEndpoint,
     deliveryDraft,
     setDeliveryDraft: (value) => {

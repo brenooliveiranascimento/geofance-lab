@@ -138,3 +138,29 @@ describe('queryWithinRadius', () => {
     expect([...distances].sort((a, b) => a - b)).toEqual(distances);
   });
 });
+
+describe('queryNearest with a distance bound', () => {
+  const points = makePoints(520);
+  const index = buildGridIndex(points, (p) => p);
+
+  it('stops at the bound and returns fewer than k', () => {
+    const origin = { latitude: -23.55, longitude: -46.63 };
+    const bounded = queryNearest(index, origin, 50, 2_000);
+
+    expect(bounded.length).toBeLessThan(50);
+    for (const result of bounded) {
+      expect(result.distanceMeters).toBeLessThanOrEqual(2_000);
+    }
+  });
+
+  it('agrees with the unbounded query when the bound is generous', () => {
+    const origin = { latitude: -23.55, longitude: -46.63 };
+    const bounded = queryNearest(index, origin, 10, 10_000_000).map((r) => r.item);
+
+    expect(bounded).toEqual(queryNearest(index, origin, 10).map((r) => r.item));
+  });
+
+  it('returns nothing when everything is beyond the bound', () => {
+    expect(queryNearest(index, { latitude: 51.5, longitude: -0.12 }, 10, 1_000)).toEqual([]);
+  });
+});

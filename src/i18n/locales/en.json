@@ -8,7 +8,8 @@
     "refresh": "Refresh",
     "save": "Save",
     "on": "On",
-    "off": "Off"
+    "off": "Off",
+    "unexpectedError": "Something went wrong. See History → System."
   },
   "tabs": {
     "monitor": "Monitor",
@@ -276,7 +277,12 @@
     "tools": {
       "title": "Tools",
       "simulator": "Route simulator",
-      "history": "History and log"
+      "history": "History and log",
+      "loadDemo": "Load the demo dataset",
+      "removeDemo": "Remove the demo dataset",
+      "demoHint": "{{total}} places across four cities, to exercise the platform region ceiling.",
+      "demoLoaded": "{{total}} places loaded",
+      "demoRemoved": "{{total}} places removed"
     },
     "data": {
       "title": "Data",

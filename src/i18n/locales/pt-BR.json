@@ -8,7 +8,8 @@
     "refresh": "Atualizar",
     "save": "Salvar",
     "on": "Ativado",
-    "off": "Desativado"
+    "off": "Desativado",
+    "unexpectedError": "Algo deu errado. Veja Histórico → Sistema."
   },
   "tabs": {
     "monitor": "Monitor",
@@ -276,7 +277,12 @@
     "tools": {
       "title": "Ferramentas",
       "simulator": "Simulador de rota",
-      "history": "Histórico e log"
+      "history": "Histórico e log",
+      "loadDemo": "Carregar dataset de demonstração",
+      "removeDemo": "Remover dataset de demonstração",
+      "demoHint": "{{total}} locais espalhados por quatro cidades, para exercitar o teto de regiões da plataforma.",
+      "demoLoaded": "{{total}} locais carregados",
+      "demoRemoved": "{{total}} locais removidos"
     },
     "data": {
       "title": "Dados",

@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { DEMO_DATASET_SIZE } from '@src/domains/geofencing/services/demoDataset';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Input, Text } from '@src/components/atoms';
@@ -135,6 +137,16 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
           <TouchableOpacity onPress={viewModel.openHistory}>
             <Text style={styles.action}>{t('settings.tools.history')}</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => void viewModel.loadDemoDataset()} disabled={viewModel.busy}>
+            <Text style={styles.action}>{t('settings.tools.loadDemo')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => void viewModel.removeDemoDataset()} disabled={viewModel.busy}>
+            <Text style={styles.action}>{t('settings.tools.removeDemo')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.note}>
+            {t('settings.tools.demoHint', { total: DEMO_DATASET_SIZE })}
+          </Text>
+
           {viewModel.showBatteryOptOut ? (
             <>
               <TouchableOpacity onPress={() => void viewModel.openBatterySettings()}>

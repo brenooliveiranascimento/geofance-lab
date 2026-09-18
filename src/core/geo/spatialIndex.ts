@@ -129,6 +129,7 @@ export function queryNearest<T>(
   index: GridIndex<T>,
   center: LatLng,
   k: number,
+  maxDistanceMeters = Number.POSITIVE_INFINITY,
 ): NeighborResult<T>[] {
   if (k <= 0 || index.size === 0 || index.bounds === null) return [];
 
@@ -141,12 +142,15 @@ export function queryNearest<T>(
   let visitedItems = 0;
 
   for (let ring = start; ring <= end; ring += 1) {
+    if (minDistanceAtRing(ring, cellSizeDegrees, center.latitude) > maxDistanceMeters) break;
+
     for (const key of cellsAtRing(centerRow, centerColumn, ring, bounds)) {
       const bucket = cells.get(key);
       if (!bucket) continue;
 
       for (const item of bucket) {
-        found.push({ item, distanceMeters: distanceMeters(center, getPoint(item)) });
+        const distance = distanceMeters(center, getPoint(item));
+        if (distance <= maxDistanceMeters) found.push({ item, distanceMeters: distance });
         visitedItems += 1;
       }
     }

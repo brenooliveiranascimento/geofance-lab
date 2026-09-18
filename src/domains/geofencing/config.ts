@@ -25,6 +25,13 @@ export const MONITOR_CONFIG = {
   },
 } as const;
 
+export const MAP_CONFIG = {
+  companyLimit: 24,
+  spanMinMeters: 150,
+  spanMaxMeters: 1_200,
+  nearestSearchRadiusMeters: 50_000,
+} as const;
+
 export const COMPANY_SHAPE = {
   exitBufferMeters: 25,
   minVertices: 3,
