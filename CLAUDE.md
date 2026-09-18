@@ -17,6 +17,7 @@ Expo SDK 54 · React Native 0.81 · TypeScript strict · Expo Router v6 ·
 
 ```
 app/                  rotas — re-exports de uma linha, sem lógica
+index.ts              entry do pacote: registra as tarefas antes do expo-router
 src/core/             db · geo (haversine, polígono, índice) · permissões · logger
 src/domains/
   geofencing/         empresas, cômodos e o monitoramento em background
@@ -54,9 +55,9 @@ src/components/       atoms · molecules · organisms · templates
 - **A lógica de decisão é pura e fica em `services/`**: `transitionEngine`, `regionReconciler`,
   `sequencePlanner`, `routeSimulator`. Sem I/O, sem React. É onde estão os testes, e é onde
   mudanças precisam de teste novo.
-- **Ao mexer em raio/raio ativo**, lembre que `activeRadius >= radius` é invariante: a folga
-  entre os dois é a banda morta que impede eventos repetidos na borda. Numa empresa os dois são
-  derivados do polígono — não peça ao usuário.
+- **`activeRadius >= radius` é invariante imposto pelo repositório**, que lança em vez de
+  gravar. A folga entre os dois é a banda morta que impede eventos repetidos na borda. Numa
+  empresa os dois são derivados do polígono — não peça ao usuário.
 - **Entrada numa empresa é decidida pelo polígono, não pelo círculo.** O círculo só existe para
   registrar a região nativa e acordar o app. Um local sem polígono cai na regra circular do
   enunciado, e essa via continua testada.
@@ -67,6 +68,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (206 testes)
+npm run verify    # typecheck + check:i18n + jest (227 testes)
 npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```
