@@ -1,7 +1,8 @@
 import { METERS_PER_DEGREE_LATITUDE } from '@src/core/geo';
 import type { Fix } from '@src/core/geo';
 
-import { evaluateFix, invalidateGeometry, type TransitionConfig } from '../transitionEngine';
+import { invalidateGeometry } from '../ringGeometry';
+import { evaluateFix, type TransitionConfig } from '../transitionEngine';
 import type { GeofenceEvent, Company, Room, TargetState } from '../../types';
 
 const CONFIG: TransitionConfig = {

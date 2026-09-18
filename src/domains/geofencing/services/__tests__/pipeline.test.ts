@@ -1,7 +1,8 @@
 import { buildGridIndex, queryWithinRadius, type Fix, type LatLng } from '@src/core/geo';
 
 import { DEFAULT_ROUTE_OPTIONS, buildCrossingRoute } from '../routeSimulator';
-import { evaluateFix, invalidateGeometry, type TransitionConfig } from '../transitionEngine';
+import { invalidateGeometry } from '../ringGeometry';
+import { evaluateFix, type TransitionConfig } from '../transitionEngine';
 import { selectRegions } from '../regionReconciler';
 import { MONITOR_CONFIG } from '../../config';
 import type { GeofenceEvent, Company, Room, TargetState } from '../../types';

@@ -303,8 +303,9 @@ export async function handleRegionEvent(
 
   if (isExit && !active.has(identifier)) {
     const known = loadStatesFor([identifier]).get(identifier);
-    if (!known || known.state === 'outside') {
-      logger.debug(TAG, 'exit for a region we were not inside, ignoring', {
+    if (!known) return;
+    if (known.state === 'outside') {
+      logger.debug(TAG, 'exit for a region we were already outside of, ignoring', {
         region: identifier,
       });
       return;

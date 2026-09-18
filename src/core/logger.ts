@@ -45,7 +45,8 @@ function write(level: LogLevel, tag: string, message: string, data?: unknown): v
         MAX_ENTRIES,
       );
     }
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn('[logger] could not write a log entry', error);
   }
 }
 
@@ -83,7 +84,8 @@ export function readLog(limit = 200): LogEntry[] {
         data: row.data,
         createdAt: row.created_at,
       }));
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn('[logger] could not read the log', error);
     return [];
   }
 }
@@ -91,6 +93,7 @@ export function readLog(limit = 200): LogEntry[] {
 export function clearLog(): void {
   try {
     getDatabase().runSync('DELETE FROM app_log;');
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn('[logger] could not clear the log', error);
   }
 }

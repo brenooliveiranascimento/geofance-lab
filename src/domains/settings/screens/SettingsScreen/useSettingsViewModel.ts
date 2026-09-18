@@ -88,10 +88,15 @@ export function useSettingsViewModel(): SettingsViewModel {
   const setLanguage = useCallback(
     (code: LanguageCode) => {
       setStoredLanguage(code);
-      void i18n.changeLanguage(code).then(async () => {
-        await Promise.all([rescheduleForLocale(), refreshNotificationChannel()]);
-        invalidateMessagingData();
-      });
+      void i18n
+        .changeLanguage(code)
+        .then(async () => {
+          await Promise.all([rescheduleForLocale(), refreshNotificationChannel()]);
+          invalidateMessagingData();
+        })
+        .catch((error: unknown) => {
+          logger.error('settings', 'could not apply the new language', { error: String(error) });
+        });
     },
     [setStoredLanguage],
   );

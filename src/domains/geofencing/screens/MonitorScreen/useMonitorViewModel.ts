@@ -5,6 +5,7 @@ import { Linking } from 'react-native';
 
 import { queryNearest, type LatLng } from '@src/core/geo';
 import { requestMonitoringPermissions } from '@src/core/permissions';
+import { logger } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 
 import { isMapAvailable } from '../../mapAvailability';
@@ -154,6 +155,9 @@ export function useMonitorViewModel(): MonitorViewModel {
           toast.show({ message: t(`monitor.startFailed.${result.reason ?? 'permissions'}`) });
         }
       }
+    } catch (error) {
+      logger.error('monitor', 'toggleMonitoring failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
     } finally {
       setBusy(false);
       invalidateGeofencingData();

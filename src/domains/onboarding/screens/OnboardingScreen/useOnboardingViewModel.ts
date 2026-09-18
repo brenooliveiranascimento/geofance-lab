@@ -7,7 +7,9 @@ import {
   requestNotificationPermission,
   type MonitoringPermissions,
 } from '@src/core/permissions';
+import { logger } from '@src/core/logger';
 import { invalidatePermissions } from '@src/domains/geofencing/queries/invalidate';
+import { useToast } from '@src/lib/toast';
 import { useStore } from '@src/store';
 
 import type { OnboardingStep } from '../../types';
@@ -26,6 +28,7 @@ export interface OnboardingViewModel {
 
 export function useOnboardingViewModel(): OnboardingViewModel {
   const { t } = useTranslation();
+  const toast = useToast();
   const setOnboardingCompleted = useStore((s) => s.setOnboardingCompleted);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -104,14 +107,17 @@ export function useOnboardingViewModel(): OnboardingViewModel {
           await requestNotificationPermission();
         }
         invalidatePermissions();
-      } finally {
+      } catch (error) {
+      logger.error('onboarding', 'advance failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
+    } finally {
         setBusy(false);
       }
     }
 
     if (isLast) finish();
     else setCurrentIndex((index) => index + 1);
-  }, [step, isLast, finish]);
+  }, [step, isLast, finish, t, toast]);
 
   return {
     steps,

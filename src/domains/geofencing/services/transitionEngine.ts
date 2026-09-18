@@ -1,11 +1,7 @@
-import {
-  boundingBoxOfRing,
-  distanceMeters,
-  distanceToRingMeters,
-  isPointInPolygon,
-  ringCentroid,
-} from '@src/core/geo';
-import type { BoundingBox, Fix, LatLng, Ring } from '@src/core/geo';
+import { distanceMeters, distanceToRingMeters, isPointInPolygon } from '@src/core/geo';
+import type { Fix, Ring } from '@src/core/geo';
+
+import { ringGeometry } from './ringGeometry';
 
 import type {
   EventSource,
@@ -44,30 +40,6 @@ export interface EvaluateResult {
 
 const OUTSIDE: PresenceState = 'outside';
 const INSIDE: PresenceState = 'inside';
-
-interface RingGeometry {
-  box: BoundingBox | null;
-  centroid: LatLng | null;
-}
-
-const geometryCache = new Map<string, RingGeometry>();
-
-function ringGeometry(id: string, ring: Ring): RingGeometry {
-  const cached = geometryCache.get(id);
-  if (cached) return cached;
-
-  const geometry: RingGeometry = {
-    box: boundingBoxOfRing(ring),
-    centroid: ringCentroid(ring),
-  };
-  geometryCache.set(id, geometry);
-  return geometry;
-}
-
-export function invalidateGeometry(id?: string): void {
-  if (id) geometryCache.delete(id);
-  else geometryCache.clear();
-}
 
 function resolveOccupiedRoom(fix: Fix, rooms: readonly Room[]): string | null {
   let bestId: string | null = null;

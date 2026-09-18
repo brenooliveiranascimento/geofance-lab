@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { logger } from '@src/core/logger';
 import { requestNotificationPermission } from '@src/core/permissions';
 import { invalidatePermissions } from '@src/domains/geofencing/queries/invalidate';
 import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
@@ -63,6 +64,9 @@ export function useMessagesViewModel(): MessagesViewModel {
       const summary = await reconcileSchedule();
       invalidateMessagingData();
       toast.show({ message: t('messages.enrolled', { total: summary.scheduled }), type: 'success' });
+    } catch (error) {
+      logger.error('messages', 'signUp failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
     } finally {
       setBusy(false);
     }
@@ -75,6 +79,9 @@ export function useMessagesViewModel(): MessagesViewModel {
       resetEnrolment();
       invalidateMessagingData();
       toast.show({ message: t('messages.reset') });
+    } catch (error) {
+      logger.error('messages', 'reset failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
     } finally {
       setBusy(false);
     }
@@ -92,6 +99,9 @@ export function useMessagesViewModel(): MessagesViewModel {
           confirmed: drained.confirmed,
         }),
       });
+    } catch (error) {
+      logger.error('messages', 'sync failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
     } finally {
       setBusy(false);
     }
@@ -104,6 +114,9 @@ export function useMessagesViewModel(): MessagesViewModel {
       const drained = await drainReceipts();
       invalidateMessagingData();
       toast.show({ message: t('messages.retried', { requeued, confirmed: drained.confirmed }) });
+    } catch (error) {
+      logger.error('messages', 'retryReceipts failed', { error: String(error) });
+      toast.show({ message: t('common.unexpectedError'), type: 'error' });
     } finally {
       setBusy(false);
     }
