@@ -248,11 +248,14 @@ A janela entrega **40** notificações ao SO — o plano inteiro de 33 cabe, com
 
 ### Subtítulo
 
-O enunciado pede `Semana X; Mensagem Y de Z` no subtítulo. O `content.subtitle` do
-expo-notifications é **exclusivo do iOS** — no Android o `setSubText` não é exposto. O planner
-monta a string uma vez; no iOS ela vai como subtítulo, no Android como primeira linha do corpo.
-Consequência a registrar: na bandeja recolhida do Android aparece essa linha, e o conteúdo da
-mensagem só ao expandir.
+O enunciado pede `Semana X; Mensagem Y de Z` no subtítulo. O planner monta a string uma vez e
+ela vai no campo `subtitle` nos dois sistemas: no iOS vira o subtítulo do `UNNotificationContent`,
+no Android o `setSubText`, que aparece no cabeçalho da notificação ao lado do nome do app.
+Verificado na bandeja do emulador: `android.subText=Mensagem 1 de 5`, com o corpo carregando
+apenas o texto da mensagem.
+
+Onde exatamente o `subText` aparece depende do fabricante e da versão do Android — é o campo que
+a plataforma oferece para esse papel, e não há garantia de posição.
 
 ### Confirmação de entrega
 
@@ -349,7 +352,6 @@ _layout → tasks`); agora são dois níveis síncronos (`entry → index.ts →
 | relança o app terminado para evento de região | o caminho headless precisa funcionar |
 | reporta estado inicial de todas as regiões a cada startup | chave de idempotência persistida |
 | 64 notificações locais pendentes | janela de 40 |
-| `content.subtitle` é exclusivo do iOS | no Android vira primeira linha do corpo |
 | `BGTaskScheduler` exige identificador no `Info.plist` | plugin `expo-background-task` habilitado |
 
 ### Android
@@ -363,6 +365,7 @@ _layout → tasks`); agora são dois níveis síncronos (`entry → index.ts →
 | janela de início de FGS após broadcast expira | falha ao subir a camada 2 é tratada, não fatal |
 | gerenciadores de bateria de fabricante | atalho para as configurações via `expo-intent-launcher` |
 | `expo-task-manager` registra receiver de `BOOT_COMPLETED` | as geofences são re-armadas após reiniciar |
+| `subtitle` vira `setSubText`, cuja posição varia por fabricante | o texto está no campo certo, a renderização não é garantida |
 
 ### Ambas
 

@@ -49,18 +49,10 @@ async function ensureChannel(): Promise<void> {
 }
 
 function contentFor(message: PlannedMessage): Notifications.NotificationContentInput {
-  if (Platform.OS === 'ios') {
-    return {
-      title: message.title,
-      subtitle: message.subtitle,
-      body: message.body,
-      data: { sequence: message.sequence, position: message.position, messageId: message.messageId },
-    };
-  }
-
   return {
     title: message.title,
-    body: `${message.subtitle}\n${message.body}`,
+    subtitle: message.subtitle,
+    body: message.body,
     data: { sequence: message.sequence, position: message.position, messageId: message.messageId },
   };
 }
@@ -212,9 +204,7 @@ function recordObservedDelivery(notification: Notifications.Notification): void 
 
   if (!data?.sequence || typeof data.position !== 'number') return;
 
-  const subtitle =
-    notification.request.content.subtitle ??
-    (notification.request.content.body ?? '').split('\n')[0];
+  const subtitle = notification.request.content.subtitle ?? '';
 
   const recorded = recordDelivery(
     data.sequence,
