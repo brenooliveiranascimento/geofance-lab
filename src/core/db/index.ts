@@ -1,6 +1,6 @@
 import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 
-import { MIGRATIONS } from './schema';
+import { MIGRATIONS } from '@src/core/db/schema';
 
 export const DATABASE_NAME = 'geofence-lab.db';
 

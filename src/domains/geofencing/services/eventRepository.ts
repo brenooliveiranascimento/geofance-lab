@@ -1,7 +1,7 @@
 import { getDatabase, transaction } from '@src/core/db';
 
-import { saveStates } from './stateRepository';
-import type { EventSource, GeofenceEvent, GeofenceEventKind, TargetState } from '../types';
+import { saveStates } from '@src/domains/geofencing/services/stateRepository';
+import type { EventSource, GeofenceEvent, GeofenceEventKind, TargetState } from '@src/domains/geofencing/types';
 
 interface EventRow {
   id: number;

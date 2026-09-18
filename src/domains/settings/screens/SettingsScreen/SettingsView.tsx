@@ -10,7 +10,7 @@ import { APP_CONFIG } from '@src/config/app';
 import type { PermissionState } from '@src/core/permissions';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { SettingsViewModel } from './useSettingsViewModel';
+import type { SettingsViewModel } from '@src/domains/settings/screens/SettingsScreen/useSettingsViewModel';
 
 const STATE_COLOR: Record<PermissionState, string> = {
   granted: colors.success,

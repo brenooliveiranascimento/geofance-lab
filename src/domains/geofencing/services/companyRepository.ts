@@ -2,8 +2,8 @@ import { getDatabase, transaction } from '@src/core/db';
 import { buildGridIndex, type GridIndex, type LatLng, type Ring } from '@src/core/geo';
 import { logger } from '@src/core/logger';
 
-import { invalidateGeometry } from './ringGeometry';
-import type { Company, Room } from '../types';
+import { invalidateGeometry } from '@src/domains/geofencing/services/ringGeometry';
+import type { Company, Room } from '@src/domains/geofencing/types';
 
 interface CompanyRow {
   id: string;

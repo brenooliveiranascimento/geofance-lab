@@ -1,7 +1,7 @@
 import { getDatabase, readJson, transaction, writeJson } from '@src/core/db';
 
-import { MESSAGING_KEYS } from '../config';
-import type { ScheduleState, ScheduledMessage, SequenceId } from '../types';
+import { MESSAGING_KEYS } from '@src/domains/messaging/config';
+import type { ScheduleState, ScheduledMessage, SequenceId } from '@src/domains/messaging/types';
 
 interface ScheduleRow {
   sequence: SequenceId;

@@ -3,9 +3,9 @@ import * as Network from 'expo-network';
 import { getDatabase, readJson, writeJson } from '@src/core/db';
 import { logger } from '@src/core/logger';
 
-import { slotKey } from './sequencePlanner';
-import { DELIVERY_ENDPOINT_DEFAULT, MESSAGING_CONFIG, MESSAGING_KEYS } from '../config';
-import type { DeliveryReceipt, ReceiptState, SequenceId } from '../types';
+import { slotKey } from '@src/domains/messaging/services/sequencePlanner';
+import { DELIVERY_ENDPOINT_DEFAULT, MESSAGING_CONFIG, MESSAGING_KEYS } from '@src/domains/messaging/config';
+import type { DeliveryReceipt, ReceiptState, SequenceId } from '@src/domains/messaging/types';
 
 const TAG = 'receipts';
 

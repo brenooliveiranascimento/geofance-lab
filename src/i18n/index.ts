@@ -2,8 +2,8 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 
-import en from './locales/en.json';
-import ptBR from './locales/pt-BR.json';
+import en from '@src/i18n/locales/en.json';
+import ptBR from '@src/i18n/locales/pt-BR.json';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '@src/domains/settings/types';
 import { mmkvStorage } from '@src/lib/storage/mmkv';
 

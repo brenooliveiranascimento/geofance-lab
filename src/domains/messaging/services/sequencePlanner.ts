@@ -1,4 +1,4 @@
-import type { MessageDefinition, PlannedMessage, ScheduledMessage, SequenceId } from '../types';
+import type { MessageDefinition, PlannedMessage, ScheduledMessage, SequenceId } from '@src/domains/messaging/types';
 
 export interface PlannerConfig {
   onboarding: { offsetsMinutes: readonly number[] };

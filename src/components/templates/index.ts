@@ -1,1 +1,1 @@
-export { ScreenTemplate, type ScreenTemplateProps } from './ScreenTemplate';
+export { ScreenTemplate, type ScreenTemplateProps } from '@src/components/templates/ScreenTemplate';

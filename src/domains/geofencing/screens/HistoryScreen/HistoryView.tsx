@@ -7,8 +7,8 @@ import { ScreenTemplate } from '@src/components/templates';
 import { formatTimeWithSeconds as time } from '@src/lib/format';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { GeofenceEvent } from '../../types';
-import type { EventScope, HistoryTab, HistoryViewModel } from './useHistoryViewModel';
+import type { GeofenceEvent } from '@src/domains/geofencing/types';
+import type { EventScope, HistoryTab, HistoryViewModel } from '@src/domains/geofencing/screens/HistoryScreen/useHistoryViewModel';
 
 const TABS: HistoryTab[] = ['events', 'system'];
 const SCOPES: EventScope[] = ['all', 'companies', 'rooms'];

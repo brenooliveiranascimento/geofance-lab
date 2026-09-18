@@ -5,16 +5,16 @@ import { useTranslation } from 'react-i18next';
 import type { Fix } from '@src/core/geo';
 import { useToast } from '@src/lib/toast';
 
-import { invalidateGeofencingData } from '../../queries/invalidate';
-import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
-import { useCompanies } from '../../queries/useCompanies';
-import { submitSimulatedFix } from '../../services/monitorService';
+import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
+import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
+import { useCompanies } from '@src/domains/geofencing/queries/useCompanies';
+import { submitSimulatedFix } from '@src/domains/geofencing/services/monitorService';
 import {
   DEFAULT_ROUTE_OPTIONS,
   buildApproachRoute,
   buildCrossingRoute,
-} from '../../services/routeSimulator';
-import type { Company } from '../../types';
+} from '@src/domains/geofencing/services/routeSimulator';
+import type { Company } from '@src/domains/geofencing/types';
 
 export type RouteKind = 'crossing' | 'approach';
 

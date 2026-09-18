@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { listStatesForUi } from '../services/stateRepository';
-import type { TargetState } from '../types';
+import { listStatesForUi } from '@src/domains/geofencing/services/stateRepository';
+import type { TargetState } from '@src/domains/geofencing/types';
 
 export const COMPANY_STATES_KEY = ['company-states'] as const;
 

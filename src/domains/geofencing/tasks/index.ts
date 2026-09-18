@@ -3,8 +3,8 @@ import * as TaskManager from 'expo-task-manager';
 
 import { logger } from '@src/core/logger';
 
-import { GEOFENCING_TASK, LOCATION_TASK } from '../config';
-import { handleFixes, handleRegionEvent } from '../services/monitorService';
+import { GEOFENCING_TASK, LOCATION_TASK } from '@src/domains/geofencing/config';
+import { handleFixes, handleRegionEvent } from '@src/domains/geofencing/services/monitorService';
 
 interface GeofencingPayload {
   eventType: Location.GeofencingEventType;

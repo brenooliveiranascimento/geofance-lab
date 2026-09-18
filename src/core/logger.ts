@@ -1,4 +1,4 @@
-import { getDatabase } from './db';
+import { getDatabase } from '@src/core/db';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

@@ -1,4 +1,4 @@
-import type { BoundingBox, LatLng } from './types';
+import type { BoundingBox, LatLng } from '@src/core/geo/types';
 
 export const EARTH_RADIUS_M = 6371008.8;
 

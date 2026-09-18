@@ -6,9 +6,9 @@ import { Icon, Text } from '@src/components/atoms';
 import type { LatLng } from '@src/core/geo';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import { DARK_MAP_STYLE } from './mapStyle';
-import { regionFor } from './mapRegion';
-import type { Company, Room, TargetState } from '../types';
+import { DARK_MAP_STYLE } from '@src/domains/geofencing/components/mapStyle';
+import { regionFor } from '@src/domains/geofencing/components/mapRegion';
+import type { Company, Room, TargetState } from '@src/domains/geofencing/types';
 
 export interface CompaniesMapProps {
   center: LatLng | null;

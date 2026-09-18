@@ -7,7 +7,7 @@ import { StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { RouteKind, SimulatorViewModel } from './useSimulatorViewModel';
+import type { RouteKind, SimulatorViewModel } from '@src/domains/geofencing/screens/SimulatorScreen/useSimulatorViewModel';
 
 const ROUTE_KINDS: RouteKind[] = ['crossing', 'approach'];
 const ACCURACIES = [5, 15, 40, 120];

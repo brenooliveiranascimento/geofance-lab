@@ -1,9 +1,9 @@
 import { resetDatabase } from '@src/core/db';
 
-import { assertRadii, upsertCompany, setCompanyEnabled } from '../companyRepository';
-import { commitEvaluation, listEvents } from '../eventRepository';
-import { loadOccupiedCompanyIds, loadStatesFor, saveStates } from '../stateRepository';
-import type { Company, GeofenceEvent, TargetState } from '../../types';
+import { assertRadii, upsertCompany, setCompanyEnabled } from '@src/domains/geofencing/services/companyRepository';
+import { commitEvaluation, listEvents } from '@src/domains/geofencing/services/eventRepository';
+import { loadOccupiedCompanyIds, loadStatesFor, saveStates } from '@src/domains/geofencing/services/stateRepository';
+import type { Company, GeofenceEvent, TargetState } from '@src/domains/geofencing/types';
 
 const company = (id: string, enabled = true): Company => ({
   id,

@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { queryClient } from '@src/lib/query/client';
 
-import { listReceipts } from '../services/receiptSender';
-import { readMessagingSnapshot, readPlanWithState } from '../services/scheduler';
-import type { DeliveryReceipt, MessagingSnapshot, PlannedMessage } from '../types';
+import { listReceipts } from '@src/domains/messaging/services/receiptSender';
+import { readMessagingSnapshot, readPlanWithState } from '@src/domains/messaging/services/scheduler';
+import type { DeliveryReceipt, MessagingSnapshot, PlannedMessage } from '@src/domains/messaging/types';
 
 export const MESSAGING_KEY = ['messaging'] as const;
 

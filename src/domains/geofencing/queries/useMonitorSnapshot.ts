@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { readSnapshot } from '../services/monitorService';
-import type { MonitorSnapshot } from '../types';
+import { readSnapshot } from '@src/domains/geofencing/services/monitorService';
+import type { MonitorSnapshot } from '@src/domains/geofencing/types';
 
 export const MONITOR_SNAPSHOT_KEY = ['monitor-snapshot'] as const;
 

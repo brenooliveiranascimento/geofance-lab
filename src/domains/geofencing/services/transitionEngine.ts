@@ -1,7 +1,7 @@
 import { distanceMeters, distanceToRingMeters, isPointInPolygon } from '@src/core/geo';
 import type { Fix, Ring } from '@src/core/geo';
 
-import { ringGeometry } from './ringGeometry';
+import { ringGeometry } from '@src/domains/geofencing/services/ringGeometry';
 
 import type {
   EventSource,
@@ -11,7 +11,7 @@ import type {
   PresenceState,
   Room,
   TargetState,
-} from '../types';
+} from '@src/domains/geofencing/types';
 
 export interface TransitionConfig {
   maxAccuracyMeters: number;

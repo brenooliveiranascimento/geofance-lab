@@ -9,7 +9,7 @@ import { StatCard, StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { MessagesViewModel } from './useMessagesViewModel';
+import type { MessagesViewModel } from '@src/domains/messaging/screens/MessagesScreen/useMessagesViewModel';
 
 const STATE_COLOR: Record<string, string> = {
   delivered: colors.success,

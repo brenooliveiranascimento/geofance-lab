@@ -6,7 +6,7 @@ import { Button, Icon, Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import type { OnboardingViewModel } from './useOnboardingViewModel';
+import type { OnboardingViewModel } from '@src/domains/onboarding/screens/OnboardingScreen/useOnboardingViewModel';
 
 export interface OnboardingViewProps {
   viewModel: OnboardingViewModel;

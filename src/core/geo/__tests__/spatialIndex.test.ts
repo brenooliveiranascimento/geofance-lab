@@ -1,11 +1,11 @@
-import { distanceMeters } from '../haversine';
+import { distanceMeters } from '@src/core/geo/haversine';
 import {
   DEFAULT_CELL_SIZE_DEGREES,
   buildGridIndex,
   queryNearest,
   queryWithinRadius,
-} from '../spatialIndex';
-import type { LatLng } from '../types';
+} from '@src/core/geo/spatialIndex';
+import type { LatLng } from '@src/core/geo/types';
 
 interface Point extends LatLng {
   id: string;

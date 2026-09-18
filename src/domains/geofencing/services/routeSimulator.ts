@@ -1,6 +1,6 @@
 import { METERS_PER_DEGREE_LATITUDE, metersPerDegreeLongitude, type Fix } from '@src/core/geo';
 
-import type { Company } from '../types';
+import type { Company } from '@src/domains/geofencing/types';
 
 export interface RouteOptions {
   steps: number;

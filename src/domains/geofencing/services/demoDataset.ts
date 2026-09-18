@@ -2,7 +2,7 @@ import { transaction } from '@src/core/db';
 import { logger } from '@src/core/logger';
 
 import dataset from '@src/__fixtures__/companies.json';
-import { invalidateCompanyCaches, seedCompanies, type SeedPayload } from './companyRepository';
+import { invalidateCompanyCaches, seedCompanies, type SeedPayload } from '@src/domains/geofencing/services/companyRepository';
 
 const TAG = 'demo-dataset';
 

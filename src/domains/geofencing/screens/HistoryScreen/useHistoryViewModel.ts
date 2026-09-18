@@ -8,13 +8,13 @@ import { useTranslation } from 'react-i18next';
 import { clearLog, readLog, type LogEntry } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 
-import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG } from '../../config';
-import { invalidateGeofencingData } from '../../queries/invalidate';
-import { useEvents } from '../../queries/useEvents';
-import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
-import { clearEvents, exportEventsAsJsonl } from '../../services/eventRepository';
+import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG } from '@src/domains/geofencing/config';
+import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
+import { useEvents } from '@src/domains/geofencing/queries/useEvents';
+import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
+import { clearEvents, exportEventsAsJsonl } from '@src/domains/geofencing/services/eventRepository';
 import { MESSAGING_TASK } from '@src/domains/messaging/config';
-import type { GeofenceEvent, GeofenceEventKind } from '../../types';
+import type { GeofenceEvent, GeofenceEventKind } from '@src/domains/geofencing/types';
 
 export type HistoryTab = 'events' | 'system';
 export type EventScope = 'all' | 'companies' | 'rooms';

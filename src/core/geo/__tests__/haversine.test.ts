@@ -4,7 +4,7 @@ import {
   distanceMeters,
   isInBoundingBox,
   metersPerDegreeLongitude,
-} from '../haversine';
+} from '@src/core/geo/haversine';
 
 describe('distanceMeters', () => {
   it('returns zero for the same point', () => {

@@ -1,8 +1,8 @@
 import { METERS_PER_DEGREE_LATITUDE, distanceMeters } from '@src/core/geo';
 import type { LatLng } from '@src/core/geo';
 
-import { regionsEqual, selectRegions, type SelectRegionsOptions } from '../regionReconciler';
-import type { Company } from '../../types';
+import { regionsEqual, selectRegions, type SelectRegionsOptions } from '@src/domains/geofencing/services/regionReconciler';
+import type { Company } from '@src/domains/geofencing/types';
 
 const ORIGIN: LatLng = { latitude: -23.55, longitude: -46.63 };
 

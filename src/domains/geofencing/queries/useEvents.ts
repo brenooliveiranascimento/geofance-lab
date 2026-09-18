@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { listEvents, type EventFilter } from '../services/eventRepository';
-import type { GeofenceEvent } from '../types';
+import { listEvents, type EventFilter } from '@src/domains/geofencing/services/eventRepository';
+import type { GeofenceEvent } from '@src/domains/geofencing/types';
 
 export const EVENTS_KEY = ['events'] as const;
 

@@ -7,8 +7,8 @@ import { ScreenTemplate } from '@src/components/templates';
 import { formatTime } from '@src/lib/format';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import { CompaniesMap } from '../../components/CompaniesMap';
-import type { MonitorViewModel } from './useMonitorViewModel';
+import { CompaniesMap } from '@src/domains/geofencing/components/CompaniesMap';
+import type { MonitorViewModel } from '@src/domains/geofencing/screens/MonitorScreen/useMonitorViewModel';
 
 const DOT_COLOR: Record<string, string> = {
   idle: colors.textMuted,

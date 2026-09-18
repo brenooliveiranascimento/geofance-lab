@@ -5,8 +5,8 @@ import {
   buildApproachRoute,
   buildCrossingRoute,
   type RouteOptions,
-} from '../routeSimulator';
-import type { Company } from '../../types';
+} from '@src/domains/geofencing/services/routeSimulator';
+import type { Company } from '@src/domains/geofencing/types';
 
 const COMPANY: Company = {
   id: 'home',

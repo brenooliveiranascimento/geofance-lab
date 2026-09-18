@@ -1,7 +1,7 @@
 import i18n from '@src/i18n';
 
-import type { MessageDefinition } from '../types';
-import type { SubtitleFormatter } from '../services/sequencePlanner';
+import type { MessageDefinition } from '@src/domains/messaging/types';
+import type { SubtitleFormatter } from '@src/domains/messaging/services/sequencePlanner';
 
 export const ONBOARDING_MESSAGE_IDS = ['onb-01', 'onb-02', 'onb-03', 'onb-04', 'onb-05'] as const;
 

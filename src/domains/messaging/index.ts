@@ -1,6 +1,6 @@
-export * from './types';
-export { MESSAGING_CONFIG } from './config';
-export { registerMessagingTask } from './tasks';
+export * from '@src/domains/messaging/types';
+export { MESSAGING_CONFIG } from '@src/domains/messaging/config';
+export { registerMessagingTask } from '@src/domains/messaging/tasks';
 export {
   cancelAllMessages,
   handleNotificationReceived,
@@ -8,7 +8,7 @@ export {
   readPlanWithState,
   reconcileSchedule,
   rescheduleForLocale,
-} from './services/scheduler';
+} from '@src/domains/messaging/services/scheduler';
 export {
   drainReceipts,
   listReceipts,
@@ -17,5 +17,5 @@ export {
   readDeliveryEndpoint,
   retryExhaustedReceipts,
   writeDeliveryEndpoint,
-} from './services/receiptSender';
-export { enrol, readEnrolledAt, resetEnrolment } from './services/scheduleRepository';
+} from '@src/domains/messaging/services/receiptSender';
+export { enrol, readEnrolledAt, resetEnrolment } from '@src/domains/messaging/services/scheduleRepository';

@@ -1,5 +1,5 @@
-import { METERS_PER_DEGREE_LATITUDE, distanceMeters, metersPerDegreeLongitude } from './haversine';
-import type { LatLng } from './types';
+import { METERS_PER_DEGREE_LATITUDE, distanceMeters, metersPerDegreeLongitude } from '@src/core/geo/haversine';
+import type { LatLng } from '@src/core/geo/types';
 
 export const DEFAULT_CELL_SIZE_DEGREES = 0.01;
 

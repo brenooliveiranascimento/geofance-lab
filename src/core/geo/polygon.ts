@@ -1,5 +1,5 @@
-import { METERS_PER_DEGREE_LATITUDE, distanceMeters } from './haversine';
-import type { BoundingBox, LatLng, Ring } from './types';
+import { METERS_PER_DEGREE_LATITUDE, distanceMeters } from '@src/core/geo/haversine';
+import type { BoundingBox, LatLng, Ring } from '@src/core/geo/types';
 
 export function boundingBoxOfRing(ring: Ring): BoundingBox | null {
   if (ring.length === 0) return null;

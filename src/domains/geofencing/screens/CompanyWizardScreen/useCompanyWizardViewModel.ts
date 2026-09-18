@@ -17,17 +17,17 @@ import { logger } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 import { useStore } from '@src/store';
 
-import { COMPANY_SHAPE } from '../../config';
-import { isMapAvailable } from '../../mapAvailability';
-import { invalidateGeofencingData } from '../../queries/invalidate';
-import { upsertCompany, upsertRoom } from '../../services/companyRepository';
+import { COMPANY_SHAPE } from '@src/domains/geofencing/config';
+import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
+import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
+import { upsertCompany, upsertRoom } from '@src/domains/geofencing/services/companyRepository';
 import {
   getApproximateFix,
   readSnapshot,
   refreshMonitoring,
   startMonitoring,
-} from '../../services/monitorService';
-import type { Company } from '../../types';
+} from '@src/domains/geofencing/services/monitorService';
+import type { Company } from '@src/domains/geofencing/types';
 
 export type WizardStep = 'name' | 'outline' | 'rooms' | 'roomDraw' | 'roomName';
 

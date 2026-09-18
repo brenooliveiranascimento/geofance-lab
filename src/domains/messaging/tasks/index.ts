@@ -3,9 +3,9 @@ import * as TaskManager from 'expo-task-manager';
 
 import { logger } from '@src/core/logger';
 
-import { drainReceipts } from '../services/receiptSender';
-import { reconcileSchedule } from '../services/scheduler';
-import { MESSAGING_TASK } from '../config';
+import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
+import { reconcileSchedule } from '@src/domains/messaging/services/scheduler';
+import { MESSAGING_TASK } from '@src/domains/messaging/config';
 
 TaskManager.defineTask(MESSAGING_TASK, async () => {
   try {

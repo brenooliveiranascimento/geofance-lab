@@ -12,7 +12,7 @@ import { invalidatePermissions } from '@src/domains/geofencing/queries/invalidat
 import { useToast } from '@src/lib/toast';
 import { useStore } from '@src/store';
 
-import type { OnboardingStep } from '../../types';
+import type { OnboardingStep } from '@src/domains/onboarding/types';
 
 export interface OnboardingViewModel {
   steps: OnboardingStep[];

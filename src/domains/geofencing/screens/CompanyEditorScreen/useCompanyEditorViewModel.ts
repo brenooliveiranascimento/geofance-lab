@@ -16,10 +16,10 @@ import {
 } from '@src/core/geo';
 import { useToast } from '@src/lib/toast';
 
-import { COMPANY_SHAPE } from '../../config';
-import { isMapAvailable } from '../../mapAvailability';
-import { invalidateGeofencingData } from '../../queries/invalidate';
-import { useCompanyStates } from '../../queries/useCompanyStates';
+import { COMPANY_SHAPE } from '@src/domains/geofencing/config';
+import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
+import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
+import { useCompanyStates } from '@src/domains/geofencing/queries/useCompanyStates';
 import {
   deleteCompany,
   deleteRoom,
@@ -27,9 +27,9 @@ import {
   listRooms,
   upsertCompany,
   upsertRoom,
-} from '../../services/companyRepository';
-import { getApproximateFix, refreshMonitoring } from '../../services/monitorService';
-import type { Company, Room, TargetState } from '../../types';
+} from '@src/domains/geofencing/services/companyRepository';
+import { getApproximateFix, refreshMonitoring } from '@src/domains/geofencing/services/monitorService';
+import type { Company, Room, TargetState } from '@src/domains/geofencing/types';
 
 export type EditorMode = 'view' | 'outlineDraw' | 'roomDraw' | 'roomName';
 

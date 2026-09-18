@@ -1,5 +1,5 @@
-export * from './types';
-export { MONITOR_CONFIG } from './config';
+export * from '@src/domains/geofencing/types';
+export { MONITOR_CONFIG } from '@src/domains/geofencing/config';
 export {
   evaluateAndCommit,
   getApproximateFix,
@@ -10,5 +10,5 @@ export {
   startMonitoring,
   stopMonitoring,
   submitSimulatedFix,
-} from './services/monitorService';
-export { refreshNotificationChannel } from './services/notifier';
+} from '@src/domains/geofencing/services/monitorService';
+export { refreshNotificationChannel } from '@src/domains/geofencing/services/notifier';

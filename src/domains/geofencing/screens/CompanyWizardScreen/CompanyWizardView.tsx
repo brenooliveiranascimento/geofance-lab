@@ -7,8 +7,8 @@ import { StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import { CrosshairMap } from '../../components/CrosshairMap';
-import type { CompanyWizardViewModel } from './useCompanyWizardViewModel';
+import { CrosshairMap } from '@src/domains/geofencing/components/CrosshairMap';
+import type { CompanyWizardViewModel } from '@src/domains/geofencing/screens/CompanyWizardScreen/useCompanyWizardViewModel';
 
 export interface CompanyWizardViewProps {
   viewModel: CompanyWizardViewModel;

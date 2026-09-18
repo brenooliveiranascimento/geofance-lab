@@ -1,8 +1,8 @@
 import { resetDatabase } from '@src/core/db';
 
-import { countPendingReceipts, drainReceipts, writeDeliveryEndpoint } from '../receiptSender';
-import { enrol, listSchedule, markScheduled } from '../scheduleRepository';
-import { recordDelivery } from '../scheduler';
+import { countPendingReceipts, drainReceipts, writeDeliveryEndpoint } from '@src/domains/messaging/services/receiptSender';
+import { enrol, listSchedule, markScheduled } from '@src/domains/messaging/services/scheduleRepository';
+import { recordDelivery } from '@src/domains/messaging/services/scheduler';
 
 const ENROLLED_AT = 1_700_000_000_000;
 

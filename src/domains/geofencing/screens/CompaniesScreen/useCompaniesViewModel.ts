@@ -3,13 +3,13 @@ import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import { distanceMeters, type LatLng } from '@src/core/geo';
 
-import { invalidateGeofencingData } from '../../queries/invalidate';
-import { useCompanies } from '../../queries/useCompanies';
-import { useCompanyStates } from '../../queries/useCompanyStates';
-import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
-import { refreshMonitoring } from '../../services/monitorService';
-import { countRoomsByCompany, setCompanyEnabled } from '../../services/companyRepository';
-import type { Company, TargetState } from '../../types';
+import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
+import { useCompanies } from '@src/domains/geofencing/queries/useCompanies';
+import { useCompanyStates } from '@src/domains/geofencing/queries/useCompanyStates';
+import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
+import { refreshMonitoring } from '@src/domains/geofencing/services/monitorService';
+import { countRoomsByCompany, setCompanyEnabled } from '@src/domains/geofencing/services/companyRepository';
+import type { Company, TargetState } from '@src/domains/geofencing/types';
 
 export interface CompanyRow {
   company: Company;

@@ -1,7 +1,7 @@
 import { distanceMeters } from '@src/core/geo';
 import type { LatLng } from '@src/core/geo';
 
-import type { NativeRegion, Company } from '../types';
+import type { NativeRegion, Company } from '@src/domains/geofencing/types';
 
 export interface SelectRegionsOptions {
   limit: number;

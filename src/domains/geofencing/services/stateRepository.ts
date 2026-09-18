@@ -1,6 +1,6 @@
 import { getDatabase } from '@src/core/db';
 
-import type { PresenceState, TargetState } from '../types';
+import type { PresenceState, TargetState } from '@src/domains/geofencing/types';
 
 interface StateRow {
   target_id: string;

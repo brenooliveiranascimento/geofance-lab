@@ -1,9 +1,9 @@
 import { METERS_PER_DEGREE_LATITUDE } from '@src/core/geo';
 import type { Fix } from '@src/core/geo';
 
-import { invalidateGeometry } from '../ringGeometry';
-import { evaluateFix, type TransitionConfig } from '../transitionEngine';
-import type { GeofenceEvent, Company, Room, TargetState } from '../../types';
+import { invalidateGeometry } from '@src/domains/geofencing/services/ringGeometry';
+import { evaluateFix, type TransitionConfig } from '@src/domains/geofencing/services/transitionEngine';
+import type { GeofenceEvent, Company, Room, TargetState } from '@src/domains/geofencing/types';
 
 const CONFIG: TransitionConfig = {
   maxAccuracyMeters: 100,

@@ -4,8 +4,8 @@ import { Platform } from 'react-native';
 import i18n from '@src/i18n';
 import { logger } from '@src/core/logger';
 
-import { markNotified } from './eventRepository';
-import type { GeofenceEvent } from '../types';
+import { markNotified } from '@src/domains/geofencing/services/eventRepository';
+import type { GeofenceEvent } from '@src/domains/geofencing/types';
 
 export const GEOFENCE_CHANNEL_ID = 'geofence-events';
 

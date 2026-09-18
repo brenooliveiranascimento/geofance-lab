@@ -8,19 +8,19 @@ import { logger } from '@src/core/logger';
 import { colors } from '@src/theme';
 import { isMonitoringAllowed, readPermissions } from '@src/core/permissions';
 
-import { commitEvaluation } from './eventRepository';
-import { notifyEvents } from './notifier';
+import { commitEvaluation } from '@src/domains/geofencing/services/eventRepository';
+import { notifyEvents } from '@src/domains/geofencing/services/notifier';
 import {
   getMaxActiveRadius,
   getCompanyIndex,
   getRoomsByCompany,
   listEnabledCompanies,
-} from './companyRepository';
-import { regionsEqual, selectRegions } from './regionReconciler';
-import { loadOccupiedCompanyIds, loadStatesFor } from './stateRepository';
-import { evaluateFix } from './transitionEngine';
-import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG, MONITOR_KEYS } from '../config';
-import type { EventSource, MonitorSnapshot, MonitorTier, NativeRegion, Company } from '../types';
+} from '@src/domains/geofencing/services/companyRepository';
+import { regionsEqual, selectRegions } from '@src/domains/geofencing/services/regionReconciler';
+import { loadOccupiedCompanyIds, loadStatesFor } from '@src/domains/geofencing/services/stateRepository';
+import { evaluateFix } from '@src/domains/geofencing/services/transitionEngine';
+import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG, MONITOR_KEYS } from '@src/domains/geofencing/config';
+import type { EventSource, MonitorSnapshot, MonitorTier, NativeRegion, Company } from '@src/domains/geofencing/types';
 
 const TAG = 'monitor';
 

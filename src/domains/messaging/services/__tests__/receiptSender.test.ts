@@ -10,7 +10,7 @@ import {
   readDeliveryEndpoint,
   writeDeliveryEndpoint,
   type BackoffConfig,
-} from '../receiptSender';
+} from '@src/domains/messaging/services/receiptSender';
 
 const DEFAULT_ENDPOINT = process.env.EXPO_PUBLIC_DELIVERY_ENDPOINT ?? '';
 

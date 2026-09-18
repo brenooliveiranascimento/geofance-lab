@@ -13,15 +13,15 @@ import {
   useMessagingSnapshot,
   useReceipts,
   type PlanEntry,
-} from '../../queries/useMessagingState';
+} from '@src/domains/messaging/queries/useMessagingState';
 import {
   drainReceipts,
   readDeliveryEndpoint,
   retryExhaustedReceipts,
-} from '../../services/receiptSender';
-import { enrol, resetEnrolment } from '../../services/scheduleRepository';
-import { cancelAllMessages, reconcileSchedule } from '../../services/scheduler';
-import type { DeliveryReceipt, MessagingSnapshot } from '../../types';
+} from '@src/domains/messaging/services/receiptSender';
+import { enrol, resetEnrolment } from '@src/domains/messaging/services/scheduleRepository';
+import { cancelAllMessages, reconcileSchedule } from '@src/domains/messaging/services/scheduler';
+import type { DeliveryReceipt, MessagingSnapshot } from '@src/domains/messaging/types';
 
 export interface MessagesViewModel {
   snapshot: MessagingSnapshot | undefined;

@@ -5,8 +5,8 @@ import MapView, { Marker, Polygon, Polyline, PROVIDER_GOOGLE, type Region } from
 import { Icon, Text } from '@src/components/atoms';
 import type { LatLng, Ring } from '@src/core/geo';
 
-import { DARK_MAP_STYLE } from './mapStyle';
-import { regionFor } from './mapRegion';
+import { DARK_MAP_STYLE } from '@src/domains/geofencing/components/mapStyle';
+import { regionFor } from '@src/domains/geofencing/components/mapRegion';
 import { colors, fontSize, radius as radii, spacing } from '@src/theme';
 
 export interface CrosshairMapProps {

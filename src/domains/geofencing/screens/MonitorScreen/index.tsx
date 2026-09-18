@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { MonitorView } from './MonitorView';
-import { useMonitorViewModel } from './useMonitorViewModel';
+import { MonitorView } from '@src/domains/geofencing/screens/MonitorScreen/MonitorView';
+import { useMonitorViewModel } from '@src/domains/geofencing/screens/MonitorScreen/useMonitorViewModel';
 
 export function MonitorScreen(): React.JSX.Element {
   const viewModel = useMonitorViewModel();

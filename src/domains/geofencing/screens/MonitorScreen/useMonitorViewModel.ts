@@ -8,21 +8,21 @@ import { requestMonitoringPermissions } from '@src/core/permissions';
 import { logger } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 
-import { isMapAvailable } from '../../mapAvailability';
-import { invalidateGeofencingData, invalidatePermissions } from '../../queries/invalidate';
-import { MAP_CONFIG } from '../../config';
-import { useCompanies } from '../../queries/useCompanies';
-import { useCompanyStates } from '../../queries/useCompanyStates';
-import { useEvents } from '../../queries/useEvents';
-import { useMonitorSnapshot } from '../../queries/useMonitorSnapshot';
-import { usePermissions } from '../../queries/usePermissions';
-import { getCompanyIndex, getRoomsByCompany } from '../../services/companyRepository';
+import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
+import { invalidateGeofencingData, invalidatePermissions } from '@src/domains/geofencing/queries/invalidate';
+import { MAP_CONFIG } from '@src/domains/geofencing/config';
+import { useCompanies } from '@src/domains/geofencing/queries/useCompanies';
+import { useCompanyStates } from '@src/domains/geofencing/queries/useCompanyStates';
+import { useEvents } from '@src/domains/geofencing/queries/useEvents';
+import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
+import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
+import { getCompanyIndex, getRoomsByCompany } from '@src/domains/geofencing/services/companyRepository';
 import {
   getApproximateFix,
   startMonitoring,
   stopMonitoring,
-} from '../../services/monitorService';
-import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '../../types';
+} from '@src/domains/geofencing/services/monitorService';
+import type { Company, GeofenceEvent, MonitorSnapshot, Room, TargetState } from '@src/domains/geofencing/types';
 
 
 export type MonitorStatus = 'idle' | 'regions' | 'precise' | 'blocked' | 'busy' | 'empty';

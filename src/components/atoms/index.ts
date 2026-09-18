@@ -1,4 +1,4 @@
-export { Text, type AppTextProps } from './Text';
-export { Icon, type IconName, type IconProps } from './Icon';
-export { Button, type ButtonProps } from './Button';
-export { Input, type InputProps } from './Input';
+export { Text, type AppTextProps } from '@src/components/atoms/Text';
+export { Icon, type IconName, type IconProps } from '@src/components/atoms/Icon';
+export { Button, type ButtonProps } from '@src/components/atoms/Button';
+export { Input, type InputProps } from '@src/components/atoms/Input';

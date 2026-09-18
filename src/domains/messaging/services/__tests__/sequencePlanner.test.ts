@@ -5,8 +5,8 @@ import {
   slotKey,
   type PlannerConfig,
   type PlannerContent,
-} from '../sequencePlanner';
-import type { PlannedMessage, ScheduledMessage } from '../../types';
+} from '@src/domains/messaging/services/sequencePlanner';
+import type { PlannedMessage, ScheduledMessage } from '@src/domains/messaging/types';
 
 const CONFIG: PlannerConfig = {
   onboarding: { offsetsMinutes: [2, 5, 12] },

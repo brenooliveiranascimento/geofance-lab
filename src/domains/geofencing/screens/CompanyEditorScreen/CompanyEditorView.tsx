@@ -7,9 +7,9 @@ import { StatusBanner } from '@src/components/organisms';
 import { ScreenTemplate } from '@src/components/templates';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
-import { CompaniesMap } from '../../components/CompaniesMap';
-import { CrosshairMap } from '../../components/CrosshairMap';
-import type { CompanyEditorViewModel } from './useCompanyEditorViewModel';
+import { CompaniesMap } from '@src/domains/geofencing/components/CompaniesMap';
+import { CrosshairMap } from '@src/domains/geofencing/components/CrosshairMap';
+import type { CompanyEditorViewModel } from '@src/domains/geofencing/screens/CompanyEditorScreen/useCompanyEditorViewModel';
 
 export interface CompanyEditorViewProps {
   viewModel: CompanyEditorViewModel;

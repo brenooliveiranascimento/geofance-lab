@@ -14,8 +14,8 @@ import {
   ringCentroid,
   ringPerimeterMeters,
   untangleRing,
-} from '../polygon';
-import type { Ring } from '../types';
+} from '@src/core/geo/polygon';
+import type { Ring } from '@src/core/geo/types';
 
 const ring = (...points: [number, number][]): Ring =>
   points.map(([longitude, latitude]) => ({ latitude, longitude }));

@@ -7,7 +7,7 @@ import { ScreenTemplate } from '@src/components/templates';
 import { formatDistance } from '@src/lib/format';
 import { colors, fontSize, spacing } from '@src/theme';
 
-import type { CompaniesViewModel, CompanyRow } from './useCompaniesViewModel';
+import type { CompaniesViewModel, CompanyRow } from '@src/domains/geofencing/screens/CompaniesScreen/useCompaniesViewModel';
 
 export interface CompaniesViewProps {
   viewModel: CompaniesViewModel;

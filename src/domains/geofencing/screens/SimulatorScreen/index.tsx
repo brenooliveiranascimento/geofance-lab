@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { SimulatorView } from './SimulatorView';
-import { useSimulatorViewModel } from './useSimulatorViewModel';
+import { SimulatorView } from '@src/domains/geofencing/screens/SimulatorScreen/SimulatorView';
+import { useSimulatorViewModel } from '@src/domains/geofencing/screens/SimulatorScreen/useSimulatorViewModel';
 
 export function SimulatorScreen(): React.JSX.Element {
   const viewModel = useSimulatorViewModel();

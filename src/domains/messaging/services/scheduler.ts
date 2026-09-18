@@ -5,7 +5,7 @@ import { transaction } from '@src/core/db';
 import i18n from '@src/i18n';
 import { logger } from '@src/core/logger';
 
-import { countPendingReceipts, drainReceipts, enqueueReceipt, receiptKeyFor } from './receiptSender';
+import { countPendingReceipts, drainReceipts, enqueueReceipt, receiptKeyFor } from '@src/domains/messaging/services/receiptSender';
 import {
   clearSchedule,
   countByState,
@@ -16,11 +16,11 @@ import {
   markScheduled,
   nextScheduled,
   readEnrolledAt,
-} from './scheduleRepository';
-import { buildPlan, diffSchedule, slotKey, type PlannerContent } from './sequencePlanner';
-import { dailyMessages, onboardingMessages, subtitleFormatter } from '../content/messages';
-import { MESSAGING_CONFIG } from '../config';
-import type { MessagingSnapshot, PlannedMessage, SequenceId } from '../types';
+} from '@src/domains/messaging/services/scheduleRepository';
+import { buildPlan, diffSchedule, slotKey, type PlannerContent } from '@src/domains/messaging/services/sequencePlanner';
+import { dailyMessages, onboardingMessages, subtitleFormatter } from '@src/domains/messaging/content/messages';
+import { MESSAGING_CONFIG } from '@src/domains/messaging/config';
+import type { MessagingSnapshot, PlannedMessage, SequenceId } from '@src/domains/messaging/types';
 
 const TAG = 'messaging';
 
