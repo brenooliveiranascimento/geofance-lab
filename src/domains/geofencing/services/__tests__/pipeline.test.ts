@@ -188,6 +188,7 @@ describe('the region window over the full dataset', () => {
       limit: 20,
       minRegionRadiusMeters: MONITOR_CONFIG.minNativeRegionRadiusMeters,
       minGuardRadiusMeters: MONITOR_CONFIG.minGuardRadiusMeters,
+    maxGuardRadiusMeters: MONITOR_CONFIG.maxGuardRadiusMeters,
       guardIdentifier: MONITOR_CONFIG.guardRegionIdentifier,
     });
 
@@ -201,6 +202,7 @@ describe('the region window over the full dataset', () => {
       limit: 20,
       minRegionRadiusMeters: MONITOR_CONFIG.minNativeRegionRadiusMeters,
       minGuardRadiusMeters: MONITOR_CONFIG.minGuardRadiusMeters,
+    maxGuardRadiusMeters: MONITOR_CONFIG.maxGuardRadiusMeters,
       guardIdentifier: MONITOR_CONFIG.guardRegionIdentifier,
     });
     expect(result.selected[0].company.id).toBe(SUBJECT.id);

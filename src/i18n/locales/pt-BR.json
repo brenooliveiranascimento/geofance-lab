@@ -33,7 +33,8 @@
     "startFailed": {
       "permissions": "Conceda o acesso à localização em background para iniciar",
       "no_companies": "Cadastre uma empresa antes de iniciar",
-      "no_position": "Não foi possível obter uma posição"
+      "no_position": "Não foi possível obter uma posição",
+      "platform": "O sistema recusou registrar as regiões. Veja Histórico → Sistema."
     },
     "mapUnavailable": {
       "body": "Mapa indisponível: a chave do Google Maps não entrou neste build. Confira o .env e gere o app de novo."

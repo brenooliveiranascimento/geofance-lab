@@ -5,6 +5,7 @@ import { readJson, writeJson } from '@src/core/db';
 import i18n from '@src/i18n';
 import { queryWithinRadius, type Fix, type LatLng } from '@src/core/geo';
 import { logger } from '@src/core/logger';
+import { colors } from '@src/theme';
 import { isMonitoringAllowed, readPermissions } from '@src/core/permissions';
 
 import { commitEvaluation } from './eventRepository';
@@ -16,7 +17,7 @@ import {
   listEnabledCompanies,
 } from './companyRepository';
 import { regionsEqual, selectRegions } from './regionReconciler';
-import { loadOccupiedCompanyIds, loadStatesFor, releaseAllPresence } from './stateRepository';
+import { loadOccupiedCompanyIds, loadStatesFor } from './stateRepository';
 import { evaluateFix } from './transitionEngine';
 import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG, MONITOR_KEYS } from '../config';
 import type { EventSource, MonitorSnapshot, MonitorTier, NativeRegion, Company } from '../types';
@@ -96,6 +97,7 @@ export async function rebuildRegions(origin: LatLng, force = false): Promise<Nat
     limit: MONITOR_CONFIG.maxNativeRegions,
     minRegionRadiusMeters: MONITOR_CONFIG.minNativeRegionRadiusMeters,
     minGuardRadiusMeters: MONITOR_CONFIG.minGuardRadiusMeters,
+    maxGuardRadiusMeters: MONITOR_CONFIG.maxGuardRadiusMeters,
     guardIdentifier: MONITOR_CONFIG.guardRegionIdentifier,
   });
 
@@ -128,6 +130,18 @@ export async function rebuildRegions(origin: LatLng, force = false): Promise<Nat
   return regions;
 }
 
+async function armWindow(origin: LatLng, force = false): Promise<number | null> {
+  try {
+    const regions = await rebuildRegions(origin, force);
+    return regions.length;
+  } catch (error) {
+    logger.error(TAG, 'the platform refused to register the region window', {
+      error: String(error),
+    });
+    return null;
+  }
+}
+
 async function stopGeofencing(): Promise<void> {
   try {
     if (await TaskManager.isTaskRegisteredAsync(GEOFENCING_TASK)) {
@@ -141,7 +155,8 @@ async function stopGeofencing(): Promise<void> {
 async function isLocationTaskRunning(): Promise<boolean> {
   try {
     return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK);
-  } catch {
+  } catch (error) {
+    logger.warn(TAG, 'could not read the location task state', { error: String(error) });
     return false;
   }
 }
@@ -159,7 +174,7 @@ async function startPreciseUpdates(): Promise<void> {
     foregroundService: {
       notificationTitle: i18n.t('notifications.foreground.title'),
       notificationBody: i18n.t('notifications.foreground.body'),
-      notificationColor: '#2563EB',
+      notificationColor: colors.primary,
     },
   });
 
@@ -178,10 +193,21 @@ async function stopPreciseUpdates(): Promise<void> {
 }
 
 async function syncTier(activeCompanyIds: readonly string[]): Promise<void> {
-  writeJson(MONITOR_KEYS.activeCompanies, [...activeCompanyIds]);
+  if (activeCompanyIds.length === 0) {
+    writeJson(MONITOR_KEYS.activeCompanies, []);
+    await stopPreciseUpdates();
+    return;
+  }
 
-  if (activeCompanyIds.length > 0) await startPreciseUpdates();
-  else await stopPreciseUpdates();
+  try {
+    await startPreciseUpdates();
+    writeJson(MONITOR_KEYS.activeCompanies, [...activeCompanyIds]);
+  } catch (error) {
+    writeJson(MONITOR_KEYS.activeCompanies, []);
+    logger.error(TAG, 'precise updates unavailable, staying on native regions', {
+      error: String(error),
+    });
+  }
 }
 
 function candidateCompaniesFor(fix: Fix): Company[] {
@@ -267,7 +293,7 @@ export async function handleRegionEvent(
     logger.info(TAG, 'guard region left, recomputing window');
     const fix = await getCurrentFix();
     if (fix) {
-      await rebuildRegions(fix);
+      await armWindow(fix, true);
       await evaluateAndCommit(fix, 'native_region');
     }
     return;
@@ -334,7 +360,7 @@ export async function submitSimulatedFix(fix: Fix): Promise<void> {
   if (readRunning()) await syncTier(occupied);
 }
 
-export type StartFailure = 'permissions' | 'no_companies' | 'no_position';
+export type StartFailure = 'permissions' | 'no_companies' | 'no_position' | 'platform';
 
 export interface StartResult {
   started: boolean;
@@ -356,15 +382,17 @@ export async function startMonitoring(): Promise<StartResult> {
   const fix = await getCurrentFix();
   if (!fix) return { started: false, reason: 'no_position' };
 
-  writeJson(MONITOR_KEYS.running, true);
+  const regionCount = await armWindow(fix, true);
+  if (regionCount === null) return { started: false, reason: 'platform' };
+  if (regionCount === 0) return { started: false, reason: 'no_companies' };
 
-  const regions = await rebuildRegions(fix);
+  writeJson(MONITOR_KEYS.running, true);
 
   const occupied = await evaluateAndCommit(fix, 'initial_sync');
   await syncTier(occupied);
 
-  logger.info(TAG, 'monitoring started', { regions: regions.length, occupied });
-  return { started: true, regionCount: regions.length };
+  logger.info(TAG, 'monitoring started', { regions: regionCount, occupied });
+  return { started: true, regionCount };
 }
 
 export async function stopMonitoring(): Promise<void> {
@@ -376,15 +404,14 @@ export async function stopMonitoring(): Promise<void> {
   writeJson(MONITOR_KEYS.regions, []);
   writeJson(MONITOR_KEYS.activeCompanies, []);
 
-  releaseAllPresence();
-
   logger.info(TAG, 'monitoring stopped');
 }
 
 export async function isGeofencingLive(): Promise<boolean> {
   try {
     return await Location.hasStartedGeofencingAsync(GEOFENCING_TASK);
-  } catch {
+  } catch (error) {
+    logger.warn(TAG, 'could not read the geofencing state', { error: String(error) });
     return false;
   }
 }
@@ -401,6 +428,7 @@ export async function resumeMonitoringIfNeeded(): Promise<void> {
 
   if (await isGeofencingLive()) {
     logger.debug(TAG, 'platform still holds the region window');
+    await syncTier(loadOccupiedCompanyIds());
     return;
   }
 
@@ -412,16 +440,26 @@ export async function resumeMonitoringIfNeeded(): Promise<void> {
     return;
   }
 
-  await rebuildRegions(fix, true);
+  if ((await armWindow(fix, true)) === 0) {
+    await stopMonitoring();
+    return;
+  }
+
   const occupied = await evaluateAndCommit(fix, 'initial_sync');
   await syncTier(occupied);
 }
 
 export async function refreshMonitoring(): Promise<void> {
   if (!readRunning()) return;
+
   const fix = (await getCurrentFix()) ?? readJson<Fix>(MONITOR_KEYS.lastFix);
   if (!fix) return;
-  await rebuildRegions(fix);
+
+  if ((await armWindow(fix)) === 0) {
+    await stopMonitoring();
+    return;
+  }
+
   const occupied = await evaluateAndCommit(fix, 'initial_sync');
   await syncTier(occupied);
 }

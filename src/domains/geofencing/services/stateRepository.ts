@@ -28,11 +28,6 @@ const toState = (row: StateRow): TargetState => ({
   updatedAt: row.updated_at,
 });
 
-export function loadAllStates(): Map<string, TargetState> {
-  const rows = getDatabase().getAllSync<StateRow>('SELECT * FROM monitor_state;');
-  return new Map(rows.map((row) => [row.target_id, toState(row)]));
-}
-
 export function loadStatesFor(targetIds: readonly string[]): Map<string, TargetState> {
   if (targetIds.length === 0) return new Map();
 
@@ -43,18 +38,13 @@ export function loadStatesFor(targetIds: readonly string[]): Map<string, TargetS
   return new Map(rows.map((row) => [row.target_id, toState(row)]));
 }
 
-export function loadOccupiedTargetIds(): string[] {
-  return getDatabase()
-    .getAllSync<{ target_id: string }>(
-      "SELECT target_id FROM monitor_state WHERE state = 'inside';",
-    )
-    .map((row) => row.target_id);
-}
-
 export function loadOccupiedCompanyIds(): string[] {
   return getDatabase()
     .getAllSync<{ company_id: string }>(
-      "SELECT DISTINCT company_id FROM monitor_state WHERE state = 'inside' AND target_kind = 'company';",
+      `SELECT DISTINCT s.company_id
+         FROM monitor_state s
+         JOIN companies c ON c.id = s.company_id
+        WHERE s.state = 'inside' AND s.target_kind = 'company' AND c.enabled = 1;`,
     )
     .map((row) => row.company_id);
 }
@@ -93,15 +83,6 @@ export function saveStates(
       ],
     );
   }
-}
-
-export function releaseAllPresence(): void {
-  getDatabase().runSync(
-    `UPDATE monitor_state
-        SET state = 'outside', pending_state = NULL, pending_count = 0, updated_at = ?
-      WHERE state = 'inside';`,
-    Date.now(),
-  );
 }
 
 export function listStatesForUi(): TargetState[] {

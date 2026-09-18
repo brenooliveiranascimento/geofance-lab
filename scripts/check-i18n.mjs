@@ -14,7 +14,7 @@ const DYNAMIC_KEYS = {
   'events.source': ['native_region', 'location_update', 'simulator', 'initial_sync'],
   'messages.state': ['pending', 'scheduled', 'delivered', 'cancelled', 'failed'],
   'messages.receipts.state': ['pending', 'confirmed', 'exhausted'],
-  'monitor.startFailed': ['permissions', 'no_companies', 'no_position'],
+  'monitor.startFailed': ['permissions', 'no_companies', 'no_position', 'platform'],
   'permissions.state': ['granted', 'denied', 'undetermined'],
   'notifications.company': ['enter', 'exit'],
   'notifications.room': ['enter', 'exit'],

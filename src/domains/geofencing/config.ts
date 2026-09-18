@@ -9,6 +9,8 @@ export const MONITOR_CONFIG = {
 
   minGuardRadiusMeters: 200,
 
+  maxGuardRadiusMeters: 100_000,
+
   maxAccuracyMeters: 100,
 
   maxAccuracyMarginRatio: 0.5,
@@ -20,10 +22,6 @@ export const MONITOR_CONFIG = {
   preciseUpdates: {
     distanceIntervalMeters: 3,
     timeIntervalMs: 4_000,
-  },
-
-  get nearestCandidateCount(): number {
-    return this.maxNativeRegions * 2;
   },
 } as const;
 

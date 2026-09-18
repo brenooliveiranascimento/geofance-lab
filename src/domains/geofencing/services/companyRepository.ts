@@ -102,7 +102,15 @@ export function getMaxActiveRadius(): number {
   return maxActiveRadiusCache;
 }
 
+export function assertRadii(company: Pick<Company, 'radius' | 'activeRadius'>): void {
+  if (company.activeRadius < company.radius) {
+    throw new Error('activeRadius must be greater than or equal to radius');
+  }
+}
+
 export function upsertCompany(company: Company): void {
+  assertRadii(company);
+
   getDatabase().runSync(
     `INSERT INTO companies (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -127,6 +135,7 @@ export function upsertCompany(company: Company): void {
     ],
   );
   invalidateCaches();
+  invalidateGeometry(company.id);
 }
 
 export function setCompanyEnabled(id: string, enabled: boolean): void {

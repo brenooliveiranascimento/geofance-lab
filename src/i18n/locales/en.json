@@ -33,7 +33,8 @@
     "startFailed": {
       "permissions": "Grant background location access to start",
       "no_companies": "Register a company before starting",
-      "no_position": "Could not obtain a position"
+      "no_position": "Could not obtain a position",
+      "platform": "The system refused to register the regions. See History → System."
     },
     "mapUnavailable": {
       "body": "Map unavailable: the Google Maps key did not make it into this build. Check .env and rebuild."

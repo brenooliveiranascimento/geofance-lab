@@ -7,6 +7,7 @@ export interface SelectRegionsOptions {
   limit: number;
   minRegionRadiusMeters: number;
   minGuardRadiusMeters: number;
+  maxGuardRadiusMeters: number;
   guardIdentifier: string;
 }
 
@@ -38,9 +39,10 @@ function guardRadiusFor(
   lastSelectedEdge: number,
   firstOmittedEdge: number,
   minGuardRadiusMeters: number,
+  maxGuardRadiusMeters: number,
 ): number {
   const halfGap = (firstOmittedEdge - lastSelectedEdge) / 2;
-  return Math.max(halfGap, minGuardRadiusMeters);
+  return Math.min(Math.max(halfGap, minGuardRadiusMeters), maxGuardRadiusMeters);
 }
 
 export function selectRegions(
@@ -48,7 +50,8 @@ export function selectRegions(
   origin: LatLng,
   options: SelectRegionsOptions,
 ): SelectRegionsResult {
-  const { limit, minRegionRadiusMeters, minGuardRadiusMeters, guardIdentifier } = options;
+  const { limit, minRegionRadiusMeters, minGuardRadiusMeters, maxGuardRadiusMeters, guardIdentifier } =
+    options;
 
   const ranked: SelectedCompany[] = companies
     .filter((company) => company.enabled)
@@ -91,6 +94,7 @@ export function selectRegions(
         lastSelected.edgeDistanceMeters,
         firstOmitted.edgeDistanceMeters,
         minGuardRadiusMeters,
+        maxGuardRadiusMeters,
       ),
       minRegionRadiusMeters,
     ),

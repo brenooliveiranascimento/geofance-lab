@@ -10,6 +10,7 @@ const IOS: SelectRegionsOptions = {
   limit: 20,
   minRegionRadiusMeters: 100,
   minGuardRadiusMeters: 200,
+  maxGuardRadiusMeters: 100_000,
   guardIdentifier: '__guard__',
 };
 
@@ -156,6 +157,16 @@ describe('the guard region', () => {
     ];
     const spread = selectRegions(sparse, ORIGIN, IOS);
     expect(spread.guard!.radius).toBeGreaterThan(10_000);
+  });
+
+  it('stays inside the radius the platform agrees to monitor', () => {
+    const continents = [
+      ...Array.from({ length: 19 }, (_, i) => companyAt(`near${i}`, 100 + i * 10)),
+      companyAt('overseas1', 8_000_000),
+      companyAt('overseas2', 9_000_000),
+    ];
+    const spread = selectRegions(continents, ORIGIN, IOS);
+    expect(spread.guard!.radius).toBe(IOS.maxGuardRadiusMeters);
   });
 });
 
