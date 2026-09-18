@@ -74,6 +74,9 @@ marca como atualizada em situações em que ele mudou de verdade — mexer no `.
 e o resultado é um APK que instala e roda com o código antigo dentro, sem aviso nenhum. O script
 apaga a saída do bundle antes de montar.
 
+O pacote leva `arm64-v8a` (todo aparelho Android atual) e `x86_64` (emulador em máquina Intel).
+Deixar as quatro ABIs dobraria o tamanho sem atender nenhum aparelho a mais.
+
 ### Verificando
 
 ```bash

@@ -15,7 +15,7 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "verify": "npm run typecheck && npm run check:i18n && npm test",
     "seed:demo": "node scripts/gen-demo-house.mjs",
-    "apk": "rm -rf android/app/build/generated/assets/createBundleReleaseJsAndAssets android/app/build/intermediates/assets && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a"
+    "apk": "rm -rf android/app/build/generated/assets/createBundleReleaseJsAndAssets android/app/build/intermediates/assets && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

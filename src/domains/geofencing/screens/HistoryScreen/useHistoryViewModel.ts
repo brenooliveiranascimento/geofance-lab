@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { clearLog, readLog, type LogEntry } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
 
-import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG } from '@src/domains/geofencing/config';
+import { GEOFENCING_TASK, LOCATION_TASK, MONITOR_CONFIG, UPKEEP_TASK } from '@src/domains/geofencing/config';
 import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
 import { useEvents } from '@src/domains/geofencing/queries/useEvents';
 import { useMonitorSnapshot } from '@src/domains/geofencing/queries/useMonitorSnapshot';
@@ -60,7 +60,7 @@ export function useHistoryViewModel(): HistoryViewModel {
     void (async () => {
       const live = await Location.hasStartedGeofencingAsync(GEOFENCING_TASK).catch(() => false);
       const entries = await Promise.all(
-        [GEOFENCING_TASK, LOCATION_TASK, MESSAGING_TASK].map(async (name) => ({
+        [GEOFENCING_TASK, LOCATION_TASK, UPKEEP_TASK, MESSAGING_TASK].map(async (name) => ({
           name: name.replace('geofence-lab.', ''),
           registered: await TaskManager.isTaskRegisteredAsync(name).catch(() => false),
         })),
