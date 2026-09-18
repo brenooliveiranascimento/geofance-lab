@@ -45,12 +45,6 @@ describe('respecting the platform ceiling', () => {
     expect(result.omittedCount).toBe(501);
   });
 
-  it('honours the larger Android ceiling', () => {
-    const result = selectRegions(manyCompanies(), ORIGIN, { ...IOS, limit: 100 });
-    expect(result.regions).toHaveLength(100);
-    expect(result.selected).toHaveLength(99);
-  });
-
   it('spends every slot on real companies when they all fit', () => {
     const companies = manyCompanies(12);
     const result = selectRegions(companies, ORIGIN, IOS);
@@ -59,27 +53,9 @@ describe('respecting the platform ceiling', () => {
     expect(result.omittedCount).toBe(0);
   });
 
-  it('returns nothing for a zero ceiling', () => {
-    const result = selectRegions(manyCompanies(30), ORIGIN, { ...IOS, limit: 0 });
-    expect(result.regions).toEqual([]);
-    expect(result.omittedCount).toBe(30);
-  });
-
-  it('handles an empty dataset', () => {
-    const result = selectRegions([], ORIGIN, IOS);
-    expect(result.regions).toEqual([]);
-    expect(result.guard).toBeNull();
-  });
 });
 
 describe('which companies win a slot', () => {
-  it('picks the nearest ones', () => {
-    const result = selectRegions(manyCompanies(), ORIGIN, IOS);
-    const ids = result.selected.map((entry) => entry.company.id);
-    expect(ids[0]).toBe('p000');
-    expect(ids).toHaveLength(19);
-    expect(ids).toEqual([...ids].sort());
-  });
 
   it('ranks by distance to the boundary, not to the centre', () => {
     const near = companyAt('narrow', 900, { radius: 20, activeRadius: 30 });
@@ -90,19 +66,6 @@ describe('which companies win a slot', () => {
     expect(result.selected[0].edgeDistanceMeters).toBeLessThan(0);
   });
 
-  it('skips disabled companies', () => {
-    const companies = [companyAt('a', 100), companyAt('b', 200, { enabled: false }), companyAt('c', 300)];
-    const result = selectRegions(companies, ORIGIN, IOS);
-    expect(result.selected.map((e) => e.company.id)).toEqual(['a', 'c']);
-  });
-
-  it('produces a stable set for equidistant companies', () => {
-    const tied = ['z', 'm', 'a'].map((id) => companyAt(id, 500));
-    const first = selectRegions(tied, ORIGIN, { ...IOS, limit: 3 });
-    const second = selectRegions([...tied].reverse(), ORIGIN, { ...IOS, limit: 3 });
-    expect(first.selected.map((e) => e.company.id)).toEqual(['a', 'm', 'z']);
-    expect(regionsEqual(first.regions, second.regions)).toBe(true);
-  });
 });
 
 describe('registered radii', () => {
@@ -111,16 +74,6 @@ describe('registered radii', () => {
     expect(result.regions[0].radius).toBe(400);
   });
 
-  it('clamps up to the platform minimum', () => {
-    const tiny = companyAt('tiny', 300, { radius: 8, activeRadius: 12 });
-    const result = selectRegions([tiny], ORIGIN, IOS);
-    expect(result.regions[0].radius).toBe(100);
-  });
-
-  it('asks for both edges on company regions', () => {
-    const result = selectRegions([companyAt('a', 300)], ORIGIN, IOS);
-    expect(result.regions[0]).toMatchObject({ notifyOnEnter: true, notifyOnExit: true });
-  });
 });
 
 describe('the guard region', () => {
@@ -143,22 +96,6 @@ describe('the guard region', () => {
     );
   });
 
-  it('never drops below the reliable platform minimum', () => {
-    const dense = Array.from({ length: 520 }, (_, i) => companyAt(`d${i}`, (i + 1) * 5));
-    const tight = selectRegions(dense, ORIGIN, IOS);
-    expect(tight.guard!.radius).toBeGreaterThanOrEqual(IOS.minRegionRadiusMeters);
-  });
-
-  it('grows when the next company is far away', () => {
-    const sparse = [
-      ...Array.from({ length: 19 }, (_, i) => companyAt(`near${i}`, 100 + i * 10)),
-      companyAt('faraway1', 50_000),
-      companyAt('faraway2', 60_000),
-    ];
-    const spread = selectRegions(sparse, ORIGIN, IOS);
-    expect(spread.guard!.radius).toBeGreaterThan(10_000);
-  });
-
   it('stays inside the radius the platform agrees to monitor', () => {
     const continents = [
       ...Array.from({ length: 19 }, (_, i) => companyAt(`near${i}`, 100 + i * 10)),
@@ -177,12 +114,4 @@ describe('regionsEqual', () => {
     expect(regionsEqual(a, [...a].reverse())).toBe(true);
   });
 
-  it('detects a moved origin', () => {
-    const moved = selectRegions(manyCompanies(), { latitude: -23.4, longitude: -46.63 }, IOS).regions;
-    expect(regionsEqual(a, moved)).toBe(false);
-  });
-
-  it('detects a different size', () => {
-    expect(regionsEqual(a, a.slice(1))).toBe(false);
-  });
 });

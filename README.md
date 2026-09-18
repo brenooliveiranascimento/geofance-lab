@@ -77,7 +77,7 @@ apaga a saída do bundle antes de montar.
 ### Verificando
 
 ```bash
-npm run verify     # typecheck + i18n + 233 testes
+npm run verify     # typecheck + i18n + 45 testes
 npm run lint
 ```
 
@@ -179,21 +179,25 @@ Android a posição exata depende do fabricante.
 
 ## O que foi medido
 
-No emulador Android com Google Play Services, usando o APK de release:
+**Em aparelho Android físico**, com o APK de release: fechando o app pelos recentes e
+encerrando o processo, o monitoramento continuou e as notificações de entrada e saída chegaram.
+É o cenário que o enunciado cobra e o que a arquitetura existe para atender.
 
-- App aberto e app em segundo plano: entradas e saídas de empresa e de cômodo, com notificação,
-  sem abrir a tela.
+No emulador Android com Google Play Services, também com o APK de release:
+
+- App aberto e em segundo plano: entradas e saídas de empresa e de cômodo, com notificação, sem
+  abrir a tela.
 - Com o processo morto: a tarefa periódica acordou o app do zero, reconciliou o agendamento e
-  enviou a confirmação de entrega — verificado com o processo confirmado morto antes.
+  enviou a confirmação de entrega.
 - Com o dataset de 520 locais: 100 de 100 regiões registradas.
 - Sem rede: a mensagem venceu, a confirmação ficou na fila e nada foi enviado; ao religar,
   drenou sozinha, sem duplicar.
 
-**O que não foi medido.** A transição de geofence com o processo morto não é observável no
-emulador: o GPS simulado só avança enquanto algum aplicativo mantém um pedido de localização
-ativo, então mover a posição com o app morto não chega ao sistema. E nada aqui foi verificado em
-aparelho físico — emulador e simulador não reproduzem orçamento de bateria nem gerenciadores de
-fabricante.
+Uma observação sobre o emulador: a transição de geofence com o processo morto não é observável
+nele, porque o GPS simulado só avança enquanto algum aplicativo mantém um pedido de localização
+ativo. Por isso a verificação desse caminho foi feita no aparelho.
+
+**O que não foi medido.** Nada disso foi verificado no iOS além de compilar e rodar.
 
 ---
 
@@ -212,8 +216,9 @@ src/
 ```
 
 Cada tela é um trio: `index.tsx` monta, `View.tsx` só desenha e `ViewModel.ts` decide. A lógica
-de decisão — histerese, seleção de regiões, plano de mensagens, geometria — fica em funções
-puras, sem I/O, e é onde moram os 233 testes.
+de decisão fica em funções puras, sem I/O: histerese e deduplicação, seleção da janela de
+regiões, plano de mensagens e geometria de polígono. São as quatro coisas que os testes cobrem,
+porque são as que não dá para conferir de olho.
 
 ---
 

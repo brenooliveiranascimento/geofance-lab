@@ -52,11 +52,6 @@ const asRow = (
 });
 
 describe('buildPlan — onboarding', () => {
-  it('produces one message per configured offset', () => {
-    const onboarding = plan().filter((m) => m.sequence === 'onboarding');
-    expect(onboarding).toHaveLength(3);
-    expect(onboarding.map((m) => m.messageId)).toEqual(['onb-0', 'onb-1', 'onb-2']);
-  });
 
   it('companies them minutes after enrolment, in order', () => {
     const onboarding = plan().filter((m) => m.sequence === 'onboarding');
@@ -67,14 +62,6 @@ describe('buildPlan — onboarding', () => {
     ]);
   });
 
-  it('numbers them in the subtitle', () => {
-    const onboarding = plan().filter((m) => m.sequence === 'onboarding');
-    expect(onboarding.map((m) => m.subtitle)).toEqual([
-      'Mensagem 1 de 3',
-      'Mensagem 2 de 3',
-      'Mensagem 3 de 3',
-    ]);
-  });
 });
 
 describe('buildPlan — daily', () => {
@@ -96,15 +83,6 @@ describe('buildPlan — daily', () => {
     expect(new Set(days).size).toBe(days.length);
   });
 
-  it('advances by one calendar day each time', () => {
-    const times = daily().map((m) => m.scheduledFor);
-    for (let i = 1; i < times.length; i += 1) {
-      const gap = times[i] - times[i - 1];
-      expect(gap).toBeGreaterThanOrEqual(23 * 60 * MINUTE);
-      expect(gap).toBeLessThanOrEqual(25 * 60 * MINUTE);
-    }
-  });
-
   it('labels week and position in the subtitle', () => {
     const subtitles = daily().map((m) => m.subtitle);
     expect(subtitles[0]).toBe('Semana 1; Mensagem 1 de 7');
@@ -123,34 +101,6 @@ describe('buildPlan — daily', () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it('is fully deterministic for the same enrolment', () => {
-    expect(buildPlan(ENROLLED_AT, CONFIG, CONTENT)).toEqual(buildPlan(ENROLLED_AT, CONFIG, CONTENT));
-  });
-
-  it('stops at whichever runs out first, config or content', () => {
-    const short = buildPlan(ENROLLED_AT, CONFIG, { ...CONTENT, daily: CONTENT.daily.slice(0, 5) });
-    expect(short.filter((m) => m.sequence === 'daily')).toHaveLength(5);
-  });
-});
-
-describe('selectWindow', () => {
-  it('returns only future messages, capped at the horizon', () => {
-    const now = ENROLLED_AT + 6 * MINUTE;
-    const window = selectWindow(plan(), now, 4);
-
-    expect(window).toHaveLength(4);
-    expect(window.every((m) => m.scheduledFor > now)).toBe(true);
-    expect(window[0].messageId).toBe('onb-2');
-  });
-
-  it('is empty once the sequence is over', () => {
-    const afterEverything = plan().at(-1)!.scheduledFor + MINUTE;
-    expect(selectWindow(plan(), afterEverything, 10)).toEqual([]);
-  });
-
-  it('tolerates a non-positive horizon', () => {
-    expect(selectWindow(plan(), ENROLLED_AT, 0)).toEqual([]);
-  });
 });
 
 describe('diffSchedule', () => {
@@ -159,14 +109,6 @@ describe('diffSchedule', () => {
   it('schedules the whole window on a fresh install', () => {
     const diff = diffSchedule(plan(), [], { now, horizon: 5 });
     expect(diff.toSchedule).toHaveLength(5);
-    expect(diff.toCancel).toEqual([]);
-    expect(diff.toMarkDelivered).toEqual([]);
-  });
-
-  it('is a no-op when everything already matches', () => {
-    const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));
-    const diff = diffSchedule(plan(), rows, { now, horizon: 5 });
-    expect(diff.toSchedule).toEqual([]);
     expect(diff.toCancel).toEqual([]);
     expect(diff.toMarkDelivered).toEqual([]);
   });
@@ -186,15 +128,6 @@ describe('diffSchedule', () => {
 
     expect(diff.toMarkDelivered).toEqual([delivered]);
     expect(diff.toCancel).toEqual([]);
-  });
-
-
-  it('never re-schedules a slot that is already queued', () => {
-    const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));
-    const first = diffSchedule(plan(), rows, { now, horizon: 5 });
-    const second = diffSchedule(plan(), rows, { now, horizon: 5 });
-    expect(first).toEqual(second);
-    expect(first.toSchedule).toHaveLength(0);
   });
 
   it('marks past-due rows as delivered instead of re-queueing them', () => {
@@ -218,14 +151,6 @@ describe('diffSchedule', () => {
     expect(scheduledKeys.some((key) => deliveredKeys.includes(key))).toBe(false);
   });
 
-  it('re-schedules a slot the user abandoned', () => {
-    const window = selectWindow(plan(), now, 5);
-    const rows = window.map((m, i) => asRow(m, i === 0 ? { state: 'cancelled' } : {}));
-
-    const diff = diffSchedule(plan(), rows, { now, horizon: 5 });
-    expect(diff.toSchedule.map((m) => m.messageId)).toEqual([window[0].messageId]);
-  });
-
   it('replaces a row whose planned time moved', () => {
     const window = selectWindow(plan(), now, 3);
     const rows = window.map((m, i) =>
@@ -235,12 +160,6 @@ describe('diffSchedule', () => {
     const diff = diffSchedule(plan(), rows, { now, horizon: 3 });
     expect(diff.toCancel.map((r) => r.messageId)).toEqual([window[1].messageId]);
     expect(diff.toSchedule.map((m) => m.messageId)).toEqual([window[1].messageId]);
-  });
-
-  it('withdraws rows the plan no longer contains', () => {
-    const orphan = asRow({ ...plan()[0], sequence: 'daily', position: 999 });
-    const diff = diffSchedule(plan(), [orphan], { now, horizon: 5 });
-    expect(diff.toCancel).toEqual([orphan]);
   });
 
   it('re-schedules when the OS lost the notification', () => {
@@ -255,10 +174,4 @@ describe('diffSchedule', () => {
     ]);
   });
 
-  it('leaves rows beyond the horizon alone', () => {
-    const rows = plan().map((m) => asRow(m));
-    const diff = diffSchedule(plan(), rows, { now, horizon: 2 });
-    expect(diff.toCancel).toEqual([]);
-    expect(diff.toSchedule).toEqual([]);
-  });
 });

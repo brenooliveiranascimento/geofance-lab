@@ -68,6 +68,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (233 testes)
+npm run verify    # typecheck + check:i18n + jest (45 testes)
 npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```

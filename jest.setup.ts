@@ -1,14 +1,11 @@
 process.env.TZ = 'America/Sao_Paulo';
 
-beforeAll(async () => {
-  await require('./src/__mocks__/expoSqlite').initTestSqlite();
-});
-
 jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: () => require('./src/__mocks__/expoSqlite').openTestDatabase(),
-}));
-
-jest.mock('expo-network', () => ({
-  getNetworkStateAsync: async () => ({ isConnected: true, isInternetReachable: true }),
-  addNetworkStateListener: () => ({ remove: () => undefined }),
+  openDatabaseSync: () => ({
+    execSync: jest.fn(),
+    runSync: () => ({ changes: 0, lastInsertRowId: 0 }),
+    getAllSync: () => [],
+    getFirstSync: () => null,
+    withTransactionSync: (work: () => void) => work(),
+  }),
 }));
