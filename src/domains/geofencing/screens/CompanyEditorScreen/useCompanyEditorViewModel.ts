@@ -5,7 +5,6 @@ import { Alert } from 'react-native';
 
 import {
   circumscribedRadiusMeters,
-  isRingInsideRing,
   isSimpleRing,
   nearestVertexDistanceMeters,
   ringAreaSquareMeters,
@@ -17,6 +16,7 @@ import {
 import { useToast } from '@src/lib/toast';
 
 import { COMPANY_SHAPE } from '@src/domains/geofencing/config';
+import { ringIssue } from '@src/domains/geofencing/services/ringRules';
 import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
 import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
 import { useCompanyStates } from '@src/domains/geofencing/queries/useCompanyStates';
@@ -144,26 +144,24 @@ export function useCompanyEditorViewModel(): CompanyEditorViewModel {
     if (mode === 'roomName') {
       return roomName.trim().length < 2 ? t('wizard.errors.roomName') : null;
     }
-    if (mode !== 'outlineDraw' && mode !== 'roomDraw') return null;
+    if (!drawing) return null;
 
-    if (draft.length < COMPANY_SHAPE.minVertices) {
-      return t('wizard.errors.vertices', { total: COMPANY_SHAPE.minVertices });
-    }
-    if (tangled) return t('wizard.errors.selfIntersecting');
-    const minArea =
+    const minAreaSquareMeters =
       mode === 'outlineDraw'
         ? COMPANY_SHAPE.minCompanyAreaSquareMeters
         : COMPANY_SHAPE.minRoomAreaSquareMeters;
-    if (draftAreaSquareMeters < minArea) return t('wizard.errors.area', { total: minArea });
 
-    if (mode === 'roomDraw' && company?.polygon && !isRingInsideRing(draft, company.polygon)) {
-      return t('wizard.errors.outsideCompany');
-    }
-    if (mode === 'outlineDraw' && rooms.some((room) => !isRingInsideRing(room.polygon, draft))) {
-      return t('editor.errors.outlineExcludesRooms');
-    }
-    return null;
-  }, [mode, roomName, draft, tangled, draftAreaSquareMeters, company, rooms, t]);
+    const issue = ringIssue(draft, {
+      minAreaSquareMeters,
+      containedBy: mode === 'roomDraw' ? (company?.polygon ?? null) : null,
+      mustContain: mode === 'outlineDraw' ? rooms.map((room) => room.polygon) : [],
+    });
+    if (!issue) return null;
+
+    return t(`wizard.errors.${issue}`, {
+      total: issue === 'vertices' ? COMPANY_SHAPE.minVertices : minAreaSquareMeters,
+    });
+  }, [mode, drawing, roomName, draft, company, rooms, t]);
 
   const persistCompany = useCallback(
     (next: Company) => {

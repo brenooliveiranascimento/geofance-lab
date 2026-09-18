@@ -7,6 +7,13 @@ const LOCALE = 'pt-BR';
 const SOURCE_DIRS = ['src', 'app'];
 
 const DYNAMIC_KEYS = {
+  'wizard.errors': [
+    'vertices',
+    'selfIntersecting',
+    'area',
+    'outsideCompany',
+    'outlineExcludesRooms',
+  ],
   'events.kind': ['company_enter', 'company_exit', 'room_enter', 'room_exit'],
   'events.scope': ['all', 'companies', 'rooms'],
   'history.tab': ['events', 'system'],

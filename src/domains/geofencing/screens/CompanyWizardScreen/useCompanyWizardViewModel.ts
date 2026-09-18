@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import {
   circumscribedRadiusMeters,
-  isRingInsideRing,
   isSimpleRing,
   nearestVertexDistanceMeters,
   ringAreaSquareMeters,
@@ -21,6 +20,7 @@ import {
 } from '@src/domains/onboarding/services/onboardingFlag';
 
 import { COMPANY_SHAPE } from '@src/domains/geofencing/config';
+import { ringIssue } from '@src/domains/geofencing/services/ringRules';
 import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
 import { invalidateGeofencingData } from '@src/domains/geofencing/queries/invalidate';
 import { upsertCompany, upsertRoom } from '@src/domains/geofencing/services/companyRepository';
@@ -173,27 +173,28 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
 
   const error = useMemo(() => {
     if (step === 'name' && name.trim().length < 2) return t('wizard.errors.name');
+    if (step === 'roomName' && roomName.trim().length < 2) return t('wizard.errors.roomName');
+    if (!isDrawing) return null;
 
-    if (isDrawing) {
-      if (currentRing.length < COMPANY_SHAPE.minVertices) {
-        return t('wizard.errors.vertices', { total: COMPANY_SHAPE.minVertices });
-      }
-      if (tangled) return t('wizard.errors.selfIntersecting');
-      const minArea =
+    const issue = ringIssue(currentRing, {
+      minAreaSquareMeters:
         step === 'outline'
           ? COMPANY_SHAPE.minCompanyAreaSquareMeters
-          : COMPANY_SHAPE.minRoomAreaSquareMeters;
-      if (draftAreaSquareMeters < minArea) return t('wizard.errors.area', { total: minArea });
+          : COMPANY_SHAPE.minRoomAreaSquareMeters,
+      containedBy: step === 'roomDraw' ? outline : null,
+      mustContain: step === 'outline' ? rooms.map((room) => room.polygon) : [],
+    });
+    if (!issue) return null;
 
-      if (step === 'roomDraw' && !isRingInsideRing(currentRing, outline)) {
-        return t('wizard.errors.outsideCompany');
-      }
-    }
-
-    if (step === 'roomName' && roomName.trim().length < 2) return t('wizard.errors.roomName');
-
-    return null;
-  }, [step, name, isDrawing, currentRing, tangled, draftAreaSquareMeters, outline, roomName, t]);
+    return t(`wizard.errors.${issue}`, {
+      total:
+        issue === 'vertices'
+          ? COMPANY_SHAPE.minVertices
+          : step === 'outline'
+            ? COMPANY_SHAPE.minCompanyAreaSquareMeters
+            : COMPANY_SHAPE.minRoomAreaSquareMeters,
+    });
+  }, [step, name, roomName, isDrawing, currentRing, outline, rooms, t]);
 
   const advance = useCallback(() => {
     if (error) return;

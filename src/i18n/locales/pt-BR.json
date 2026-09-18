@@ -114,9 +114,6 @@
       "activeRadius": "Raio ativo",
       "vertices": "Vértices do perímetro"
     },
-    "errors": {
-      "outlineExcludesRooms": "O novo perímetro deixaria algum cômodo de fora. Amplie o desenho ou exclua o cômodo antes."
-    },
     "rooms": {
       "title": "Cômodos ({{total}})",
       "explainer": "Círculos nativos não funcionam nessa escala, então cômodos são polígonos.",
@@ -173,7 +170,8 @@
       "outsideCompany": "O cômodo precisa ficar dentro do perímetro da empresa",
       "roomName": "Informe um nome com pelo menos 2 letras",
       "selfIntersecting": "As linhas do desenho estão se cruzando. Toque em \"Desembaraçar\" ou desfaça os últimos pontos.",
-      "tooClose": "Esse ponto está em cima de outro. Arraste o mapa antes de adicionar."
+      "tooClose": "Esse ponto está em cima de outro. Arraste o mapa antes de adicionar.",
+      "outlineExcludesRooms": "O novo perímetro deixaria algum cômodo de fora. Amplie o desenho ou exclua o cômodo antes."
     },
     "tangled": {
       "title": "O contorno está cruzado",
