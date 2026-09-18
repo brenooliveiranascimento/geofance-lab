@@ -1,20 +1,22 @@
 process.env.TZ = 'America/Sao_Paulo';
 
+beforeAll(async () => {
+  await require('./src/__mocks__/expoSqlite').initTestSqlite();
+});
+
 jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: jest.fn(() => ({
-    execSync: jest.fn(),
-    runSync: jest.fn(() => ({ changes: 0, lastInsertRowId: 0 })),
-    getAllSync: jest.fn(() => []),
-    getFirstSync: jest.fn(() => null),
-    withTransactionSync: jest.fn((fn: () => void) => fn()),
-    closeSync: jest.fn(),
-  })),
+  openDatabaseSync: () => require('./src/__mocks__/expoSqlite').openTestDatabase(),
 }));
 
 jest.mock('react-native-mmkv', () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
+  createMMKV: () => ({
     set: jest.fn(),
-    getString: jest.fn(() => undefined),
+    getString: () => undefined,
     delete: jest.fn(),
-  })),
+  }),
+}));
+
+jest.mock('expo-network', () => ({
+  getNetworkStateAsync: async () => ({ isConnected: true, isInternetReachable: true }),
+  addNetworkStateListener: () => ({ remove: () => undefined }),
 }));
