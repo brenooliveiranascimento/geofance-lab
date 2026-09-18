@@ -8,13 +8,159 @@ Sem backend, sem conta, sem serviço pago — tudo mora no aparelho.
 
 ---
 
+## Começando
+
+### Instalar
+
+O APK acompanha a entrega; ele não fica versionado no repositório, porque são 62 MB. Se você só
+tem o código em mãos, [gere um](#gerando-o-apk) — leva menos de dois minutos.
+
+Com o aparelho no cabo:
+
+```bash
+adb install geofence-lab.apk
+```
+
+Ou copie o arquivo para o celular e abra: o Android vai pedir para liberar instalação de fonte
+desconhecida. Ele é assinado com chave de debug, que é o normal para um build que vai por
+sideload — roda igual, só não serviria para publicar na Play.
+
+O pacote traz `arm64-v8a` e `x86_64`, então instala tanto em aparelho quanto em emulador. Para
+rodar direto do código em vez de instalar, veja [Rodando](#rodando).
+
+### Na primeira abertura
+
+São cinco telas e dá para pular qualquer uma com "Agora não", mas vale parar na terceira.
+
+1. **Boas-vindas** — o que o app faz.
+2. **Como funciona** — as duas camadas de detecção, em três linhas.
+3. **Localização** — o Android pede o acesso em duas etapas: primeiro o comum, e só depois o "o
+   tempo todo", que abre uma tela de ajustes do sistema. É preciso escolher **"Permitir o tempo
+   todo"** — sem isso a detecção só funciona com o app aberto. A tela mostra o estado das duas
+   para você conferir antes de seguir.
+4. **Notificações** — um toque. É o que faz as mensagens e os avisos de entrada e saída
+   aparecerem na bandeja.
+5. **Cadastrar empresa** — leva direto para o cadastro, ou "Cadastrar depois".
+
+### Cadastrar a primeira empresa
+
+Três passos.
+
+**Nome.** É o que aparece na notificação. "Matriz São Paulo", "Casa", o que fizer sentido.
+
+**Perímetro.** Aqui o app foge do usual: em vez de arrastar um pino pelo mapa, o pino fica
+parado no centro da tela e quem se move é o mapa. Você leva um canto da empresa para baixo da
+mira e toca em "Adicionar ponto". Repete para cada canto — três é o mínimo, quatro costumam
+bastar. O contador embaixo mostra quantos pontos e quantos m² o desenho já tem, e "Desfazer"
+tira o último.
+
+**Cômodos.** Cada área de dentro vira um polígono com nome, desenhado do mesmo jeito. O contorno
+azul da empresa continua visível para guiar, porque o cômodo precisa caber dentro dele. Dá para
+concluir sem nenhum e adicionar depois.
+
+Raio e raio ativo você não digita: os dois saem do desenho.
+
+### Ligar o monitoramento
+
+Na aba Monitor, "Iniciar monitoramento". O cabeçalho passa a "Monitorando" e diz quantas regiões
+o sistema aceitou registrar. A partir daí pode fechar o app, inclusive tirar dos recentes.
+
+Quando você entra numa empresa o cabeçalho vira "Você está dentro", o GPS contínuo liga e aparece
+uma notificação fixa avisando que o app está monitorando os cômodos. Ela some quando você sai.
+É exigência do Android: sem serviço em primeiro plano o sistema estrangula a localização em
+background.
+
+### Ver funcionar sem sair do lugar
+
+No rodapé do Monitor há dois links, Histórico e Simulador.
+
+O **Simulador** percorre uma rota sintética pelo mesmo caminho que as posições reais do GPS
+percorrem — mesma máquina de estados, mesma gravação, mesmas notificações. Escolha a empresa, se
+o trajeto atravessa ou só chega e fica, e a acurácia simulada. Em ±120 m nada acontece de
+propósito: a leitura é pior que o teto de acurácia e é descartada antes de virar evento.
+
+Pare o monitoramento real antes de rodar — o próprio simulador avisa. Senão as duas fontes
+disputam a mesma máquina de estados.
+
+### A sequência de mensagens
+
+Na aba Mensagens, "Simular cadastro". Isso grava o instante do cadastro, e é dele que o plano
+inteiro deriva: cinco mensagens de boas-vindas em 2, 5, 12, 25 e 45 minutos e, no dia seguinte,
+o início da diária — 4 semanas, 7 por semana, uma por dia às 9h.
+
+A primeira chega em dois minutos. Feche o app e espere: ela aparece na bandeja com "Mensagem 1
+de 5" no subtítulo. Nas diárias o subtítulo é "Semana 3; Mensagem 2 de 7".
+
+Para ver a confirmação de entrega saindo, configure o endpoint antes — está em
+[Configurando](#configurando).
+
+---
+
+## As telas
+
+### Monitor
+
+O mapa com a sua posição e as empresas em volta. O círculo cheio é o raio de entrada, o anel de
+fora é o raio ativo, o polígono laranja é um cômodo; verde quando você está dentro, azul quando
+não. O botão no canto inferior direito reenquadra no seu ponto.
+
+O cabeçalho é o estado em uma linha — "Parado", "Monitorando · 100 regiões no sistema · GPS em
+repouso", "Você está dentro" — e logo abaixo vem o último evento registrado. Embaixo, o botão de
+ligar e desligar, com os links para Histórico e Simulador.
+
+### Empresas
+
+A lista ordenada por distância de onde você está, com busca por nome. Cada linha traz os raios,
+quantos cômodos tem e a que distância fica. O interruptor desliga uma empresa sem apagá-la: ela
+sai do monitoramento e volta quando você quiser. Tocar na linha abre o editor.
+
+"Cadastrar empresa" abre o assistente de três passos descrito lá em cima. O mesmo botão aparece
+no Monitor enquanto não houver nenhuma empresa.
+
+### Editor da empresa
+
+Renomear, ver os raios derivados e a contagem de vértices, redesenhar o perímetro, adicionar e
+remover cômodos, excluir a empresa. Redesenhar o perímetro exige que os cômodos continuem
+cabendo dentro do novo contorno — o app recusa e explica se algum ficar de fora.
+
+### Mensagens
+
+Antes do cadastro há só o botão. Depois: quantas mensagens estão agendadas, quantas foram
+entregues, o total do plano, quando cai a próxima, e a sequência inteira listada com o subtítulo
+e o estado de cada uma.
+
+Mais abaixo fica a fila de confirmações — quantas estão na fila, quantas foram confirmadas, e as
+últimas com a chave de idempotência e o número de tentativas. É onde o comportamento offline
+aparece: a fila segura sem gastar tentativa e esvazia sozinha quando a rede volta.
+
+"Reconciliar agora" força o que o app faz sozinho em background. "Apagar sequência" zera tudo.
+
+### Ajustes
+
+O estado das três permissões, com atalhos para pedi-las ou abrir os ajustes do sistema; o
+endpoint de confirmação de entrega; a versão; e "Apagar tudo e recomeçar", que limpa empresas,
+cômodos, eventos e a sequência e devolve para o onboarding.
+
+### Simulador
+
+Escolhe uma empresa, o trajeto e a acurácia, e injeta posições sintéticas pelo mesmo caminho do
+GPS real. Serve para conferir a detecção sem sair do lugar — e para ver o teto de acurácia
+trabalhando, já que em ±120 m nenhum evento sai. As posições são datadas para trás, então o
+monitoramento real pode seguir logo depois sem confusão de horário.
+
+### Histórico
+
+Duas abas. **Eventos** lista entradas e saídas, filtrável por empresa ou cômodo, com "Copiar"
+exportando em JSONL. **Sistema** é o log interno mais um painel de diagnóstico: se o
+monitoramento está ativo, quantas regiões o sistema aceitou, e quais das quatro tarefas de
+background estão registradas. É para onde olhar quando alguma coisa não acontece.
+
+---
+
 ## Como funciona
 
-### Cadastro
-
-Você desenha o perímetro da empresa arrastando o mapa sob um pino fixo e tocando em "Adicionar
-ponto". Depois desenha os cômodos por dentro, cada um com um nome. O raio e o raio ativo são
-calculados a partir do desenho — você não precisa informar números.
+Até aqui foi o que se vê. Desta seção em diante é o porquê — o que acontece por baixo e por que
+foi feito assim.
 
 ### Detecção
 
@@ -37,7 +183,7 @@ Cada evento carrega uma chave única (`empresa:3:entrada`) gravada com índice `
 nenhum evento é registrado duas vezes — nem quando o sistema operacional reporta o estado de
 todas as regiões de novo ao reiniciar o app.
 
-### Mensagens
+### Sequência e entrega
 
 Depois do cadastro chegam 5 mensagens de boas-vindas em 2, 5, 12, 25 e 45 minutos. Um dia
 depois começa a sequência diária: 4 semanas, 7 mensagens por semana, uma por dia às 9h, com
@@ -119,18 +265,6 @@ na fila.
 O app pede localização em duas etapas, porque os dois sistemas exigem assim: primeiro o acesso
 comum, depois o "o tempo todo". No Android o segundo abre uma tela de ajustes. Sem o acesso "o
 tempo todo" não há monitoramento em background.
-
----
-
-## Testando sem sair do lugar
-
-**Simulador de rota** — o link no rodapé do Monitor percorre uma rota sintética pelo mesmo
-caminho que o GPS alimenta. Dá para escolher a empresa, o trajeto e a acurácia simulada: em ±120 m nenhum
-evento é emitido, porque a leitura é descartada antes de virar evento.
-
-**Histórico** — o outro link no rodapé do Monitor, com duas abas. Eventos mostra entradas e saídas, filtráveis e exportáveis. Sistema
-mostra o log interno: a janela de regiões, a troca de camada, as leituras descartadas e as
-chaves de idempotência.
 
 ---
 
