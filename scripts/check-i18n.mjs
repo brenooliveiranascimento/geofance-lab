@@ -47,6 +47,21 @@ function walk(dir) {
   return files;
 }
 
+function collectMentionedKeys() {
+  const mentioned = new Set();
+
+  for (const dir of SOURCE_DIRS) {
+    for (const file of walk(resolve(ROOT, dir))) {
+      const source = readFileSync(file, 'utf8');
+      for (const match of source.matchAll(/'([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)+)'/g)) {
+        mentioned.add(match[1]);
+      }
+    }
+  }
+
+  return mentioned;
+}
+
 function collectUsedKeys() {
   const keys = new Set();
 
@@ -107,6 +122,16 @@ function main() {
         problems.push(`${locale}: chave ausente ou não textual → ${key}`);
       }
     }
+  }
+
+  const reachable = new Set([...used, ...collectMentionedKeys()]);
+  const isUsed = (key) =>
+    reachable.has(key) ||
+    reachable.has(key.replace(/_(one|other)$/, '')) ||
+    [...reachable].some((prefix) => key.startsWith(`${prefix}.`));
+
+  for (const key of flatten(bundles[LOCALES[0]])) {
+    if (!isUsed(key)) problems.push(`chave definida e nunca usada → ${key}`);
   }
 
   const [first, ...rest] = LOCALES;

@@ -55,10 +55,6 @@ const config: ExpoConfig = {
     ...(googleMapsApiKey ? { config: { googleMaps: { apiKey: googleMapsApiKey } } } : {}),
   },
 
-  web: {
-    output: 'static',
-    favicon: './assets/images/favicon.png',
-  },
 
   plugins: [
     'expo-router',

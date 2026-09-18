@@ -25,7 +25,6 @@ export const useStore = create<StoreState>()(
       partialize: (state) => ({
         onboardingCompleted: state.onboardingCompleted,
         language: state.language,
-        colorScheme: state.colorScheme,
       }),
     },
   ),

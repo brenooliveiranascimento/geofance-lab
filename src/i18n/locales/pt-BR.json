@@ -5,7 +5,6 @@
     "close": "Fechar",
     "delete": "Excluir",
     "next": "Continuar",
-    "refresh": "Atualizar",
     "save": "Salvar",
     "on": "Ativado",
     "off": "Desativado",
@@ -14,7 +13,6 @@
   "tabs": {
     "monitor": "Monitor",
     "companies": "Empresas",
-    "events": "Eventos",
     "messages": "Mensagens",
     "settings": "Ajustes"
   },
@@ -263,14 +261,9 @@
       "notifications": "Notificações",
       "requestLocation": "Pedir localização",
       "requestNotifications": "Pedir notificações",
-      "openSettings": "Abrir ajustes",
-      "backgroundMissing": {
-        "title": "Sem acesso em segundo plano",
-        "body": "O sistema só pergunta uma vez. Depois, só pelos ajustes do aparelho."
-      }
+      "openSettings": "Abrir ajustes"
     },
     "battery": {
-      "title": "Otimização de bateria",
       "body": "Alguns fabricantes encerram o serviço com a tela apagada. Isentar o app evita isso.",
       "action": "Abrir ajustes de bateria"
     },
@@ -285,7 +278,6 @@
       "demoRemoved": "{{total}} locais removidos"
     },
     "data": {
-      "title": "Dados",
       "reset": "Apagar tudo e recomeçar"
     },
     "reset": {
@@ -296,7 +288,6 @@
     },
     "about": {
       "title": "Sobre",
-      "app": "Aplicativo",
       "version": "Versão"
     },
     "delivery": {

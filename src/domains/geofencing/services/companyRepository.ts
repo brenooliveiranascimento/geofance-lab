@@ -78,12 +78,6 @@ export function getCompany(id: string): Company | null {
   return row ? toCompany(row) : null;
 }
 
-export function countCompanies(): number {
-  const row = getDatabase().getFirstSync<{ total: number }>(
-    'SELECT COUNT(*) AS total FROM companies;',
-  );
-  return row?.total ?? 0;
-}
 
 export function getCompanyIndex(): GridIndex<Company> {
   if (!indexCache) {

@@ -1,8 +1,8 @@
-import type { IconSymbolName } from '@src/components/ui/icon-symbol';
+import type { IconName } from '@src/components/atoms';
 
 export interface OnboardingStep {
   key: 'welcome' | 'how' | 'location' | 'notifications' | 'company';
-  icon: IconSymbolName;
+  icon: IconName;
   title: string;
   body: string;
   bullets?: string[];

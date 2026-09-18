@@ -12,7 +12,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Appearance, AppState, StyleSheet, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import 'react-native-reanimated';
 
 import { logger } from '@src/core/logger';
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';

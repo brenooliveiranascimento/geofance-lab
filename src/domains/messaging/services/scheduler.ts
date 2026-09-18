@@ -16,7 +16,6 @@ import {
   markScheduled,
   nextScheduled,
   readEnrolledAt,
-  writeLastReconciledAt,
 } from './scheduleRepository';
 import { buildPlan, diffSchedule, slotKey, type PlannerContent } from './sequencePlanner';
 import { dailyMessages, onboardingMessages, subtitleFormatter } from '../content/messages';
@@ -159,7 +158,6 @@ async function runReconcile({
     }
   }
 
-  writeLastReconciledAt(now);
 
   const summary = {
     scheduled,

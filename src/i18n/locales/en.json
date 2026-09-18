@@ -5,7 +5,6 @@
     "close": "Close",
     "delete": "Delete",
     "next": "Continue",
-    "refresh": "Refresh",
     "save": "Save",
     "on": "On",
     "off": "Off",
@@ -14,7 +13,6 @@
   "tabs": {
     "monitor": "Monitor",
     "companies": "Companies",
-    "events": "Events",
     "messages": "Messages",
     "settings": "Settings"
   },
@@ -263,14 +261,9 @@
       "notifications": "Notifications",
       "requestLocation": "Request location",
       "requestNotifications": "Request notifications",
-      "openSettings": "Open settings",
-      "backgroundMissing": {
-        "title": "No background access",
-        "body": "The system only asks once. After that, only through the device settings."
-      }
+      "openSettings": "Open settings"
     },
     "battery": {
-      "title": "Battery optimisation",
       "body": "Some manufacturers kill the service with the screen off. Exempting the app avoids that.",
       "action": "Open battery settings"
     },
@@ -285,7 +278,6 @@
       "demoRemoved": "{{total}} places removed"
     },
     "data": {
-      "title": "Data",
       "reset": "Erase everything and start over"
     },
     "reset": {
@@ -296,7 +288,6 @@
     },
     "about": {
       "title": "About",
-      "app": "Application",
       "version": "Version"
     },
     "delivery": {

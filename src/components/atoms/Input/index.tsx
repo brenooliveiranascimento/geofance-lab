@@ -1,21 +1,13 @@
 import React from 'react';
-import { TextInput, type TextInputProps, StyleSheet, View } from 'react-native';
-import { colors, spacing, radius, fontSize } from '@src/theme';
+import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
-export interface InputProps extends TextInputProps {
-  label?: string;
-  error?: string;
-}
+import { colors, fontSize, radius, spacing } from '@src/theme';
+
+export type InputProps = TextInputProps;
 
 export function Input({ style, ...props }: InputProps): React.JSX.Element {
   return (
-    <View>
-      <TextInput
-        placeholderTextColor={colors.textMuted}
-        style={[styles.input, style]}
-        {...props}
-      />
-    </View>
+    <TextInput placeholderTextColor={colors.textMuted} style={[styles.input, style]} {...props} />
   );
 }
 

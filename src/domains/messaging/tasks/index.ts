@@ -32,12 +32,3 @@ export async function registerMessagingTask(): Promise<void> {
   }
 }
 
-export async function unregisterMessagingTask(): Promise<void> {
-  try {
-    if (await TaskManager.isTaskRegisteredAsync(MESSAGING_TASK)) {
-      await BackgroundTask.unregisterTaskAsync(MESSAGING_TASK);
-    }
-  } catch (error) {
-    logger.warn('task:messaging', 'unregistration failed', { error: String(error) });
-  }
-}

@@ -33,7 +33,6 @@ export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
   full: 9999,
 } as const;
 
@@ -46,5 +45,3 @@ export const fontSize = {
   xxl: 32,
 } as const;
 
-export const theme = { colors, spacing, radius, fontSize } as const;
-export type Theme = typeof theme;

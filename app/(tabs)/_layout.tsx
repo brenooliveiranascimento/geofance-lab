@@ -3,8 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
-import { HapticTab } from '@src/components/ui/haptic-tab';
-import { IconSymbol } from '@src/components/ui/icon-symbol';
+import { Icon } from '@src/components/atoms';
 import { colors } from '@src/theme';
 
 export default function TabLayout() {
@@ -14,7 +13,6 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: styles.tabBar,
@@ -26,28 +24,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.monitor'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="location.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon size={22} name="location.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="companies"
         options={{
           title: t('tabs.companies'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="building.2.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon size={22} name="building.2.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: t('tabs.messages'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="bell.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon size={22} name="bell.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t('tabs.settings'),
-          tabBarIcon: ({ color }) => <IconSymbol size={22} name="gearshape.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon size={22} name="gearshape.fill" color={color} />,
         }}
       />
     </Tabs>

@@ -33,17 +33,6 @@ export function listSchedule(): ScheduledMessage[] {
     .map(toScheduled);
 }
 
-export function getScheduleEntry(
-  sequence: SequenceId,
-  position: number,
-): ScheduledMessage | null {
-  const row = getDatabase().getFirstSync<ScheduleRow>(
-    'SELECT * FROM message_schedule WHERE sequence = ? AND position = ?;',
-    sequence,
-    position,
-  );
-  return row ? toScheduled(row) : null;
-}
 
 export function markScheduled(
   sequence: SequenceId,
@@ -154,8 +143,4 @@ export function resetEnrolment(): void {
   clearSchedule();
 }
 
-export const readLastReconciledAt = (): number | null =>
-  readJson<number>(MESSAGING_KEYS.lastReconciledAt);
 
-export const writeLastReconciledAt = (at: number): void =>
-  writeJson(MESSAGING_KEYS.lastReconciledAt, at);

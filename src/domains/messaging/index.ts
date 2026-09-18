@@ -1,6 +1,6 @@
 export * from './types';
 export { MESSAGING_CONFIG } from './config';
-export { registerMessagingTask, unregisterMessagingTask } from './tasks';
+export { registerMessagingTask } from './tasks';
 export {
   cancelAllMessages,
   handleNotificationReceived,

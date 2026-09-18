@@ -113,12 +113,6 @@ export function listEvents(filter: EventFilter = {}): GeofenceEvent[] {
     .map(toEvent);
 }
 
-export function countEvents(): number {
-  const row = getDatabase().getFirstSync<{ total: number }>(
-    'SELECT COUNT(*) AS total FROM geofence_events;',
-  );
-  return row?.total ?? 0;
-}
 
 export function clearEvents(): void {
   getDatabase().runSync('DELETE FROM geofence_events;');

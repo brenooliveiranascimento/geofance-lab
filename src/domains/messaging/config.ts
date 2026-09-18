@@ -23,7 +23,6 @@ export const MESSAGING_CONFIG = {
 
 export const MESSAGING_KEYS = {
   enrolledAt: 'messaging.enrolledAt',
-  lastReconciledAt: 'messaging.lastReconciledAt',
   deliveryEndpoint: 'messaging.deliveryEndpoint',
 } as const;
 

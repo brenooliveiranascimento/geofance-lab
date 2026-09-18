@@ -67,9 +67,6 @@ export function writeJson(key: string, value: unknown): void {
   writeValue(key, JSON.stringify(value));
 }
 
-export function deleteValue(key: string): void {
-  getDatabase().runSync('DELETE FROM kv WHERE key = ?;', key);
-}
 
 export function resetDatabase(): void {
   const db = getDatabase();
