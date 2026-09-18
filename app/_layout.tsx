@@ -4,7 +4,6 @@ import { resumeMonitoringIfNeeded } from '@src/domains/geofencing';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as Network from 'expo-network';
-import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -17,10 +16,7 @@ import { logger } from '@src/core/logger';
 import { UPKEEP_TASK } from '@src/domains/geofencing/config';
 import { MESSAGING_TASK } from '@src/domains/messaging/config';
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
-import {
-  handleNotificationReceived,
-  reconcileSchedule,
-} from '@src/domains/messaging/services/scheduler';
+import { reconcileSchedule } from '@src/domains/messaging/services/scheduler';
 import { queryClient } from '@src/lib/query/client';
 import { ToastProvider } from '@src/lib/toast';
 import { colors } from '@src/theme';
@@ -28,15 +24,6 @@ import { colors } from '@src/theme';
 Appearance.setColorScheme('dark');
 
 SplashScreen.preventAutoHideAsync();
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 async function catchUp(): Promise<void> {
   try {
@@ -62,8 +49,6 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    const received = Notifications.addNotificationReceivedListener(handleNotificationReceived);
-
     const appState = AppState.addEventListener('change', (status: AppStateStatus) => {
       if (status === 'active') void catchUp();
     });
@@ -73,7 +58,6 @@ export default function RootLayout() {
     });
 
     return () => {
-      received.remove();
       appState.remove();
       network.remove();
     };

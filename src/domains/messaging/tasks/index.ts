@@ -1,10 +1,11 @@
 import * as BackgroundTask from 'expo-background-task';
+import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
 import { logger } from '@src/core/logger';
 
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
-import { reconcileSchedule } from '@src/domains/messaging/services/scheduler';
+import { handleNotificationReceived, reconcileSchedule } from '@src/domains/messaging/services/scheduler';
 import { MESSAGING_TASK } from '@src/domains/messaging/config';
 
 TaskManager.defineTask(MESSAGING_TASK, async () => {
@@ -22,3 +23,5 @@ TaskManager.defineTask(MESSAGING_TASK, async () => {
   }
 });
 
+
+Notifications.addNotificationReceivedListener(handleNotificationReceived);
