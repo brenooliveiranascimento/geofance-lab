@@ -62,8 +62,6 @@ export const MIGRATIONS: readonly string[] = [
     notification_id TEXT,
     state           TEXT    NOT NULL,
     delivered_at    INTEGER,
-    last_error      TEXT,
-    updated_at      INTEGER NOT NULL,
     PRIMARY KEY (sequence, position)
   );
   CREATE INDEX IF NOT EXISTS idx_schedule_due ON message_schedule(state, scheduled_for);
@@ -97,5 +95,21 @@ export const MIGRATIONS: readonly string[] = [
     key   TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL
   );
+  `,
+
+  `
+  DROP TABLE IF EXISTS message_schedule;
+
+  CREATE TABLE message_schedule (
+    sequence        TEXT    NOT NULL,
+    position        INTEGER NOT NULL,
+    message_id      TEXT    NOT NULL,
+    scheduled_for   INTEGER NOT NULL,
+    notification_id TEXT,
+    state           TEXT    NOT NULL,
+    delivered_at    INTEGER,
+    PRIMARY KEY (sequence, position)
+  );
+  CREATE INDEX idx_schedule_due ON message_schedule(state, scheduled_for);
   `,
 ];

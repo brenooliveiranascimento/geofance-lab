@@ -104,7 +104,6 @@ export function selectWindow(
 
 export interface ScheduleDiff {
   toSchedule: PlannedMessage[];
-  toCancel: ScheduledMessage[];
   toMarkDelivered: ScheduledMessage[];
 }
 
@@ -125,7 +124,6 @@ export function diffSchedule(
   const rowByKey = new Map(existing.map((row) => [slotKey(row.sequence, row.position), row]));
 
   const toSchedule: PlannedMessage[] = [];
-  const toCancel: ScheduledMessage[] = [];
   const toMarkDelivered: ScheduledMessage[] = [];
   const needsReschedule = new Set<string>();
 
@@ -140,34 +138,20 @@ export function diffSchedule(
     }
 
     const planned = planByKey.get(key);
+    if (!planned) continue;
 
-    if (!planned) {
-      toCancel.push(row);
-      continue;
-    }
+    const moved = planned.scheduledFor !== row.scheduledFor;
+    const lost =
+      liveNotificationIds !== null &&
+      (!row.notificationId || !liveNotificationIds.has(row.notificationId));
 
-    if (planned.scheduledFor !== row.scheduledFor) {
-      toCancel.push(row);
-      needsReschedule.add(key);
-      continue;
-    }
-
-    if (liveNotificationIds && (!row.notificationId || !liveNotificationIds.has(row.notificationId))) {
-      needsReschedule.add(key);
-    }
+    if (moved || lost) needsReschedule.add(key);
   }
 
   for (const message of selectWindow(plan, now, horizon)) {
     const key = slotKey(message.sequence, message.position);
-    const row = rowByKey.get(key);
-
-    const missing = !row;
-    const abandoned = row?.state === 'cancelled' || row?.state === 'failed';
-
-    if (missing || abandoned || needsReschedule.has(key)) {
-      toSchedule.push(message);
-    }
+    if (!rowByKey.has(key) || needsReschedule.has(key)) toSchedule.push(message);
   }
 
-  return { toSchedule, toCancel, toMarkDelivered };
+  return { toSchedule, toMarkDelivered };
 }

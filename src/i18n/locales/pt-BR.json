@@ -290,10 +290,6 @@
       "save": "Salvar",
       "saved": "Endpoint salvo",
       "cleared": "Envio desligado",
-      "test": "Testar",
-      "testing": "Testando…",
-      "testOk": "O endpoint respondeu.",
-      "testFailed": "Não houve resposta do endpoint.",
       "invalid": "Informe uma URL http:// ou https://, ou deixe vazio para desligar."
     }
   },
@@ -305,7 +301,6 @@
     "synced": "{{scheduled}} agendadas · {{confirmed}} confirmações enviadas",
     "reset": "Apagar sequência",
     "enrolled": "Cadastro registrado · {{total}} notificações agendadas",
-    "retried": "{{requeued}} reenfileiradas · {{confirmed}} confirmadas",
     "permissionDenied": "Sem permissão de notificação não há o que agendar",
     "plan": "Sequência",
     "next": "Próxima mensagem",
@@ -321,9 +316,7 @@
     "state": {
       "pending": "no plano",
       "scheduled": "agendada",
-      "delivered": "entregue",
-      "cancelled": "cancelada",
-      "failed": "falhou"
+      "delivered": "entregue"
     },
     "receipts": {
       "title": "Confirmações de entrega",
@@ -331,13 +324,10 @@
       "noEndpoint": "Sem endpoint configurado. A fila continua sendo gravada.",
       "pending": "Na fila",
       "confirmed": "Confirmadas",
-      "exhausted": "Esgotadas",
-      "retry": "Reenfileirar esgotadas",
       "attempts": "{{total}} tentativas",
       "state": {
         "pending": "na fila",
-        "confirmed": "confirmada",
-        "exhausted": "esgotada"
+        "confirmed": "confirmada"
       }
     },
     "channel": "Mensagens",

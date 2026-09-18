@@ -44,9 +44,14 @@ depois começa a sequência diária: 4 semanas, 7 mensagens por semana, uma por 
 `Semana X; Mensagem Y de Z` no subtítulo da notificação.
 
 O app não encadeia agendamentos: ele deriva o plano inteiro do instante do cadastro e compara
-com o que o sistema já tem, agendando o que falta. Funciona offline; cada entrega gera uma
-confirmação que fica numa fila e é enviada ao endpoint quando houver rede — com reenvio
-progressivo e sem duplicar.
+com o que o sistema já tem, agendando o que falta. O identificador da notificação é a chave do
+slot, então reagendar substitui a pendente em vez de somar outra — é daí que vem a garantia de
+não duplicar, e é por isso que não existe caminho de cancelamento.
+
+Funciona offline: o plano é local e cada entrega gera uma confirmação que fica numa fila. Sem
+rede a fila segura sem gastar tentativa; com rede ela é enviada ao endpoint, e uma falha volta
+com espera dobrando a partir de 30 s até o teto de 4 h, indefinidamente. Um slot tem dois
+estados, agendado e entregue; um recibo, pendente e confirmado.
 
 ---
 
@@ -100,8 +105,9 @@ prebuild, e no bundle, pela compilação.
 
 ### Endpoint de confirmação de entrega
 
-Em **Ajustes → Confirmação de entrega**, cole uma URL e toque em "Testar". Gere uma em
-[webhook.site](https://webhook.site) para acompanhar as requisições chegando no navegador.
+Em **Ajustes → Confirmação de entrega**, cole uma URL e salve. Gere uma em
+[webhook.site](https://webhook.site) para acompanhar as requisições chegando no navegador — a
+aba Mensagens mostra a fila esvaziando.
 
 Cada mensagem entregue gera um POST com o identificador da mensagem, o subtítulo, o instante da
 entrega e um cabeçalho `Idempotency-Key`. Campo vazio volta para o valor de

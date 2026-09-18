@@ -10,9 +10,7 @@ import {
   clearSchedule,
   countByState,
   listSchedule,
-  markCancelled,
   markDelivered,
-  markFailed,
   markScheduled,
   nextScheduled,
   readEnrolledAt,
@@ -57,13 +55,9 @@ function contentFor(message: PlannedMessage): Notifications.NotificationContentI
   };
 }
 
-export type ReconcileSkipReason = 'not_enrolled' | 'no_permission';
-
 export interface ReconcileSummary {
   scheduled: number;
-  cancelled: number;
   delivered: number;
-  skipped: ReconcileSkipReason | null;
 }
 
 export interface ReconcileOptions {
@@ -79,15 +73,15 @@ export function reconcileSchedule(options: ReconcileOptions = {}): Promise<Recon
 }
 
 async function runReconcile({ now = Date.now() }: ReconcileOptions): Promise<ReconcileSummary> {
-  const idle: ReconcileSummary = { scheduled: 0, cancelled: 0, delivered: 0, skipped: null };
+  const idle: ReconcileSummary = { scheduled: 0, delivered: 0 };
 
   const enrolledAt = readEnrolledAt();
-  if (enrolledAt === null) return { ...idle, skipped: 'not_enrolled' };
+  if (enrolledAt === null) return idle;
 
   const permission = await Notifications.getPermissionsAsync();
   if (!permission.granted) {
     logger.warn(TAG, 'notifications are not permitted, holding the schedule');
-    return { ...idle, skipped: 'no_permission' };
+    return idle;
   }
 
   await ensureChannel();
@@ -108,16 +102,6 @@ async function runReconcile({ now = Date.now() }: ReconcileOptions): Promise<Rec
     horizon: MESSAGING_CONFIG.scheduleHorizon,
     liveNotificationIds: liveIds,
   });
-
-  for (const row of diff.toCancel) {
-    const key = slotKey(row.sequence, row.position);
-    try {
-      await Notifications.cancelScheduledNotificationAsync(key);
-    } catch (error) {
-      logger.warn(TAG, 'could not cancel a queued notification', { key, error: String(error) });
-    }
-    markCancelled(row.sequence, row.position);
-  }
 
   for (const row of diff.toMarkDelivered) {
     const planned = plan.find((m) => m.sequence === row.sequence && m.position === row.position);
@@ -141,20 +125,11 @@ async function runReconcile({ now = Date.now() }: ReconcileOptions): Promise<Rec
       scheduled += 1;
     } catch (error) {
       logger.error(TAG, 'failed to schedule', { key, error: String(error) });
-      markFailed(message.sequence, message.position, String(error));
     }
   }
 
-
-  const summary = {
-    scheduled,
-    cancelled: diff.toCancel.length,
-    delivered: diff.toMarkDelivered.length,
-    skipped: null,
-  };
-  if (scheduled || diff.toCancel.length || diff.toMarkDelivered.length) {
-    logger.info(TAG, 'schedule reconciled', summary);
-  }
+  const summary = { scheduled, delivered: diff.toMarkDelivered.length };
+  if (scheduled || summary.delivered) logger.info(TAG, 'schedule reconciled', summary);
   return summary;
 }
 
@@ -218,12 +193,10 @@ function recordObservedDelivery(notification: Notifications.Notification): void 
 }
 
 export function readMessagingSnapshot(): MessagingSnapshot {
-  const rows = listSchedule();
   return {
     enrolledAt: readEnrolledAt(),
     scheduled: countByState('scheduled'),
     delivered: countByState('delivered'),
-    total: rows.length,
     pendingReceipts: countPendingReceipts(),
     nextMessage: nextScheduled(),
   };
@@ -250,13 +223,10 @@ export function readPlanWithState(): {
 }
 
 export async function cancelAllMessages(): Promise<void> {
-  for (const row of listSchedule()) {
-    const key = slotKey(row.sequence, row.position);
-    try {
-      await Notifications.cancelScheduledNotificationAsync(key);
-    } catch (error) {
-      logger.warn(TAG, 'could not cancel a queued notification', { key, error: String(error) });
-    }
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } catch (error) {
+    logger.warn(TAG, 'could not clear the queued notifications', { error: String(error) });
   }
   clearSchedule();
   logger.info(TAG, 'schedule cleared');

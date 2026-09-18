@@ -11,9 +11,7 @@ export {
   drainReceipts,
   listReceipts,
   parseEndpoint,
-  probeDeliveryEndpoint,
   readDeliveryEndpoint,
-  retryExhaustedReceipts,
   writeDeliveryEndpoint,
 } from '@src/domains/messaging/services/receiptSender';
 export { enrol, readEnrolledAt, resetEnrolment } from '@src/domains/messaging/services/scheduleRepository';

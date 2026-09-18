@@ -26,7 +26,6 @@ import {
   cancelAllMessages,
   drainReceipts,
   parseEndpoint,
-  probeDeliveryEndpoint,
   readDeliveryEndpoint,
   writeDeliveryEndpoint,
 } from '@src/domains/messaging';
@@ -43,13 +42,9 @@ export interface SettingsViewModel {
   appVersion: string;
   loadDemoDataset: () => Promise<void>;
   removeDemoDataset: () => Promise<void>;
-  deliveryEndpoint: string;
   deliveryDraft: string;
   setDeliveryDraft: (value: string) => void;
-  deliveryState: DeliveryState;
-  deliveryDetail: string | null;
   saveDelivery: () => void;
-  testDelivery: () => Promise<void>;
   busy: boolean;
   clearEventLog: () => void;
   resetEverything: () => void;
@@ -57,18 +52,13 @@ export interface SettingsViewModel {
   openSimulator: () => void;
 }
 
-export type DeliveryState = 'idle' | 'testing' | 'ok' | 'failed' | 'invalid';
-
 export function useSettingsViewModel(): SettingsViewModel {
   const { t } = useTranslation();
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
 
-  const [deliveryEndpoint, setDeliveryEndpoint] = useState(() => readDeliveryEndpoint());
-  const [deliveryDraft, setDeliveryDraft] = useState(deliveryEndpoint);
-  const [deliveryState, setDeliveryState] = useState<DeliveryState>('idle');
-  const [deliveryDetail, setDeliveryDetail] = useState<string | null>(null);
+  const [deliveryDraft, setDeliveryDraft] = useState(() => readDeliveryEndpoint());
 
   const { data: permissions } = usePermissions();
 
@@ -161,33 +151,18 @@ export function useSettingsViewModel(): SettingsViewModel {
   const saveDelivery = useCallback(() => {
     const parsed = parseEndpoint(deliveryDraft);
     if (!parsed.valid) {
-      setDeliveryState('invalid');
+      toast.show({ message: t('settings.delivery.invalid'), type: 'error' });
       return;
     }
 
     writeDeliveryEndpoint(parsed.value);
-    setDeliveryEndpoint(parsed.value);
     setDeliveryDraft(parsed.value);
-    setDeliveryState('idle');
     toast.show({
       message: parsed.value ? t('settings.delivery.saved') : t('settings.delivery.cleared'),
       type: 'success',
     });
     if (parsed.value) void drainReceipts();
   }, [deliveryDraft, t, toast]);
-
-  const testDelivery = useCallback(async () => {
-    const parsed = parseEndpoint(deliveryDraft);
-    if (!parsed.valid || !parsed.value) {
-      setDeliveryState('invalid');
-      return;
-    }
-
-    setDeliveryState('testing');
-    const result = await probeDeliveryEndpoint(parsed.value);
-    setDeliveryDetail(result.ok ? null : (result.status ? `HTTP ${result.status}` : (result.error ?? null)));
-    setDeliveryState(result.ok ? 'ok' : 'failed');
-  }, [deliveryDraft]);
 
   return {
     permissions,
@@ -199,16 +174,9 @@ export function useSettingsViewModel(): SettingsViewModel {
     appVersion: Constants.expoConfig?.version ?? '1.0.0',
     loadDemoDataset: loadDemo,
     removeDemoDataset: removeDemo,
-    deliveryEndpoint,
     deliveryDraft,
-    setDeliveryDraft: (value) => {
-      setDeliveryDraft(value);
-      setDeliveryState('idle');
-    },
-    deliveryState,
-    deliveryDetail,
+    setDeliveryDraft,
     saveDelivery,
-    testDelivery,
     busy,
     clearEventLog,
     resetEverything,

@@ -43,8 +43,6 @@ const asRow = (message: PlannedMessage): ScheduledMessage => ({
   notificationId: `notif-${slotKey(message.sequence, message.position)}`,
   state: 'scheduled',
   deliveredAt: null,
-  lastError: null,
-  updatedAt: ENROLLED_AT,
 });
 
 describe('buildPlan', () => {

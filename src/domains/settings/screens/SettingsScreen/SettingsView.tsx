@@ -153,33 +153,9 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
             keyboardType="url"
             style={styles.input}
           />
-          <View style={styles.inlineActions}>
-            <TouchableOpacity onPress={viewModel.saveDelivery}>
-              <Text style={styles.action}>{t('settings.delivery.save')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => void viewModel.testDelivery()}
-              disabled={viewModel.deliveryState === 'testing'}
-            >
-              <Text style={styles.action}>
-                {t(
-                  viewModel.deliveryState === 'testing'
-                    ? 'settings.delivery.testing'
-                    : 'settings.delivery.test',
-                )}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {viewModel.deliveryState === 'ok' ? (
-            <Text style={[styles.note, styles.ok]}>{t('settings.delivery.testOk')}</Text>
-          ) : viewModel.deliveryState === 'failed' ? (
-            <Text style={[styles.note, styles.bad]}>
-              {t('settings.delivery.testFailed')}
-              {viewModel.deliveryDetail ? ` (${viewModel.deliveryDetail})` : ''}
-            </Text>
-          ) : viewModel.deliveryState === 'invalid' ? (
-            <Text style={[styles.note, styles.bad]}>{t('settings.delivery.invalid')}</Text>
-          ) : null}
+          <TouchableOpacity onPress={viewModel.saveDelivery}>
+            <Text style={styles.action}>{t('settings.delivery.save')}</Text>
+          </TouchableOpacity>
         </Section>
 
         <Section title={t('settings.about.title')}>

@@ -16,7 +16,7 @@ export interface PlannedMessage {
   scheduledFor: number;
 }
 
-export type ScheduleState = 'scheduled' | 'delivered' | 'cancelled' | 'failed';
+export type ScheduleState = 'scheduled' | 'delivered';
 
 export interface ScheduledMessage {
   sequence: SequenceId;
@@ -26,11 +26,9 @@ export interface ScheduledMessage {
   notificationId: string | null;
   state: ScheduleState;
   deliveredAt: number | null;
-  lastError: string | null;
-  updatedAt: number;
 }
 
-export type ReceiptState = 'pending' | 'confirmed' | 'exhausted';
+export type ReceiptState = 'pending' | 'confirmed';
 
 export interface DeliveryReceipt {
   id?: number;
@@ -50,7 +48,6 @@ export interface MessagingSnapshot {
   enrolledAt: number | null;
   scheduled: number;
   delivered: number;
-  total: number;
   pendingReceipts: number;
   nextMessage: ScheduledMessage | null;
 }

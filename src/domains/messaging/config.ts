@@ -14,7 +14,6 @@ export const MESSAGING_CONFIG = {
   scheduleHorizon: 40,
 
   receipts: {
-    maxAttempts: 15,
     baseDelayMs: 30_000,
     maxDelayMs: 4 * 60 * 60 * 1_000,
     requestTimeoutMs: 15_000,

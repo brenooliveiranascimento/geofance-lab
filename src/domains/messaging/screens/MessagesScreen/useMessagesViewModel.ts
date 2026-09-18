@@ -14,11 +14,7 @@ import {
   useReceipts,
   type PlanEntry,
 } from '@src/domains/messaging/queries/useMessagingState';
-import {
-  drainReceipts,
-  readDeliveryEndpoint,
-  retryExhaustedReceipts,
-} from '@src/domains/messaging/services/receiptSender';
+import { drainReceipts, readDeliveryEndpoint } from '@src/domains/messaging/services/receiptSender';
 import { enrol, resetEnrolment } from '@src/domains/messaging/services/scheduleRepository';
 import { cancelAllMessages, reconcileSchedule } from '@src/domains/messaging/services/scheduler';
 import type { DeliveryReceipt, MessagingSnapshot } from '@src/domains/messaging/types';
@@ -33,7 +29,6 @@ export interface MessagesViewModel {
   signUp: () => Promise<void>;
   reset: () => Promise<void>;
   sync: () => Promise<void>;
-  retryReceipts: () => Promise<void>;
 }
 
 export function useMessagesViewModel(): MessagesViewModel {
@@ -107,21 +102,6 @@ export function useMessagesViewModel(): MessagesViewModel {
     }
   }, [t, toast]);
 
-  const retryReceipts = useCallback(async () => {
-    setBusy(true);
-    try {
-      const requeued = retryExhaustedReceipts();
-      const drained = await drainReceipts();
-      invalidateMessagingData();
-      toast.show({ message: t('messages.retried', { requeued, confirmed: drained.confirmed }) });
-    } catch (error) {
-      logger.error('messages', 'retryReceipts failed', { error: String(error) });
-      toast.show({ message: t('common.unexpectedError'), type: 'error' });
-    } finally {
-      setBusy(false);
-    }
-  }, [t, toast]);
-
   return {
     snapshot,
     plan,
@@ -132,6 +112,5 @@ export function useMessagesViewModel(): MessagesViewModel {
     signUp,
     reset,
     sync,
-    retryReceipts,
   };
 }

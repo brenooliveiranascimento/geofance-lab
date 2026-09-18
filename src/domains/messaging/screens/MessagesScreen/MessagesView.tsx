@@ -14,8 +14,6 @@ import type { MessagesViewModel } from '@src/domains/messaging/screens/MessagesS
 const STATE_COLOR: Record<string, string> = {
   delivered: colors.success,
   scheduled: colors.primary,
-  cancelled: colors.textMuted,
-  failed: colors.error,
   pending: colors.textMuted,
 };
 
@@ -30,7 +28,6 @@ export function MessagesView({ viewModel }: MessagesViewProps): React.JSX.Elemen
   const enrolled = snapshot?.enrolledAt != null;
   const pendingReceipts = receipts.filter((r) => r.state === 'pending').length;
   const confirmedReceipts = receipts.filter((r) => r.state === 'confirmed').length;
-  const exhaustedReceipts = receipts.filter((r) => r.state === 'exhausted').length;
 
   return (
     <ScreenTemplate underTabBar>
@@ -129,21 +126,7 @@ export function MessagesView({ viewModel }: MessagesViewProps): React.JSX.Elemen
             value={String(confirmedReceipts)}
             tone={confirmedReceipts > 0 ? 'active' : 'neutral'}
           />
-          <StatCard
-            label={t('messages.receipts.exhausted')}
-            value={String(exhaustedReceipts)}
-            tone={exhaustedReceipts > 0 ? 'warning' : 'neutral'}
-          />
         </View>
-
-        {exhaustedReceipts > 0 ? (
-          <Button
-            label={t('messages.receipts.retry')}
-            variant="secondary"
-            disabled={busy}
-            onPress={() => void viewModel.retryReceipts()}
-          />
-        ) : null}
 
         {receipts.slice(0, 8).map((receipt) => (
           <View key={receipt.idempotencyKey} style={styles.receiptRow}>

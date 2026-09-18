@@ -11,8 +11,6 @@ interface ScheduleRow {
   notification_id: string | null;
   state: ScheduleState;
   delivered_at: number | null;
-  last_error: string | null;
-  updated_at: number;
 }
 
 const toScheduled = (row: ScheduleRow): ScheduledMessage => ({
@@ -23,8 +21,6 @@ const toScheduled = (row: ScheduleRow): ScheduledMessage => ({
   notificationId: row.notification_id,
   state: row.state,
   deliveredAt: row.delivered_at,
-  lastError: row.last_error,
-  updatedAt: row.updated_at,
 });
 
 export function listSchedule(): ScheduledMessage[] {
@@ -33,28 +29,24 @@ export function listSchedule(): ScheduledMessage[] {
     .map(toScheduled);
 }
 
-
 export function markScheduled(
   sequence: SequenceId,
   position: number,
   messageId: string,
   scheduledFor: number,
   notificationId: string | null,
-  db = getDatabase(),
 ): void {
-  db.runSync(
+  getDatabase().runSync(
     `INSERT INTO message_schedule
-       (sequence, position, message_id, scheduled_for, notification_id, state, delivered_at, last_error, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, NULL, ?)
+       (sequence, position, message_id, scheduled_for, notification_id, state, delivered_at)
+     VALUES (?, ?, ?, ?, ?, 'scheduled', NULL)
      ON CONFLICT(sequence, position) DO UPDATE SET
        message_id = excluded.message_id,
        scheduled_for = excluded.scheduled_for,
        notification_id = excluded.notification_id,
        state = 'scheduled',
-       delivered_at = NULL,
-       last_error = NULL,
-       updated_at = excluded.updated_at;`,
-    [sequence, position, messageId, scheduledFor, notificationId, Date.now()],
+       delivered_at = NULL;`,
+    [sequence, position, messageId, scheduledFor, notificationId],
   );
 }
 
@@ -66,42 +58,11 @@ export function markDelivered(
 ): boolean {
   const result = db.runSync(
     `UPDATE message_schedule
-        SET state = 'delivered', delivered_at = ?, updated_at = ?
+        SET state = 'delivered', delivered_at = ?
       WHERE sequence = ? AND position = ? AND state = 'scheduled';`,
-    [deliveredAt, Date.now(), sequence, position],
+    [deliveredAt, sequence, position],
   );
   return result.changes > 0;
-}
-
-export function markCancelled(
-  sequence: SequenceId,
-  position: number,
-  db = getDatabase(),
-): void {
-  db.runSync(
-    `UPDATE message_schedule
-        SET state = 'cancelled', notification_id = NULL, updated_at = ?
-      WHERE sequence = ? AND position = ?;`,
-    [Date.now(), sequence, position],
-  );
-}
-
-export function markFailed(
-  sequence: SequenceId,
-  position: number,
-  error: string,
-  db = getDatabase(),
-): void {
-  db.runSync(
-    `INSERT INTO message_schedule
-       (sequence, position, message_id, scheduled_for, notification_id, state, delivered_at, last_error, updated_at)
-     VALUES (?, ?, '', 0, NULL, 'failed', NULL, ?, ?)
-     ON CONFLICT(sequence, position) DO UPDATE SET
-       state = 'failed',
-       last_error = excluded.last_error,
-       updated_at = excluded.updated_at;`,
-    [sequence, position, error, Date.now()],
-  );
 }
 
 export function countByState(state: ScheduleState): number {
@@ -142,5 +103,3 @@ export function resetEnrolment(): void {
   writeJson(MESSAGING_KEYS.enrolledAt, null);
   clearSchedule();
 }
-
-

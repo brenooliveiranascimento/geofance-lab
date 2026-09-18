@@ -10,7 +10,6 @@ import type { DeliveryReceipt, ReceiptState, SequenceId } from '@src/domains/mes
 const TAG = 'receipts';
 
 export interface BackoffConfig {
-  maxAttempts: number;
   baseDelayMs: number;
   maxDelayMs: number;
 }
@@ -35,37 +34,8 @@ export function writeDeliveryEndpoint(endpoint: string): void {
   writeJson(MESSAGING_KEYS.deliveryEndpoint, endpoint);
 }
 
-export interface ProbeResult {
-  ok: boolean;
-  status?: number;
-  error?: string;
-}
-
-export async function probeDeliveryEndpoint(endpoint: string): Promise<ProbeResult> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), MESSAGING_CONFIG.receipts.requestTimeoutMs);
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'probe' },
-      body: JSON.stringify({ probe: true, at: Date.now() }),
-      signal: controller.signal,
-    });
-    if (!response.ok) logger.warn(TAG, 'probe rejected', { status: response.status });
-    return { ok: response.ok, status: response.status };
-  } catch (error) {
-    logger.warn(TAG, 'probe failed', { error: String(error) });
-    return { ok: false, error: String(error) };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-export function computeBackoffMs(attemptsMade: number, config: BackoffConfig): number | null {
-  if (attemptsMade >= config.maxAttempts) return null;
-  const delay = config.baseDelayMs * 2 ** (attemptsMade - 1);
-  return Math.min(delay, config.maxDelayMs);
+export function computeBackoffMs(attemptsMade: number, config: BackoffConfig): number {
+  return Math.min(config.baseDelayMs * 2 ** (attemptsMade - 1), config.maxDelayMs);
 }
 
 interface ReceiptRow {
@@ -141,10 +111,7 @@ function dueReceipts(now: number, limit: number): DeliveryReceipt[] {
 
 async function post(receipt: DeliveryReceipt, endpoint: string): Promise<void> {
   const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(),
-    MESSAGING_CONFIG.receipts.requestTimeoutMs,
-  );
+  const timeout = setTimeout(() => controller.abort(), MESSAGING_CONFIG.receipts.requestTimeoutMs);
 
   try {
     const response = await fetch(endpoint, {
@@ -157,9 +124,7 @@ async function post(receipt: DeliveryReceipt, endpoint: string): Promise<void> {
       signal: controller.signal,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
   } finally {
     clearTimeout(timeout);
   }
@@ -169,7 +134,6 @@ export interface DrainResult {
   attempted: number;
   confirmed: number;
   retried: number;
-  exhausted: number;
   offline: boolean;
 }
 
@@ -192,13 +156,7 @@ export function drainReceipts(limit = 20): Promise<DrainResult> {
 }
 
 async function runDrain(limit: number): Promise<DrainResult> {
-  const result: DrainResult = {
-    attempted: 0,
-    confirmed: 0,
-    retried: 0,
-    exhausted: 0,
-    offline: false,
-  };
+  const result: DrainResult = { attempted: 0, confirmed: 0, retried: 0, offline: false };
 
   const endpoint = readDeliveryEndpoint();
   if (!endpoint) return result;
@@ -209,9 +167,8 @@ async function runDrain(limit: number): Promise<DrainResult> {
   }
 
   const db = getDatabase();
-  const pending = dueReceipts(Date.now(), limit);
 
-  for (const receipt of pending) {
+  for (const receipt of dueReceipts(Date.now(), limit)) {
     result.attempted += 1;
     try {
       await post(receipt, endpoint);
@@ -224,42 +181,23 @@ async function runDrain(limit: number): Promise<DrainResult> {
       result.confirmed += 1;
     } catch (error) {
       const attempts = receipt.attempts + 1;
-      const backoff = computeBackoffMs(attempts, MESSAGING_CONFIG.receipts);
-      const message = String(error);
-
-      if (backoff === null) {
-        db.runSync(
-          `UPDATE delivery_receipts
-              SET state = 'exhausted', attempts = ?, last_error = ?
-            WHERE id = ?;`,
-          [attempts, message, receipt.id!],
-        );
-        result.exhausted += 1;
-        logger.warn(TAG, 'receipt exhausted its attempts', { key: receipt.idempotencyKey });
-      } else {
-        db.runSync(
-          `UPDATE delivery_receipts
-              SET attempts = ?, next_attempt_at = ?, last_error = ?
-            WHERE id = ?;`,
-          [attempts, Date.now() + backoff, message, receipt.id!],
-        );
-        result.retried += 1;
-      }
+      db.runSync(
+        `UPDATE delivery_receipts
+            SET attempts = ?, next_attempt_at = ?, last_error = ?
+          WHERE id = ?;`,
+        [
+          attempts,
+          Date.now() + computeBackoffMs(attempts, MESSAGING_CONFIG.receipts),
+          String(error),
+          receipt.id!,
+        ],
+      );
+      result.retried += 1;
     }
   }
 
   if (result.attempted > 0) logger.info(TAG, 'receipt queue drained', result);
   return result;
-}
-
-export function retryExhaustedReceipts(): number {
-  const result = getDatabase().runSync(
-    `UPDATE delivery_receipts
-        SET state = 'pending', attempts = 0, next_attempt_at = ?, last_error = NULL
-      WHERE state = 'exhausted';`,
-    Date.now(),
-  );
-  return result.changes;
 }
 
 export const receiptKeyFor = (

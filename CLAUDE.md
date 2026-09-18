@@ -67,8 +67,9 @@ src/components/       atoms · molecules · organisms · templates
   é o sinalizador `preciseRunning` do `monitorService`, reivindicado antes do `await` para que
   chamadas concorrentes não subam o serviço várias vezes.
 - **Ao mudar conteúdo ou timing das mensagens**, não agende direto — mexa no plano e deixe o
-  `scheduler` reconciliar. O identificador da notificação é a chave do slot, e o SO usa isso
-  para recusar duplicatas.
+  `scheduler` reconciliar. O identificador da notificação é a chave do slot: reagendar com ele
+  substitui a pendente nas duas plataformas, e é por isso que o diff não tem caminho de
+  cancelamento. Não reintroduza um: cancelar e reagendar abre janela para duplicar.
 
 ## Verificação
 
