@@ -7,7 +7,6 @@ export {
   readMessagingSnapshot,
   readPlanWithState,
   reconcileSchedule,
-  rescheduleForLocale,
 } from '@src/domains/messaging/services/scheduler';
 export {
   drainReceipts,

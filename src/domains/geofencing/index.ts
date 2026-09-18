@@ -11,4 +11,3 @@ export {
   stopMonitoring,
   submitSimulatedFix,
 } from '@src/domains/geofencing/services/monitorService';
-export { refreshNotificationChannel } from '@src/domains/geofencing/services/notifier';

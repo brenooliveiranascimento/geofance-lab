@@ -188,15 +188,6 @@ describe('diffSchedule', () => {
     expect(diff.toCancel).toEqual([]);
   });
 
-  it('re-queues every pending slot when the content has to be rebuilt', () => {
-    const now = ENROLLED_AT;
-    const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));
-
-    const diff = diffSchedule(plan(), rows, { now, horizon: 5, rescheduleAll: true });
-
-    expect(diff.toSchedule).toHaveLength(rows.length);
-    expect(diff.toCancel).toEqual([]);
-  });
 
   it('never re-schedules a slot that is already queued', () => {
     const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const ROOT = process.cwd();
-const LOCALES = ['pt-BR', 'en'];
+const LOCALE = 'pt-BR';
 const SOURCE_DIRS = ['src', 'app'];
 
 const DYNAMIC_KEYS = {
@@ -19,7 +19,6 @@ const DYNAMIC_KEYS = {
   'notifications.company': ['enter', 'exit'],
   'notifications.room': ['enter', 'exit'],
   'notifications.body': ['perimeter', 'distance'],
-  'settings.languages': LOCALES,
 };
 
 const MESSAGE_IDS = readFileSync(resolve(ROOT, 'src/domains/messaging/content/messages.ts'), 'utf8')
@@ -106,22 +105,15 @@ function flatten(tree, prefix = '') {
 }
 
 function main() {
-  const bundles = Object.fromEntries(
-    LOCALES.map((locale) => [
-      locale,
-      JSON.parse(readFileSync(resolve(ROOT, `src/i18n/locales/${locale}.json`), 'utf8')),
-    ]),
+  const bundle = JSON.parse(
+    readFileSync(resolve(ROOT, `src/i18n/locales/${LOCALE}.json`), 'utf8'),
   );
 
   const used = collectUsedKeys();
   const problems = [];
 
   for (const key of used) {
-    for (const locale of LOCALES) {
-      if (!resolves(bundles[locale], key)) {
-        problems.push(`${locale}: chave ausente ou não textual → ${key}`);
-      }
-    }
+    if (!resolves(bundle, key)) problems.push(`chave ausente ou não textual → ${key}`);
   }
 
   const reachable = new Set([...used, ...collectMentionedKeys()]);
@@ -130,20 +122,8 @@ function main() {
     reachable.has(key.replace(/_(one|other)$/, '')) ||
     [...reachable].some((prefix) => key.startsWith(`${prefix}.`));
 
-  for (const key of flatten(bundles[LOCALES[0]])) {
+  for (const key of flatten(bundle)) {
     if (!isUsed(key)) problems.push(`chave definida e nunca usada → ${key}`);
-  }
-
-  const [first, ...rest] = LOCALES;
-  const baseline = new Set(flatten(bundles[first]));
-  for (const locale of rest) {
-    const other = new Set(flatten(bundles[locale]));
-    for (const key of baseline) {
-      if (!other.has(key)) problems.push(`${locale}: falta a chave que ${first} tem → ${key}`);
-    }
-    for (const key of other) {
-      if (!baseline.has(key)) problems.push(`${first}: falta a chave que ${locale} tem → ${key}`);
-    }
   }
 
   if (problems.length > 0) {
@@ -152,9 +132,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log(
-    `✔ i18n ok — ${used.length} chaves usadas, ${flatten(bundles[first]).length} definidas em cada locale`,
-  );
+  console.log(`✔ i18n ok — ${used.length} chaves usadas, ${flatten(bundle).length} definidas`);
 }
 
 main();

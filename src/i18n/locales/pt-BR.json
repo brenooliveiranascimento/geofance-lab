@@ -249,11 +249,6 @@
   },
   "settings": {
     "title": "Ajustes",
-    "language": "Idioma",
-    "languages": {
-      "pt-BR": "Português",
-      "en": "English"
-    },
     "permissions": {
       "title": "Permissões",
       "foreground": "Localização (primeiro plano)",

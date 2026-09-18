@@ -10,7 +10,7 @@ import {
 import { logger } from '@src/core/logger';
 import { invalidatePermissions } from '@src/domains/geofencing/queries/invalidate';
 import { useToast } from '@src/lib/toast';
-import { useStore } from '@src/store';
+import { setOnboardingCompleted } from '@src/domains/onboarding/services/onboardingFlag';
 
 import type { OnboardingStep } from '@src/domains/onboarding/types';
 
@@ -29,7 +29,6 @@ export interface OnboardingViewModel {
 export function useOnboardingViewModel(): OnboardingViewModel {
   const { t } = useTranslation();
   const toast = useToast();
-  const setOnboardingCompleted = useStore((s) => s.setOnboardingCompleted);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -90,7 +89,7 @@ export function useOnboardingViewModel(): OnboardingViewModel {
   const finish = useCallback(() => {
     setOnboardingCompleted(true);
     router.replace('/(tabs)');
-  }, [setOnboardingCompleted]);
+  }, []);
 
   const advance = useCallback(async () => {
     if (step.action === 'company') {

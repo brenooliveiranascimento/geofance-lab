@@ -115,21 +115,6 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
           ) : null}
         </Section>
 
-        <Section title={t('settings.language')}>
-          <View style={styles.chips}>
-            {viewModel.languages.map((code) => {
-              const active = viewModel.language === code;
-              return (
-                <TouchableOpacity key={code} onPress={() => viewModel.setLanguage(code)} hitSlop={8}>
-                  <Text style={[styles.chip, active && styles.chipActive]}>
-                    {t(`settings.languages.${code}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Section>
-
         <Section title={t('settings.tools.title')}>
           <TouchableOpacity onPress={viewModel.openSimulator}>
             <Text style={styles.action}>{t('settings.tools.simulator')}</Text>

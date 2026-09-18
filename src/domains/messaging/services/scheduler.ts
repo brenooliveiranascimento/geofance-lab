@@ -68,7 +68,6 @@ export interface ReconcileSummary {
 
 export interface ReconcileOptions {
   now?: number;
-  rescheduleAll?: boolean;
 }
 
 let queue: Promise<unknown> = Promise.resolve();
@@ -79,10 +78,7 @@ export function reconcileSchedule(options: ReconcileOptions = {}): Promise<Recon
   return run;
 }
 
-async function runReconcile({
-  now = Date.now(),
-  rescheduleAll = false,
-}: ReconcileOptions): Promise<ReconcileSummary> {
+async function runReconcile({ now = Date.now() }: ReconcileOptions): Promise<ReconcileSummary> {
   const idle: ReconcileSummary = { scheduled: 0, cancelled: 0, delivered: 0, skipped: null };
 
   const enrolledAt = readEnrolledAt();
@@ -111,7 +107,6 @@ async function runReconcile({
     now,
     horizon: MESSAGING_CONFIG.scheduleHorizon,
     liveNotificationIds: liveIds,
-    rescheduleAll,
   });
 
   for (const row of diff.toCancel) {
@@ -252,12 +247,6 @@ export function readPlanWithState(): {
       deliveredAt: row?.deliveredAt ?? null,
     };
   });
-}
-
-export async function rescheduleForLocale(): Promise<void> {
-  channelReady = false;
-  const summary = await reconcileSchedule({ rescheduleAll: true });
-  logger.info(TAG, 'rescheduled for locale', summary);
 }
 
 export async function cancelAllMessages(): Promise<void> {

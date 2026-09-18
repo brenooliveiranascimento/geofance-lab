@@ -15,7 +15,10 @@ import {
 } from '@src/core/geo';
 import { logger } from '@src/core/logger';
 import { useToast } from '@src/lib/toast';
-import { useStore } from '@src/store';
+import {
+  isOnboardingCompleted,
+  setOnboardingCompleted,
+} from '@src/domains/onboarding/services/onboardingFlag';
 
 import { COMPANY_SHAPE } from '@src/domains/geofencing/config';
 import { isMapAvailable } from '@src/domains/geofencing/mapAvailability';
@@ -84,8 +87,7 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
   const router = useRouter();
   const toast = useToast();
 
-  const onboardingCompleted = useStore((s) => s.onboardingCompleted);
-  const setOnboardingCompleted = useStore((s) => s.setOnboardingCompleted);
+  const onboardingCompleted = isOnboardingCompleted();
 
   const [step, setStep] = useState<WizardStep>('name');
   const [loading, setLoading] = useState(true);
@@ -286,7 +288,7 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     } finally {
       setSaving(false);
     }
-  }, [outline, name, rooms, onboardingCompleted, setOnboardingCompleted, router, t, toast]);
+  }, [outline, name, rooms, onboardingCompleted, router, t, toast]);
 
   const cancel = useCallback(() => {
     if (!onboardingCompleted) {
@@ -295,7 +297,7 @@ export function useCompanyWizardViewModel(): CompanyWizardViewModel {
     } else {
       router.back();
     }
-  }, [onboardingCompleted, setOnboardingCompleted, router]);
+  }, [onboardingCompleted, router]);
 
   return {
     step,
