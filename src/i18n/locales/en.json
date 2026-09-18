@@ -338,7 +338,7 @@
     "receipts": {
       "title": "Delivery confirmations",
       "endpoint": "Sending to {{endpoint}}",
-      "noEndpoint": "No endpoint in .env. The queue is still recorded.",
+      "noEndpoint": "No endpoint configured. The queue is still recorded.",
       "pending": "Queued",
       "confirmed": "Confirmed",
       "exhausted": "Exhausted",
@@ -353,7 +353,7 @@
     "channel": "Messages",
     "subtitle": {
       "onboarding": "Message {{position}} of {{total}}",
-      "daily": "Week {{week}} · Message {{position}} of {{total}}"
+      "daily": "Week {{week}}; Message {{position}} of {{total}}"
     },
     "content": {
       "onb-01": {
@@ -488,6 +488,10 @@
         "title": "End of the series",
         "body": "You have walked through all four weeks. The event log keeps recording everything."
       }
+    },
+    "permissionBlocked": {
+      "title": "Notifications are blocked",
+      "body": "The sequence is paused: the system is not allowing notifications from this app. Enable them in the device settings."
     }
   },
   "notifications": {

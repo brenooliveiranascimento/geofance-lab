@@ -44,6 +44,14 @@ export function MessagesView({ viewModel }: MessagesViewProps): React.JSX.Elemen
         <Text style={styles.heading}>{t('messages.title')}</Text>
         <Text style={styles.intro}>{t('messages.intro')}</Text>
 
+        {viewModel.notificationsBlocked ? (
+          <StatusBanner
+            tone="warning"
+            title={t('messages.permissionBlocked.title')}
+            message={t('messages.permissionBlocked.body')}
+          />
+        ) : null}
+
         {!enrolled ? (
           <StatusBanner tone="info" title={t('messages.notEnrolled.title')} message={t('messages.notEnrolled.body')} />
         ) : (

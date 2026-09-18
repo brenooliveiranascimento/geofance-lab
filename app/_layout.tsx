@@ -4,6 +4,7 @@ import { registerMessagingTask } from '@src/domains/messaging';
 
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
+import * as Network from 'expo-network';
 import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -65,9 +66,14 @@ export default function RootLayout() {
       if (status === 'active') void catchUp();
     });
 
+    const network = Network.addNetworkStateListener(({ isInternetReachable }) => {
+      if (isInternetReachable) void drainReceipts();
+    });
+
     return () => {
       received.remove();
       appState.remove();
+      network.remove();
     };
   }, []);
 

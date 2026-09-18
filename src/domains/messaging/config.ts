@@ -11,12 +11,12 @@ export const MESSAGING_CONFIG = {
     startsAfterOnboardingDays: 1,
   },
 
-  scheduleHorizon: 24,
+  scheduleHorizon: 40,
 
   receipts: {
-    maxAttempts: 10,
+    maxAttempts: 15,
     baseDelayMs: 30_000,
-    maxDelayMs: 60 * 60 * 1_000,
+    maxDelayMs: 4 * 60 * 60 * 1_000,
     requestTimeoutMs: 15_000,
   },
 } as const;

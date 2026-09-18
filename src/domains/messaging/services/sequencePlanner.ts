@@ -112,6 +112,7 @@ export interface DiffOptions {
   now: number;
   horizon: number;
   liveNotificationIds?: ReadonlySet<string> | null;
+  rescheduleAll?: boolean;
 }
 
 export function diffSchedule(
@@ -119,7 +120,7 @@ export function diffSchedule(
   existing: readonly ScheduledMessage[],
   options: DiffOptions,
 ): ScheduleDiff {
-  const { now, horizon, liveNotificationIds = null } = options;
+  const { now, horizon, liveNotificationIds = null, rescheduleAll = false } = options;
 
   const planByKey = new Map(plan.map((message) => [slotKey(message.sequence, message.position), message]));
   const rowByKey = new Map(existing.map((row) => [slotKey(row.sequence, row.position), row]));
@@ -133,6 +134,12 @@ export function diffSchedule(
     if (row.state !== 'scheduled') continue;
 
     const key = slotKey(row.sequence, row.position);
+
+    if (row.scheduledFor <= now) {
+      toMarkDelivered.push(row);
+      continue;
+    }
+
     const planned = planByKey.get(key);
 
     if (!planned) {
@@ -146,8 +153,8 @@ export function diffSchedule(
       continue;
     }
 
-    if (row.scheduledFor <= now) {
-      toMarkDelivered.push(row);
+    if (rescheduleAll) {
+      needsReschedule.add(key);
       continue;
     }
 

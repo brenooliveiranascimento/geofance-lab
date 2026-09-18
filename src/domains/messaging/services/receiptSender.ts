@@ -1,3 +1,5 @@
+import * as Network from 'expo-network';
+
 import { getDatabase, readJson, writeJson } from '@src/core/db';
 import { logger } from '@src/core/logger';
 
@@ -26,9 +28,7 @@ export function parseEndpoint(raw: string): ParsedEndpoint {
 }
 
 export function readDeliveryEndpoint(): string {
-  const stored = readJson<string>(MESSAGING_KEYS.deliveryEndpoint);
-  if (typeof stored === 'string') return stored;
-  return DELIVERY_ENDPOINT_DEFAULT;
+  return readJson<string>(MESSAGING_KEYS.deliveryEndpoint) || DELIVERY_ENDPOINT_DEFAULT;
 }
 
 export function writeDeliveryEndpoint(endpoint: string): void {
@@ -62,9 +62,9 @@ export async function probeDeliveryEndpoint(endpoint: string): Promise<ProbeResu
   }
 }
 
-export function computeBackoffMs(attempts: number, config: BackoffConfig): number | null {
-  if (attempts >= config.maxAttempts) return null;
-  const delay = config.baseDelayMs * 2 ** attempts;
+export function computeBackoffMs(attemptsMade: number, config: BackoffConfig): number | null {
+  if (attemptsMade >= config.maxAttempts) return null;
+  const delay = config.baseDelayMs * 2 ** (attemptsMade - 1);
   return Math.min(delay, config.maxDelayMs);
 }
 
@@ -170,13 +170,43 @@ export interface DrainResult {
   confirmed: number;
   retried: number;
   exhausted: number;
+  offline: boolean;
 }
 
-export async function drainReceipts(limit = 20): Promise<DrainResult> {
-  const result: DrainResult = { attempted: 0, confirmed: 0, retried: 0, exhausted: 0 };
+async function isOffline(): Promise<boolean> {
+  try {
+    const state = await Network.getNetworkStateAsync();
+    return state.isInternetReachable === false;
+  } catch (error) {
+    logger.warn(TAG, 'could not read the network state', { error: String(error) });
+    return false;
+  }
+}
+
+let queue: Promise<unknown> = Promise.resolve();
+
+export function drainReceipts(limit = 20): Promise<DrainResult> {
+  const run = queue.then(() => runDrain(limit));
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+async function runDrain(limit: number): Promise<DrainResult> {
+  const result: DrainResult = {
+    attempted: 0,
+    confirmed: 0,
+    retried: 0,
+    exhausted: 0,
+    offline: false,
+  };
 
   const endpoint = readDeliveryEndpoint();
   if (!endpoint) return result;
+
+  if (await isOffline()) {
+    result.offline = true;
+    return result;
+  }
 
   const db = getDatabase();
   const pending = dueReceipts(Date.now(), limit);
@@ -232,5 +262,8 @@ export function retryExhaustedReceipts(): number {
   return result.changes;
 }
 
-export const receiptKeyFor = (sequence: SequenceId, position: number): string =>
-  slotKey(sequence, position);
+export const receiptKeyFor = (
+  enrolledAt: number,
+  sequence: SequenceId,
+  position: number,
+): string => `${enrolledAt}:${slotKey(sequence, position)}`;

@@ -338,7 +338,7 @@
     "receipts": {
       "title": "Confirmações de entrega",
       "endpoint": "Enviando para {{endpoint}}",
-      "noEndpoint": "Sem endpoint no .env. A fila continua sendo gravada.",
+      "noEndpoint": "Sem endpoint configurado. A fila continua sendo gravada.",
       "pending": "Na fila",
       "confirmed": "Confirmadas",
       "exhausted": "Esgotadas",
@@ -353,7 +353,7 @@
     "channel": "Mensagens",
     "subtitle": {
       "onboarding": "Mensagem {{position}} de {{total}}",
-      "daily": "Semana {{week}} · Mensagem {{position}} de {{total}}"
+      "daily": "Semana {{week}}; Mensagem {{position}} de {{total}}"
     },
     "content": {
       "onb-01": {
@@ -488,6 +488,10 @@
         "title": "Fim da série",
         "body": "Você percorreu as quatro semanas. O log de eventos continua registrando tudo."
       }
+    },
+    "permissionBlocked": {
+      "title": "Notificações bloqueadas",
+      "body": "A sequência está pausada: o sistema não permite notificações deste app. Libere nos ajustes do aparelho."
     }
   },
   "notifications": {

@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { requestNotificationPermission, type PermissionState } from '@src/core/permissions';
+import { requestNotificationPermission } from '@src/core/permissions';
+import { invalidatePermissions } from '@src/domains/geofencing/queries/invalidate';
+import { usePermissions } from '@src/domains/geofencing/queries/usePermissions';
 import { useToast } from '@src/lib/toast';
 
 import {
@@ -26,7 +28,7 @@ export interface MessagesViewModel {
   receipts: DeliveryReceipt[];
   endpoint: string;
   busy: boolean;
-  notificationPermission: PermissionState | null;
+  notificationsBlocked: boolean;
   signUp: () => Promise<void>;
   reset: () => Promise<void>;
   sync: () => Promise<void>;
@@ -37,17 +39,20 @@ export function useMessagesViewModel(): MessagesViewModel {
   const { t } = useTranslation();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const [notificationPermission, setNotificationPermission] = useState<PermissionState | null>(null);
 
   const { data: snapshot } = useMessagingSnapshot();
   const { data: plan = [] } = useMessagePlan();
   const { data: receipts = [] } = useReceipts();
+  const { data: permissions } = usePermissions();
+
+  const notificationsBlocked =
+    (snapshot?.enrolledAt ?? null) !== null && permissions?.notifications !== 'granted';
 
   const signUp = useCallback(async () => {
     setBusy(true);
     try {
       const permission = await requestNotificationPermission();
-      setNotificationPermission(permission);
+      invalidatePermissions();
 
       if (permission !== 'granted') {
         toast.show({ message: t('messages.permissionDenied'), type: 'error' });
@@ -110,7 +115,7 @@ export function useMessagesViewModel(): MessagesViewModel {
     receipts,
     endpoint: readDeliveryEndpoint(),
     busy,
-    notificationPermission,
+    notificationsBlocked,
     signUp,
     reset,
     sync,

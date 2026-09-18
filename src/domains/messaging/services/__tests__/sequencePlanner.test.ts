@@ -26,7 +26,7 @@ const CONTENT: PlannerContent = {
   })),
   subtitle: {
     onboarding: (position, total) => `Mensagem ${position} de ${total}`,
-    daily: (week, position, total) => `Semana ${week} · Mensagem ${position} de ${total}`,
+    daily: (week, position, total) => `Semana ${week}; Mensagem ${position} de ${total}`,
   },
 };
 
@@ -107,10 +107,10 @@ describe('buildPlan — daily', () => {
 
   it('labels week and position in the subtitle', () => {
     const subtitles = daily().map((m) => m.subtitle);
-    expect(subtitles[0]).toBe('Semana 1 · Mensagem 1 de 7');
-    expect(subtitles[6]).toBe('Semana 1 · Mensagem 7 de 7');
-    expect(subtitles[7]).toBe('Semana 2 · Mensagem 1 de 7');
-    expect(subtitles[13]).toBe('Semana 2 · Mensagem 7 de 7');
+    expect(subtitles[0]).toBe('Semana 1; Mensagem 1 de 7');
+    expect(subtitles[6]).toBe('Semana 1; Mensagem 7 de 7');
+    expect(subtitles[7]).toBe('Semana 2; Mensagem 1 de 7');
+    expect(subtitles[13]).toBe('Semana 2; Mensagem 7 de 7');
   });
 
   it('keeps the whole plan strictly ordered', () => {
@@ -167,6 +167,34 @@ describe('diffSchedule', () => {
     const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));
     const diff = diffSchedule(plan(), rows, { now, horizon: 5 });
     expect(diff.toSchedule).toEqual([]);
+    expect(diff.toCancel).toEqual([]);
+    expect(diff.toMarkDelivered).toEqual([]);
+  });
+
+  it('records a past-due slot as delivered even when the plan has drifted', () => {
+    const first = plan()[0];
+    const delivered = asRow(first);
+    const now = first.scheduledFor + 60_000;
+
+    const drifted = plan().map((message) =>
+      message.position === first.position && message.sequence === first.sequence
+        ? { ...message, scheduledFor: message.scheduledFor + 4 * 60 * 60 * 1_000 }
+        : message,
+    );
+
+    const diff = diffSchedule(drifted, [delivered], { now, horizon: 5 });
+
+    expect(diff.toMarkDelivered).toEqual([delivered]);
+    expect(diff.toCancel).toEqual([]);
+  });
+
+  it('re-queues every pending slot when the content has to be rebuilt', () => {
+    const now = ENROLLED_AT;
+    const rows = selectWindow(plan(), now, 5).map((m) => asRow(m));
+
+    const diff = diffSchedule(plan(), rows, { now, horizon: 5, rescheduleAll: true });
+
+    expect(diff.toSchedule).toHaveLength(rows.length);
     expect(diff.toCancel).toEqual([]);
   });
 
