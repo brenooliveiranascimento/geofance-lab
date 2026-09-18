@@ -11,7 +11,7 @@ todo o estado vive no aparelho. A explicação completa das decisões está no [
 Expo SDK 54 · React Native 0.81 · TypeScript strict · Expo Router v6 ·
 `expo-location` + `expo-task-manager` (regiões e posições) · `expo-notifications` ·
 `expo-sqlite` (persistência) · `expo-background-task` (reconciliação periódica) ·
-`react-native-maps` · React Query (cache da interface) · Zustand + MMKV (preferências).
+`react-native-maps` · React Query (cache da interface).
 
 ## Onde mora o quê
 
@@ -34,12 +34,12 @@ src/components/       atoms · molecules · organisms · templates
    handlers, com interface tipada exportada).
 3. **Rotas em `app/` são re-exports de uma linha.** Nenhuma lógica ali.
 4. **Cores, espaçamentos e tipografia vêm de `@src/theme`.** Nunca hex solto.
-5. **Todo texto visível passa por `useTranslation()`**, com a chave nos dois locales, e isso
-   inclui o conteúdo das mensagens sequenciadas (`messages.content.<id>`) e os textos que saem
-   de fora do React — notificações e serviço em primeiro plano usam `i18n.t` direto.
-   `node scripts/check-i18n.mjs` verifica isso. `count` é o parâmetro de pluralização do
-   i18next: use-o quando a frase realmente flexiona (chaves `_one`/`_other`) e `total`,
-   `regions` ou `vertices` quando for só um número interpolado.
+5. **Todo texto visível passa por `useTranslation()`**, incluindo o conteúdo das mensagens
+   sequenciadas (`messages.content.<id>`) e o que sai de fora do React — notificações e serviço
+   em primeiro plano usam `i18n.t` direto. O app tem um idioma só (pt-BR).
+   `node scripts/check-i18n.mjs` verifica chave usada sem tradução e tradução sem uso; chave
+   montada por template precisa entrar em `DYNAMIC_KEYS`. `count` é o parâmetro de pluralização
+   do i18next: use-o quando a frase flexiona (`_one`/`_other`) e `total` quando for só um número.
 6. `React.JSX.Element`, nunca `JSX.Element`. `StyleSheet.create({})` ao final do arquivo.
 
 ## O que exige cuidado
@@ -50,8 +50,8 @@ src/components/       atoms · molecules · organisms · templates
   (`get: () => require(...)`) no módulo de `require.context`, e esse getter só é acessado
   quando o expo-router renderiza. O sistema sobe o processo sem montar árvore React nenhuma
   para entregar um evento de região, e aí o TaskManager não acha a tarefa e a **desregistra**.
-- **Nada de MMKV no caminho das tarefas de background.** SQLite, porque precisa de transação:
-  estado novo e evento gravados juntos ou nenhum dos dois.
+- **Todo estado vive em SQLite**, inclusive o sinalizador de onboarding. As tarefas de
+  background precisam de transação: estado novo e evento gravados juntos, ou nenhum dos dois.
 - **A lógica de decisão é pura e fica em `services/`**: `transitionEngine`, `regionReconciler`,
   `sequencePlanner`, `routeSimulator`. Sem I/O, sem React. É onde estão os testes, e é onde
   mudanças precisam de teste novo.
@@ -68,6 +68,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (227 testes)
+npm run verify    # typecheck + check:i18n + jest (233 testes)
 npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```
