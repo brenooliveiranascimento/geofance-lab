@@ -4,14 +4,10 @@ import { FlatList, StyleSheet, Switch, TouchableOpacity, View } from 'react-nati
 
 import { Button, Input, Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
+import { formatDistance } from '@src/lib/format';
 import { colors, fontSize, spacing } from '@src/theme';
 
 import type { CompaniesViewModel, CompanyRow } from './useCompaniesViewModel';
-
-const formatDistance = (meters: number | null): string => {
-  if (meters === null) return '—';
-  return meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
-};
 
 export interface CompaniesViewProps {
   viewModel: CompaniesViewModel;

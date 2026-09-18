@@ -67,7 +67,7 @@
     "radii": "raio {{radius, number(maximumFractionDigits: 0)}} m · ativo {{activeRadius, number(maximumFractionDigits: 0)}} m",
     "rooms_one": "{{count}} cômodo",
     "rooms_other": "{{count}} cômodos",
-    "residence": "com polígono",
+    "hasOutline": "com polígono",
     "youAreHere": "Você está aqui agora",
     "create": "Cadastrar empresa",
     "empty": {

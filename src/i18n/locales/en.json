@@ -67,7 +67,7 @@
     "radii": "radius {{radius, number(maximumFractionDigits: 0)}} m · active {{activeRadius, number(maximumFractionDigits: 0)}} m",
     "rooms_one": "{{count}} room",
     "rooms_other": "{{count}} rooms",
-    "residence": "has an outline",
+    "hasOutline": "has an outline",
     "youAreHere": "You are here right now",
     "create": "Register a company",
     "empty": {

@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

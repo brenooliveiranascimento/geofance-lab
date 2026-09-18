@@ -4,6 +4,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Button, Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
+import { formatTime } from '@src/lib/format';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
 import { CompaniesMap } from '../../components/CompaniesMap';
@@ -72,10 +73,7 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
                 {lastEvent.roomName ?? lastEvent.companyName}
               </Text>
               <Text style={styles.eventTime}>
-                {new Date(lastEvent.occurredAt).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {formatTime(lastEvent.occurredAt)}
               </Text>
             </TouchableOpacity>
           ) : null}

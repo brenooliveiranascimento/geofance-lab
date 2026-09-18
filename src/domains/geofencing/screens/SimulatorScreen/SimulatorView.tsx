@@ -56,7 +56,7 @@ export function SimulatorView({ viewModel }: SimulatorViewProps): React.JSX.Elem
                 </Text>
                 <Text style={styles.companyChipMeta}>
                   {t('companies.radii', { radius: company.radius, activeRadius: company.activeRadius })}
-                  {company.polygon ? ` · ${t('companies.residence')}` : ''}
+                  {company.polygon ? ` · ${t('companies.hasOutline')}` : ''}
                 </Text>
               </TouchableOpacity>
             );

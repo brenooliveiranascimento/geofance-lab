@@ -6,8 +6,8 @@ const BACKGROUND = '#0D0D0D';
 const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
 const LOCATION_RATIONALE =
-  'O Geofence Lab usa sua localização para detectar quando você entra e sai dos ' +
-  'locais e cômodos que você cadastrou, mesmo com o app fechado.';
+  'O Geofence Lab usa sua localização para detectar quando você entra e sai das ' +
+  'empresas e dos cômodos que você cadastrou, mesmo com o app fechado.';
 
 const config: ExpoConfig = {
   name: 'Geofence Lab',

@@ -54,9 +54,9 @@ export function useSimulatorViewModel(): SimulatorViewModel {
   const cancelled = useRef(false);
 
   const companies = useMemo(() => {
-    const residences = allCompanies.filter((company) => company.polygon !== null);
+    const withOutline = allCompanies.filter((company) => company.polygon !== null);
     const others = allCompanies.filter((company) => company.polygon === null).slice(0, 30);
-    return [...residences, ...others];
+    return [...withOutline, ...others];
   }, [allCompanies]);
 
   const selected = useMemo(

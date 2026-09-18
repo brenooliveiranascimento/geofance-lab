@@ -85,7 +85,7 @@ export function isPointInPolygon(
   const effectiveBox = box ?? boundingBoxOfRing(ring);
   if (!effectiveBox) return false;
 
-  const latitudePadding = toleranceMeters / 111320;
+  const latitudePadding = toleranceMeters / METERS_PER_DEGREE_LATITUDE;
   if (
     point.latitude < effectiveBox.minLatitude - latitudePadding ||
     point.latitude > effectiveBox.maxLatitude + latitudePadding ||

@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { formatDateTime } from '@src/lib/format';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Text } from '@src/components/atoms';
@@ -16,14 +18,6 @@ const STATE_COLOR: Record<string, string> = {
   failed: colors.error,
   pending: colors.textMuted,
 };
-
-const formatDateTime = (value: number): string =>
-  new Date(value).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
 export interface MessagesViewProps {
   viewModel: MessagesViewModel;

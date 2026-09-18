@@ -6,19 +6,8 @@ import { Icon, Text } from '@src/components/atoms';
 import type { LatLng, Ring } from '@src/core/geo';
 
 import { DARK_MAP_STYLE } from './mapStyle';
+import { regionFor } from './mapRegion';
 import { colors, fontSize, radius as radii, spacing } from '@src/theme';
-
-const METERS_PER_DEGREE_LATITUDE = 111320;
-
-function regionFor(center: LatLng, spanMeters: number): Region {
-  const latitudeDelta = spanMeters / METERS_PER_DEGREE_LATITUDE;
-  return {
-    latitude: center.latitude,
-    longitude: center.longitude,
-    latitudeDelta,
-    longitudeDelta: latitudeDelta / Math.max(Math.cos((center.latitude * Math.PI) / 180), 0.1),
-  };
-}
 
 export interface CrosshairMapProps {
   initialCenter: LatLng;

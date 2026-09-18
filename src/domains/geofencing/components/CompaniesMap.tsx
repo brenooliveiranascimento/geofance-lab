@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import MapView, { Circle, Marker, Polygon, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
+import MapView, { Circle, Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { Icon, Text } from '@src/components/atoms';
 import type { LatLng } from '@src/core/geo';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
 import { DARK_MAP_STYLE } from './mapStyle';
+import { regionFor } from './mapRegion';
 import type { Company, Room, TargetState } from '../types';
 
 export interface CompaniesMapProps {
@@ -23,18 +24,6 @@ export interface CompaniesMapProps {
   recenterLabel?: string;
 }
 
-const METERS_PER_DEGREE_LATITUDE = 111320;
-
-
-function regionFor(center: LatLng, spanMeters: number): Region {
-  const latitudeDelta = spanMeters / METERS_PER_DEGREE_LATITUDE;
-  return {
-    latitude: center.latitude,
-    longitude: center.longitude,
-    latitudeDelta,
-    longitudeDelta: latitudeDelta / Math.max(Math.cos((center.latitude * Math.PI) / 180), 0.1),
-  };
-}
 
 export function CompaniesMap({
   center,

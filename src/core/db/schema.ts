@@ -1,6 +1,6 @@
 export const MIGRATIONS: readonly string[] = [
   `
-  CREATE TABLE IF NOT EXISTS places (
+  CREATE TABLE IF NOT EXISTS companies (
     id            TEXT    PRIMARY KEY NOT NULL,
     name          TEXT    NOT NULL,
     latitude      REAL    NOT NULL,
@@ -14,17 +14,17 @@ export const MIGRATIONS: readonly string[] = [
 
   CREATE TABLE IF NOT EXISTS rooms (
     id         TEXT    PRIMARY KEY NOT NULL,
-    place_id   TEXT    NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    company_id TEXT    NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
     name       TEXT    NOT NULL,
     polygon    TEXT    NOT NULL,
     created_at INTEGER NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_rooms_place ON rooms(place_id);
+  CREATE INDEX IF NOT EXISTS idx_rooms_company ON rooms(company_id);
 
   CREATE TABLE IF NOT EXISTS monitor_state (
     target_id      TEXT    PRIMARY KEY NOT NULL,
     target_kind    TEXT    NOT NULL,
-    place_id       TEXT    NOT NULL,
+    company_id     TEXT    NOT NULL,
     state          TEXT    NOT NULL,
     transition_seq INTEGER NOT NULL DEFAULT 0,
     since          INTEGER NOT NULL,
@@ -33,14 +33,14 @@ export const MIGRATIONS: readonly string[] = [
     pending_count  INTEGER NOT NULL DEFAULT 0,
     updated_at     INTEGER NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_monitor_state_place ON monitor_state(place_id);
+  CREATE INDEX IF NOT EXISTS idx_monitor_state_company ON monitor_state(company_id);
 
   CREATE TABLE IF NOT EXISTS geofence_events (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     idempotency_key TEXT    NOT NULL UNIQUE,
     kind            TEXT    NOT NULL,
-    place_id        TEXT    NOT NULL,
-    place_name      TEXT    NOT NULL,
+    company_id      TEXT    NOT NULL,
+    company_name    TEXT    NOT NULL,
     room_id         TEXT,
     room_name       TEXT,
     occurred_at     INTEGER NOT NULL,
@@ -52,7 +52,7 @@ export const MIGRATIONS: readonly string[] = [
     notified        INTEGER NOT NULL DEFAULT 0
   );
   CREATE INDEX IF NOT EXISTS idx_events_occurred ON geofence_events(occurred_at DESC);
-  CREATE INDEX IF NOT EXISTS idx_events_place ON geofence_events(place_id, occurred_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_events_company ON geofence_events(company_id, occurred_at DESC);
 
   CREATE TABLE IF NOT EXISTS message_schedule (
     sequence        TEXT    NOT NULL,
@@ -97,25 +97,5 @@ export const MIGRATIONS: readonly string[] = [
     key   TEXT PRIMARY KEY NOT NULL,
     value TEXT NOT NULL
   );
-  `,
-
-  `
-  ALTER TABLE places RENAME TO companies;
-
-  ALTER TABLE rooms           RENAME COLUMN place_id   TO company_id;
-  ALTER TABLE monitor_state   RENAME COLUMN place_id   TO company_id;
-  ALTER TABLE geofence_events RENAME COLUMN place_id   TO company_id;
-  ALTER TABLE geofence_events RENAME COLUMN place_name TO company_name;
-
-  UPDATE geofence_events SET kind = 'company_enter' WHERE kind = 'place_enter';
-  UPDATE geofence_events SET kind = 'company_exit'  WHERE kind = 'place_exit';
-
-  DROP INDEX IF EXISTS idx_rooms_place;
-  DROP INDEX IF EXISTS idx_monitor_state_place;
-  DROP INDEX IF EXISTS idx_events_place;
-
-  CREATE INDEX IF NOT EXISTS idx_rooms_company ON rooms(company_id);
-  CREATE INDEX IF NOT EXISTS idx_monitor_state_company ON monitor_state(company_id);
-  CREATE INDEX IF NOT EXISTS idx_events_company ON geofence_events(company_id, occurred_at DESC);
   `,
 ];

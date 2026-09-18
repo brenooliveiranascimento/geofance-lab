@@ -4,6 +4,7 @@ import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Text } from '@src/components/atoms';
 import { ScreenTemplate } from '@src/components/templates';
+import { formatTimeWithSeconds as time } from '@src/lib/format';
 import { colors, fontSize, radius, spacing } from '@src/theme';
 
 import type { GeofenceEvent } from '../../types';
@@ -18,9 +19,6 @@ const LEVEL_COLOR: Record<string, string> = {
   warn: colors.warning,
   error: colors.error,
 };
-
-const time = (value: number) =>
-  new Date(value).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 export interface HistoryViewProps {
   viewModel: HistoryViewModel;
