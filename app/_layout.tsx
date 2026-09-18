@@ -1,6 +1,5 @@
 import '@src/i18n';
 import { resumeMonitoringIfNeeded } from '@src/domains/geofencing';
-import { registerMessagingTask } from '@src/domains/messaging';
 
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -13,7 +12,10 @@ import { useEffect } from 'react';
 import { Appearance, AppState, StyleSheet, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { registerPeriodicTask } from '@src/core/backgroundTask';
 import { logger } from '@src/core/logger';
+import { UPKEEP_TASK } from '@src/domains/geofencing/config';
+import { MESSAGING_TASK } from '@src/domains/messaging/config';
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
 import {
   handleNotificationReceived,
@@ -53,7 +55,8 @@ async function catchUp(): Promise<void> {
 
 export default function RootLayout() {
   useEffect(() => {
-    void registerMessagingTask();
+    void registerPeriodicTask(MESSAGING_TASK);
+    void registerPeriodicTask(UPKEEP_TASK);
     void catchUp();
     SplashScreen.hideAsync().catch(() => {});
   }, []);

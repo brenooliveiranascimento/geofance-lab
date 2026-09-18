@@ -61,6 +61,11 @@ src/components/       atoms · molecules · organisms · templates
 - **Entrada numa empresa é decidida pelo polígono, não pelo círculo.** O círculo só existe para
   registrar a região nativa e acordar o app. Um local sem polígono cai na regra circular do
   enunciado, e essa via continua testada.
+- **`hasStartedLocationUpdatesAsync` responde pelo registro gravado, não pelo serviço.** Se o
+  processo morrer com o tier 2 ligado, o registro sobrevive e o serviço não — tratar a resposta
+  como "está rodando" trava o app fora do GPS contínuo para sempre. Quem manda dentro do processo
+  é o sinalizador `preciseRunning` do `monitorService`, reivindicado antes do `await` para que
+  chamadas concorrentes não subam o serviço várias vezes.
 - **Ao mudar conteúdo ou timing das mensagens**, não agende direto — mexa no plano e deixe o
   `scheduler` reconciliar. O identificador da notificação é a chave do slot, e o SO usa isso
   para recusar duplicatas.
@@ -68,6 +73,6 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (45 testes)
+npm run verify    # typecheck + check:i18n + jest (19 testes)
 npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
 ```

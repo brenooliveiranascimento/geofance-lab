@@ -131,7 +131,7 @@ export function HistoryView({ viewModel }: HistoryViewProps): React.JSX.Element 
                 <Text style={[styles.logTag, { color: LEVEL_COLOR[item.level] }]}>{item.tag}</Text>
                 <Text style={styles.logMessage}>{item.message}</Text>
                 {item.data ? (
-                  <Text style={styles.logData} numberOfLines={2}>
+                  <Text style={styles.logData} numberOfLines={6}>
                     {item.data}
                   </Text>
                 ) : null}

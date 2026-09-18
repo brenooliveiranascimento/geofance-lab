@@ -22,13 +22,3 @@ TaskManager.defineTask(MESSAGING_TASK, async () => {
   }
 });
 
-export async function registerMessagingTask(): Promise<void> {
-  try {
-    if (await TaskManager.isTaskRegisteredAsync(MESSAGING_TASK)) return;
-    await BackgroundTask.registerTaskAsync(MESSAGING_TASK, { minimumInterval: 15 });
-    logger.info('task:messaging', 'registered');
-  } catch (error) {
-    logger.warn('task:messaging', 'registration failed', { error: String(error) });
-  }
-}
-

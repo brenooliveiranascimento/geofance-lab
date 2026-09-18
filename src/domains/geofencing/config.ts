@@ -51,3 +51,4 @@ export const MONITOR_KEYS = {
 
 export const GEOFENCING_TASK = 'geofence-lab.regions';
 export const LOCATION_TASK = 'geofence-lab.location';
+export const UPKEEP_TASK = 'geofence-lab.upkeep';

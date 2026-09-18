@@ -152,6 +152,8 @@ async function stopGeofencing(): Promise<void> {
   }
 }
 
+let preciseRunning = false;
+
 async function isLocationTaskRunning(): Promise<boolean> {
   try {
     return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK);
@@ -162,26 +164,38 @@ async function isLocationTaskRunning(): Promise<boolean> {
 }
 
 async function startPreciseUpdates(): Promise<void> {
-  if (await isLocationTaskRunning()) return;
+  if (preciseRunning) return;
+  preciseRunning = true;
 
-  await Location.startLocationUpdatesAsync(LOCATION_TASK, {
-    accuracy: Location.Accuracy.High,
-    distanceInterval: MONITOR_CONFIG.preciseUpdates.distanceIntervalMeters,
-    timeInterval: MONITOR_CONFIG.preciseUpdates.timeIntervalMs,
-    pausesUpdatesAutomatically: false,
-    activityType: Location.ActivityType.Other,
-    showsBackgroundLocationIndicator: true,
-    foregroundService: {
-      notificationTitle: i18n.t('notifications.foreground.title'),
-      notificationBody: i18n.t('notifications.foreground.body'),
-      notificationColor: colors.primary,
-    },
-  });
+  try {
+    if (await isLocationTaskRunning()) {
+      logger.warn(TAG, 'precise updates outlived the process that started them, restarting');
+      await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+    }
 
-  logger.info(TAG, 'precise updates started');
+    await Location.startLocationUpdatesAsync(LOCATION_TASK, {
+      accuracy: Location.Accuracy.High,
+      distanceInterval: MONITOR_CONFIG.preciseUpdates.distanceIntervalMeters,
+      timeInterval: MONITOR_CONFIG.preciseUpdates.timeIntervalMs,
+      pausesUpdatesAutomatically: false,
+      activityType: Location.ActivityType.Other,
+      showsBackgroundLocationIndicator: true,
+      foregroundService: {
+        notificationTitle: i18n.t('notifications.foreground.title'),
+        notificationBody: i18n.t('notifications.foreground.body'),
+        notificationColor: colors.primary,
+      },
+    });
+
+    logger.info(TAG, 'precise updates started');
+  } catch (error) {
+    preciseRunning = false;
+    throw error;
+  }
 }
 
 async function stopPreciseUpdates(): Promise<void> {
+  preciseRunning = false;
   try {
     if (await isLocationTaskRunning()) {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK);

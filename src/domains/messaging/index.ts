@@ -1,6 +1,5 @@
 export * from '@src/domains/messaging/types';
 export { MESSAGING_CONFIG } from '@src/domains/messaging/config';
-export { registerMessagingTask } from '@src/domains/messaging/tasks';
 export {
   cancelAllMessages,
   handleNotificationReceived,

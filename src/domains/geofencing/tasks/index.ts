@@ -1,10 +1,15 @@
+import * as BackgroundTask from 'expo-background-task';
 import type * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 
 import { logger } from '@src/core/logger';
 
-import { GEOFENCING_TASK, LOCATION_TASK } from '@src/domains/geofencing/config';
-import { handleFixes, handleRegionEvent } from '@src/domains/geofencing/services/monitorService';
+import { GEOFENCING_TASK, LOCATION_TASK, UPKEEP_TASK } from '@src/domains/geofencing/config';
+import {
+  handleFixes,
+  handleRegionEvent,
+  resumeMonitoringIfNeeded,
+} from '@src/domains/geofencing/services/monitorService';
 
 interface GeofencingPayload {
   eventType: Location.GeofencingEventType;
@@ -40,5 +45,15 @@ TaskManager.defineTask<LocationPayload>(LOCATION_TASK, async ({ data, error }) =
     await handleFixes(data.locations);
   } catch (taskError) {
     logger.error('task:location', 'unhandled failure', { error: String(taskError) });
+  }
+});
+
+TaskManager.defineTask(UPKEEP_TASK, async () => {
+  try {
+    await resumeMonitoringIfNeeded();
+    return BackgroundTask.BackgroundTaskResult.Success;
+  } catch (error) {
+    logger.error('task:upkeep', 'unhandled failure', { error: String(error) });
+    return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });

@@ -77,7 +77,7 @@ apaga a saída do bundle antes de montar.
 ### Verificando
 
 ```bash
-npm run verify     # typecheck + i18n + 45 testes
+npm run verify     # typecheck + i18n + 19 testes
 npm run lint
 ```
 
@@ -172,6 +172,17 @@ sem serviço em primeiro plano, daí a notificação persistente enquanto você 
 empresa; gerenciadores de bateria de alguns fabricantes encerram o serviço mesmo assim, e o app
 oferece atalho para as configurações de otimização.
 
+**O serviço em primeiro plano não sobrevive à morte do processo.** Quando o Android recupera o
+processo enquanto você está dentro de uma empresa, o serviço morre junto e a notificação
+persistente some — mas o registro da tarefa fica gravado, e `hasStartedLocationUpdatesAsync`
+continua respondendo que ela está ligada. Sem tratar isso, o app nunca mais sobe o serviço. No
+primeiro sync de tier de cada processo ele derruba o registro órfão e começa um serviço novo, e
+uma tarefa periódica faz a mesma reconciliação com o app fechado. O Android 12+ proíbe iniciar
+serviço em primeiro plano a partir do background, então essa tentativa costuma ser recusada: o
+app registra `precise updates unavailable, staying on native regions` e segue nas regiões
+nativas, que são o que detecta entrada e saída de empresa. O GPS contínuo — e com ele a detecção
+de cômodo — volta na travessia de região seguinte ou quando o app é aberto.
+
 **Ambos** — o subtítulo cai em campos diferentes (`subtitle` no iOS, `subText` no Android), e no
 Android a posição exata depende do fabricante.
 
@@ -202,6 +213,10 @@ No emulador Android com Google Play Services, também com o APK de release:
   drenou sozinha, sem duplicar.
 - Layout com a barra de navegação de 3 botões e com navegação por gestos: nenhum controle fica
   sob a barra do sistema nas duas configurações.
+- Serviço em primeiro plano derrubado com o app fechado: ao reabrir, o registro órfão é
+  descartado e o serviço sobe de novo, uma vez só — a notificação persistente volta.
+- Processo acordado do zero pela tarefa periódica e então aberto pelo usuário: monitoramento
+  inicia normalmente, serviço em primeiro plano e detecção de cômodo inclusos.
 
 Uma observação sobre o emulador: a transição de geofence com o processo morto não é observável
 nele, porque o GPS simulado só avança enquanto algum aplicativo mantém um pedido de localização
