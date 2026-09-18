@@ -1,6 +1,5 @@
 import { getDatabase, transaction } from '@src/core/db';
 import { buildGridIndex, type GridIndex, type LatLng, type Ring } from '@src/core/geo';
-import { logger } from '@src/core/logger';
 
 import { invalidateGeometry } from '@src/domains/geofencing/services/ringGeometry';
 import type { Company, Room } from '@src/domains/geofencing/types';
@@ -202,74 +201,4 @@ export function deleteRoom(id: string): void {
     db.runSync('DELETE FROM rooms WHERE id = ?;', id);
   });
   invalidateGeometry(id);
-}
-
-export interface SeedPayload {
-  companies: {
-    id: string;
-    name: string;
-    latitude: number;
-    longitude: number;
-    radius: number;
-    activeRadius: number;
-    polygon?: Ring | null;
-    rooms?: { id: string; name: string; polygon: Ring }[];
-  }[];
-}
-
-export function seedCompanies(payload: SeedPayload, { replace = true } = {}): number {
-  const now = Date.now();
-
-  const inserted = transaction((db) => {
-    if (replace) {
-      db.runSync('DELETE FROM monitor_state;');
-      db.runSync('DELETE FROM rooms;');
-      db.runSync('DELETE FROM companies;');
-    }
-
-    let count = 0;
-    for (const entry of payload.companies) {
-      db.runSync(
-        `INSERT INTO companies (id, name, latitude, longitude, radius, active_radius, polygon, enabled, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
-         ON CONFLICT(id) DO UPDATE SET
-           name = excluded.name,
-           latitude = excluded.latitude,
-           longitude = excluded.longitude,
-           radius = excluded.radius,
-           active_radius = excluded.active_radius,
-           polygon = excluded.polygon;`,
-        [
-          entry.id,
-          entry.name,
-          entry.latitude,
-          entry.longitude,
-          entry.radius,
-          entry.activeRadius,
-          entry.polygon ? JSON.stringify(entry.polygon) : null,
-          now,
-        ],
-      );
-
-      for (const room of entry.rooms ?? []) {
-        db.runSync(
-          `INSERT INTO rooms (id, company_id, name, polygon, created_at)
-           VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET
-             company_id = excluded.company_id,
-             name = excluded.name,
-             polygon = excluded.polygon;`,
-          [room.id, entry.id, room.name, JSON.stringify(room.polygon), now],
-        );
-      }
-
-      count += 1;
-    }
-    return count;
-  });
-
-  invalidateCompanyCaches();
-  invalidateGeometry();
-  logger.info('companies', 'seeded dataset', { companies: inserted });
-  return inserted;
 }

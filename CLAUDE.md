@@ -53,14 +53,18 @@ src/components/       atoms · molecules · organisms · templates
 - **Todo estado vive em SQLite**, inclusive o sinalizador de onboarding. As tarefas de
   background precisam de transação: estado novo e evento gravados juntos, ou nenhum dos dois.
 - **A lógica de decisão é pura e fica em `services/`**: `transitionEngine`, `regionReconciler`,
-  `sequencePlanner`, `routeSimulator`. Sem I/O, sem React. É onde estão os testes, e é onde
-  mudanças precisam de teste novo.
+  `sequencePlanner`, `routeSimulator`. Sem I/O, sem React.
 - **`activeRadius >= radius` é invariante imposto pelo repositório**, que lança em vez de
   gravar. A folga entre os dois é a banda morta que impede eventos repetidos na borda. Numa
   empresa os dois são derivados do polígono — não peça ao usuário.
 - **Entrada numa empresa é decidida pelo polígono, não pelo círculo.** O círculo só existe para
   registrar a região nativa e acordar o app. Um local sem polígono cai na regra circular do
   enunciado, e essa via continua testada.
+- **O handler de notificação vive no `index.ts`, não no `_layout`.** Sem
+  `setNotificationHandler` registrado, o expo-notifications **não apresenta** a notificação
+  agendada — e o `_layout` só roda quando a UI monta. O alarme dispara, o processo sobe headless,
+  e a mensagem é engolida em silêncio. Mesma armadilha do registro das tarefas: o que precisa
+  valer em todo processo entra pelo entry do pacote.
 - **`hasStartedLocationUpdatesAsync` responde pelo registro gravado, não pelo serviço.** Se o
   processo morrer com o tier 2 ligado, o registro sobrevive e o serviço não — tratar a resposta
   como "está rodando" trava o app fora do GPS contínuo para sempre. Quem manda dentro do processo
@@ -74,6 +78,5 @@ src/components/       atoms · molecules · organisms · templates
 ## Verificação
 
 ```bash
-npm run verify    # typecheck + check:i18n + jest (19 testes)
-npm run seed      # regenera src/__fixtures__/companies.json (fixture de teste)
+npm run verify    # typecheck + check:i18n
 ```

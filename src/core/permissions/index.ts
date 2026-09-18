@@ -1,6 +1,5 @@
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 
 import { logger } from '@src/core/logger';
 
@@ -69,4 +68,3 @@ export async function requestNotificationPermission(): Promise<PermissionState> 
   return toState(requested.status);
 }
 
-export const needsBatteryOptimizationOptOut = Platform.OS === 'android';

@@ -76,7 +76,6 @@
     }
   },
   "events": {
-    "cleared": "Log limpo",
     "scope": {
       "all": "Todos",
       "companies": "Empresas",
@@ -255,20 +254,6 @@
       "requestLocation": "Pedir localização",
       "requestNotifications": "Pedir notificações",
       "openSettings": "Abrir ajustes"
-    },
-    "battery": {
-      "body": "Alguns fabricantes encerram o serviço com a tela apagada. Isentar o app evita isso.",
-      "action": "Abrir ajustes de bateria"
-    },
-    "tools": {
-      "title": "Ferramentas",
-      "simulator": "Simulador de rota",
-      "history": "Histórico e log",
-      "loadDemo": "Carregar dataset de demonstração",
-      "removeDemo": "Remover dataset de demonstração",
-      "demoHint": "{{total}} locais espalhados por quatro cidades, para exercitar o teto de regiões da plataforma.",
-      "demoLoaded": "{{total}} locais carregados",
-      "demoRemoved": "{{total}} locais removidos"
     },
     "data": {
       "reset": "Apagar tudo e recomeçar"

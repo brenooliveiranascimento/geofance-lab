@@ -85,7 +85,7 @@ Deixar as quatro ABIs dobraria o tamanho sem atender nenhum aparelho a mais.
 ### Verificando
 
 ```bash
-npm run verify     # typecheck + i18n + 19 testes
+npm run verify     # typecheck + i18n
 npm run lint
 ```
 
@@ -124,15 +124,11 @@ tempo todo" não há monitoramento em background.
 
 ## Testando sem sair do lugar
 
-**Dataset de demonstração** — Ajustes → Ferramentas carrega 520 locais espalhados por São Paulo,
-Rio, Belo Horizonte e Curitiba, ao lado das empresas que você cadastrou. É o que exercita o teto
-de regiões da plataforma: com ele carregado o Monitor mostra 100 de 100 regiões no Android.
-
-**Simulador de rota** — Ajustes → Ferramentas percorre uma rota sintética pelo mesmo caminho que
-o GPS alimenta. Dá para escolher a empresa, o trajeto e a acurácia simulada: em ±120 m nenhum
+**Simulador de rota** — o link no rodapé do Monitor percorre uma rota sintética pelo mesmo
+caminho que o GPS alimenta. Dá para escolher a empresa, o trajeto e a acurácia simulada: em ±120 m nenhum
 evento é emitido, porque a leitura é descartada antes de virar evento.
 
-**Histórico** — duas abas. Eventos mostra entradas e saídas, filtráveis e exportáveis. Sistema
+**Histórico** — o outro link no rodapé do Monitor, com duas abas. Eventos mostra entradas e saídas, filtráveis e exportáveis. Sistema
 mostra o log interno: a janela de regiões, a troca de camada, as leituras descartadas e as
 chaves de idempotência.
 
@@ -217,9 +213,9 @@ No emulador Android com Google Play Services, também com o APK de release:
   abrir a tela.
 - Com o processo morto: a tarefa periódica acordou o app do zero, reconciliou o agendamento e
   enviou a confirmação de entrega.
-- Com o dataset de 520 locais: 100 de 100 regiões registradas.
-- Sem rede: a mensagem venceu, a confirmação ficou na fila e nada foi enviado; ao religar,
-  drenou sozinha, sem duplicar.
+- Em modo avião e com o processo encerrado: a mensagem agendada chegou na bandeja do sistema
+  com `Mensagem 1 de 5` no subtítulo, a confirmação ficou na fila sem gastar tentativa, e ao
+  religar a rede foi confirmada na primeira tentativa.
 - Layout com a barra de navegação de 3 botões e com navegação por gestos: nenhum controle fica
   sob a barra do sistema nas duas configurações.
 - Serviço em primeiro plano derrubado com o app fechado: ao reabrir, o registro órfão é
@@ -251,8 +247,7 @@ src/
 
 Cada tela é um trio: `index.tsx` monta, `View.tsx` só desenha e `ViewModel.ts` decide. A lógica
 de decisão fica em funções puras, sem I/O: histerese e deduplicação, seleção da janela de
-regiões, plano de mensagens e geometria de polígono. São as quatro coisas que os testes cobrem,
-porque são as que não dá para conferir de olho.
+regiões, plano de mensagens e geometria de polígono.
 
 ---
 
