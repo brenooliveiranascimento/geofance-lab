@@ -175,6 +175,14 @@ oferece atalho para as configurações de otimização.
 **Ambos** — o subtítulo cai em campos diferentes (`subtitle` no iOS, `subText` no Android), e no
 Android a posição exata depende do fabricante.
 
+**Instalar o APK por cima do app rodando** deixa o processo antigo com um contexto morto dentro
+do `expo-task-manager` — ele guarda o contexto em `WeakReference`, e a partir daí toda chamada de
+tarefa falha com `NullPointerException` em `SharedPreferences.getAll()`. O app trata: a exceção é
+capturada, o monitoramento não entra num estado falso e a tela avisa "O sistema recusou registrar
+as regiões. Veja Histórico → Sistema.", com a causa nativa completa no log. Fechar o app e abrir
+de novo resolve. Só acontece ao instalar por cima na mão; numa atualização de loja o sistema
+encerra o processo antes.
+
 ---
 
 ## O que foi medido
@@ -192,6 +200,8 @@ No emulador Android com Google Play Services, também com o APK de release:
 - Com o dataset de 520 locais: 100 de 100 regiões registradas.
 - Sem rede: a mensagem venceu, a confirmação ficou na fila e nada foi enviado; ao religar,
   drenou sozinha, sem duplicar.
+- Layout com a barra de navegação de 3 botões e com navegação por gestos: nenhum controle fica
+  sob a barra do sistema nas duas configurações.
 
 Uma observação sobre o emulador: a transição de geofence com o processo morto não é observável
 nele, porque o GPS simulado só avança enquanto algum aplicativo mantém um pedido de localização

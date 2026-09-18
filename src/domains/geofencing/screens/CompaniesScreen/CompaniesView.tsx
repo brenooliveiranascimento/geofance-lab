@@ -55,7 +55,7 @@ export function CompaniesView({ viewModel }: CompaniesViewProps): React.JSX.Elem
   );
 
   return (
-    <ScreenTemplate>
+    <ScreenTemplate underTabBar>
       <View style={styles.header}>
         <Text style={styles.heading}>{t('companies.title')}</Text>
         <Text style={styles.subheading}>{t('companies.subtitle', { count: viewModel.total })}</Text>

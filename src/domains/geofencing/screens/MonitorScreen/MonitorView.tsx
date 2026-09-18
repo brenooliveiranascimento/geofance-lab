@@ -28,7 +28,7 @@ export function MonitorView({ viewModel }: MonitorViewProps): React.JSX.Element 
   const { status, lastEvent, running } = viewModel;
 
   return (
-    <ScreenTemplate>
+    <ScreenTemplate underTabBar>
       <View style={styles.map}>
         {viewModel.mapAvailable && viewModel.center ? (
           <CompaniesMap

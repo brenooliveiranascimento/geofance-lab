@@ -70,7 +70,7 @@ export function SettingsView({ viewModel }: SettingsViewProps): React.JSX.Elemen
   const backgroundMissing = permissions && permissions.backgroundLocation !== 'granted';
 
   return (
-    <ScreenTemplate>
+    <ScreenTemplate underTabBar>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>{t('settings.title')}</Text>
 

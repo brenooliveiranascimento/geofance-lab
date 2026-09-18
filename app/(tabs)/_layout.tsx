@@ -2,12 +2,14 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@src/components/atoms';
 import { colors } from '@src/theme';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -15,7 +17,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom },
+        ],
         sceneStyle: styles.scene,
         tabBarLabelStyle: styles.label,
       }}
@@ -52,13 +57,14 @@ export default function TabLayout() {
   );
 }
 
+const TAB_BAR_HEIGHT = 64;
+
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.background,
     borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     elevation: 0,
-    height: 76,
     paddingTop: 8,
   },
   label: { fontSize: 11, fontWeight: '500' },

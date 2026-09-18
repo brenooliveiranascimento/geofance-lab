@@ -33,7 +33,7 @@ export function MessagesView({ viewModel }: MessagesViewProps): React.JSX.Elemen
   const exhaustedReceipts = receipts.filter((r) => r.state === 'exhausted').length;
 
   return (
-    <ScreenTemplate>
+    <ScreenTemplate underTabBar>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>{t('messages.title')}</Text>
         <Text style={styles.intro}>{t('messages.intro')}</Text>

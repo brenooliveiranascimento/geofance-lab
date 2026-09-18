@@ -1,37 +1,27 @@
 import React, { type PropsWithChildren } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { colors } from '@src/theme';
 
 export interface ScreenTemplateProps extends PropsWithChildren {
-  scrollable?: boolean;
+  underTabBar?: boolean;
 }
+
+const FULL: Edge[] = ['top', 'bottom', 'left', 'right'];
+const ABOVE_TAB_BAR: Edge[] = ['top', 'left', 'right'];
 
 export function ScreenTemplate({
   children,
-  scrollable = false,
+  underTabBar = false,
 }: ScreenTemplateProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
-
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      {scrollable ? (
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 + insets.bottom }]}
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={styles.flex}>{children}</View>
-      )}
+    <SafeAreaView style={styles.container} edges={underTabBar ? ABOVE_TAB_BAR : FULL}>
+      {children}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1 },
-  scrollContent: { paddingBottom: 32 },
 });
