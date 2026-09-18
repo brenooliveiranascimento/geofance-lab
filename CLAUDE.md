@@ -43,10 +43,12 @@ src/components/       atoms · molecules · organisms · templates
 
 ## O que exige cuidado
 
-- **`TaskManager.defineTask` tem que ficar em escopo de módulo**, importado no topo de
-  `app/_layout.tsx`. O sistema pode subir o processo só para entregar um evento de região,
-  sem montar árvore React nenhuma. Registrar de dentro de um componente quebra exatamente o
-  caso que o código existe para atender.
+- **`TaskManager.defineTask` é registrado pelo `index.ts` da raiz**, que é o `main` do pacote
+  e importa os dois módulos de tarefas antes de `expo-router/entry`. Não basta importar a
+  partir de `app/_layout.tsx`: o Metro põe cada rota atrás de um getter
+  (`get: () => require(...)`) no módulo de `require.context`, e esse getter só é acessado
+  quando o expo-router renderiza. O sistema sobe o processo sem montar árvore React nenhuma
+  para entregar um evento de região, e aí o TaskManager não acha a tarefa e a **desregistra**.
 - **Nada de MMKV no caminho das tarefas de background.** SQLite, porque precisa de transação:
   estado novo e evento gravados juntos ou nenhum dos dois.
 - **A lógica de decisão é pura e fica em `services/`**: `transitionEngine`, `regionReconciler`,

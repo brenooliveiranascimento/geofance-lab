@@ -13,7 +13,6 @@ import { Appearance, AppState, StyleSheet, type AppStateStatus } from 'react-nat
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
-import { bootstrapDatabase } from '@src/core/bootstrap';
 import { logger } from '@src/core/logger';
 import { drainReceipts } from '@src/domains/messaging/services/receiptSender';
 import {
@@ -28,8 +27,6 @@ Appearance.setColorScheme('dark');
 
 SplashScreen.preventAutoHideAsync();
 
-bootstrapDatabase();
-
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -43,14 +40,14 @@ async function catchUp(): Promise<void> {
   try {
     await resumeMonitoringIfNeeded();
   } catch (error) {
-    logger.error('bootstrap', 'could not resume monitoring', { error: String(error) });
+    logger.error('startup', 'could not resume monitoring', { error: String(error) });
   }
 
   try {
     await reconcileSchedule();
     await drainReceipts();
   } catch (error) {
-    logger.error('bootstrap', 'catch-up failed', { error: String(error) });
+    logger.error('startup', 'catch-up failed', { error: String(error) });
   }
 }
 
@@ -85,7 +82,6 @@ export default function RootLayout() {
               <Stack.Screen name="(onboarding)" />
               <Stack.Screen name="companies/[id]" options={{ presentation: 'card' }} />
               <Stack.Screen name="simulator" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="diagnostics" options={{ presentation: 'modal' }} />
             </Stack>
             <StatusBar style="light" backgroundColor={colors.background} />
           </ToastProvider>

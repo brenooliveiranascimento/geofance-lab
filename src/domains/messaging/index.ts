@@ -1,5 +1,3 @@
-import './tasks';
-
 export * from './types';
 export { MESSAGING_CONFIG } from './config';
 export { registerMessagingTask, unregisterMessagingTask } from './tasks';
