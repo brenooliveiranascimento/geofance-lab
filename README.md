@@ -12,7 +12,7 @@ Sem backend, sem conta, sem serviço pago — tudo mora no aparelho.
 
 ### Instalar
 
-O APK acompanha a entrega; ele não fica versionado no repositório, porque são 62 MB. Se você só
+O APK acompanha a entrega; ele não fica versionado no repositório, porque são 44 MB. Se você só
 tem o código em mãos, [gere um](#gerando-o-apk) — leva menos de dois minutos.
 
 Com o aparelho no cabo:

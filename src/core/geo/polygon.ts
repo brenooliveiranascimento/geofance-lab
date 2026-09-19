@@ -110,16 +110,6 @@ export function ringCentroid(ring: Ring): LatLng | null {
   return { latitude: latitude / ring.length, longitude: longitude / ring.length };
 }
 
-export function ringPerimeterMeters(ring: Ring): number {
-  if (ring.length < 2) return 0;
-
-  let total = 0;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    total += distanceMeters(ring[j], ring[i]);
-  }
-  return total;
-}
-
 export function distanceToRingMeters(point: LatLng, ring: Ring): number {
   if (ring.length === 0) return Infinity;
   if (ring.length === 1) return distanceMeters(point, ring[0]);

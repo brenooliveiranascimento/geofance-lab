@@ -1,4 +1,4 @@
-import type { BoundingBox, LatLng } from '@src/core/geo/types';
+import type { LatLng } from '@src/core/geo/types';
 
 export const EARTH_RADIUS_M = 6371008.8;
 
@@ -23,26 +23,4 @@ export function distanceMeters(a: LatLng, b: LatLng): number {
     sinHalfLat * sinHalfLat + Math.cos(lat1) * Math.cos(lat2) * sinHalfLon * sinHalfLon;
 
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
-}
-
-export function boundingBoxAround(center: LatLng, radiusMeters: number): BoundingBox {
-  const deltaLat = radiusMeters / METERS_PER_DEGREE_LATITUDE;
-  const metersPerLon = metersPerDegreeLongitude(center.latitude);
-  const deltaLon = metersPerLon < 1 ? 180 : radiusMeters / metersPerLon;
-
-  return {
-    minLatitude: center.latitude - deltaLat,
-    maxLatitude: center.latitude + deltaLat,
-    minLongitude: center.longitude - deltaLon,
-    maxLongitude: center.longitude + deltaLon,
-  };
-}
-
-export function isInBoundingBox(point: LatLng, box: BoundingBox): boolean {
-  return (
-    point.latitude >= box.minLatitude &&
-    point.latitude <= box.maxLatitude &&
-    point.longitude >= box.minLongitude &&
-    point.longitude <= box.maxLongitude
-  );
 }
